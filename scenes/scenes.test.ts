@@ -53,9 +53,9 @@ describe('scenes', () => {
     const scene = sceneOf('fathers-day');
     const merge = scene.steps.findIndex((s) => 'cmd' in s && s.cmd === 'git merge pete-lives');
     await playScene(engine, { ...scene, steps: scene.steps.slice(0, merge + 1) });
-    expect(await engine.readFile('TARDIS.md')).toContain(
-      '<<<<<<< HEAD\nPete Tyler: dead\n=======\nPete Tyler: alive\n',
-    );
+    const conflict = await engine.readFile('TARDIS.md');
+    expect(conflict).toContain('Pete Tyler: dead\n=======\n');
+    expect(conflict).toContain('Pete Tyler: alive\n>>>>>>> pete-lives');
     await playScene(engine, scene);
     expect(await out("git branch --format='%(refname:short)'")).toBe('prime-timeline\n');
     expect(await out('git log -1 --format=%s fixed-point/pete')).toBe("Father's Day\n");

@@ -6,6 +6,13 @@ export const fathersDay: Episode = {
   set: { Location: 'London, 7 November 1987', 'Pete Tyler': 'dead' },
 };
 
+export const roseSavesPete: Episode = {
+  code: '7 November 1987',
+  title: 'Rose saves Pete',
+  set: { Location: 'London, 7 November 1987', 'Pete Tyler': 'alive' },
+  fastForward: true,
+};
+
 export const badWolf: Episode = {
   code: 'S01E12',
   title: 'Bad Wolf',

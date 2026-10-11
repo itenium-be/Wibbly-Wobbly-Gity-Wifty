@@ -1,5 +1,5 @@
 import type { Scene } from '../shared/types';
-import { fathersDay } from './episodes';
+import { fathersDay, roseSavesPete } from './episodes';
 
 export const fathersDayScene: Scene = {
   id: 'fathers-day',
@@ -16,21 +16,7 @@ export const fathersDayScene: Scene = {
     { episode: fathersDay },
     { cmd: 'git tag fixed-point/pete', caption: 'A fixed point in time' },
     { cmd: 'git switch -c pete-lives HEAD~1', caption: 'Rose goes back to save him' },
-    {
-      edit: {
-        'TARDIS.md': [
-          '# TARDIS log',
-          'Doctor: The Ninth Doctor',
-          'Companions:',
-          '- Rose Tyler',
-          'Location: London, 7 November 1987',
-          'Pete Tyler: alive',
-          '',
-        ].join('\n'),
-      },
-      caption: 'Rose pushes him out of the way: Pete Tyler: alive',
-    },
-    { cmd: 'git commit -am "Rose saves Pete"', caption: 'A world where Pete lives', accepts: 'git commit' },
+    { episode: roseSavesPete },
     { cmd: 'git switch prime-timeline', caption: 'Back to the real timeline' },
     { cmd: 'git merge pete-lives', caption: 'dead and alive: a paradox. The Reapers arrive', fails: true },
     { cmd: 'git merge --abort', caption: 'Undo the merge' },
