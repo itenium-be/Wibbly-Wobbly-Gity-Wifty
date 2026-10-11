@@ -17,6 +17,7 @@ export const riversDiary: Scene = {
       caption: "River's diary",
     },
     { cmd: 'git spoilers', caption: 'Spoilers: the diary remembers every jump, even the erased ones' },
-    { cmd: 'git branch pete-lives abfb21f', caption: 'The timeline where Rose saved Pete is back' },
+    { cmd: 'git checkout abfb21f', caption: 'Back to the erased timeline where Rose saved Pete' },
+    { cmd: 'git switch prime-timeline', caption: 'Back to the real timeline' },
   ],
 };
