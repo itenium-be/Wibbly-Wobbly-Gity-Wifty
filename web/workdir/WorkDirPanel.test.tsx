@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from 'bun:test';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { WorkDir } from '../../shared/types';
+import type { GraphModel, WorkDir } from '../../shared/types';
 import { WorkDirPanel } from './WorkDirPanel';
 
 const workdir: WorkDir = {
@@ -10,6 +10,14 @@ const workdir: WorkDir = {
     { path: 'TARDIS.md', status: 'conflicted', code: 'UU' },
     { path: 'new.md', status: 'untracked', code: '??' },
   ],
+};
+
+const graph: GraphModel = {
+  initialized: true,
+  commits: [{ hash: 'a1b2c3d4', short: 'a1b2c3d', message: 'Rose', parents: [] }],
+  branches: [{ name: 'prime-timeline', hash: 'a1b2c3d4' }],
+  tags: [],
+  head: { hash: 'a1b2c3d4', branch: 'prime-timeline' },
 };
 
 const CONFLICT = `# TARDIS
@@ -24,7 +32,7 @@ function setup(content = CONFLICT) {
   const load = mock(async (_path: string) => content);
   const save = mock(async (_path: string, _content: string) => {});
   const onDone = mock(() => {});
-  const props = { branch: 'prime-timeline', load, save, onDone };
+  const props = { branch: 'prime-timeline', graph, load, save, onDone };
   const view = render(<WorkDirPanel workdir={workdir} {...props} />);
   return { load, save, onDone, props, ...view };
 }
@@ -54,6 +62,25 @@ describe('WorkDirPanel', () => {
     expect(container.querySelector('.branch.merging')).toBeNull();
     rerender(<WorkDirPanel workdir={{ ...workdir, merging: true }} {...props} />);
     expect(container.querySelector('.branch.merging')?.textContent).toBe('prime-timeline|MERGING');
+  });
+
+  test('switches between the working directory and the history', () => {
+    setup();
+    const tab = (name: RegExp) => screen.getByRole('tab', { name });
+    expect(tab(/WORKING DIR/).getAttribute('aria-selected')).toBe('true');
+    fireEvent.click(tab(/HISTORY/));
+    expect(tab(/HISTORY/).getAttribute('aria-selected')).toBe('true');
+    expect(screen.queryByText('TARDIS.md')).toBeNull();
+    expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['a1b2c3dHEAD → prime-timelineRose']);
+    fireEvent.click(tab(/WORKING DIR/));
+    expect(screen.getByText('TARDIS.md')).toBeTruthy();
+  });
+
+  test('counts the changed files on the working directory tab', () => {
+    const { rerender, props } = setup();
+    expect(screen.getByRole('tab', { name: /WORKING DIR/ }).textContent).toBe('WORKING DIR2');
+    rerender(<WorkDirPanel workdir={{ ...workdir, files: [workdir.files[0]] }} {...props} />);
+    expect(screen.getByRole('tab', { name: /WORKING DIR/ }).textContent).toBe('WORKING DIR');
   });
 
   test('flashes a file whose status changed', () => {
