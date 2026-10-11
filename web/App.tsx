@@ -79,7 +79,7 @@ export function App() {
 
   if (!scene) return null;
   const step = scene.steps[cueIndex];
-  const cue = step && 'cmd' in step ? step : undefined;
+  const cue = step && 'cmd' in step ? step : step && 'edit' in step ? { cmd: '', caption: step.caption } : undefined;
   const next = step && 'episode' in step && graph?.head.branch ? step.episode : undefined;
 
   const playNext = async (episode: Episode): Promise<boolean> => {
@@ -127,7 +127,12 @@ export function App() {
   const save = async (path: string, content: string) => {
     const mine = epoch.current;
     const updated = await writeFile(path, content);
-    if (mine === epoch.current) setWorkdir(updated);
+    if (mine !== epoch.current) return;
+    setWorkdir(updated);
+    setCueIndex((i) => {
+      const at = scene.steps[i];
+      return at && 'edit' in at && path in at.edit ? i + 1 : i;
+    });
   };
 
   return (

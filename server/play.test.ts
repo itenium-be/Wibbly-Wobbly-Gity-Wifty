@@ -29,6 +29,14 @@ describe('play', () => {
     expect(await Bun.file(join(dir, 'TARDIS.md')).text()).toBe('Doctor: The Ninth Doctor\nLocation: London, 1987\n');
     expect((await sh(dir, 'git log -1 --format=%s')).output).toBe("Father's Day\n");
   });
+
+  test('an edit step writes the files without committing', async () => {
+    const dir = await repo();
+    const played = await play(dir, { edit: { 'TARDIS.md': 'Doctor: The Tenth Doctor\n' }, caption: '' }, {});
+    expect(played).toEqual({ cmd: 'edit TARDIS.md', output: '', code: 0 });
+    expect(await Bun.file(join(dir, 'TARDIS.md')).text()).toBe('Doctor: The Tenth Doctor\n');
+    expect((await sh(dir, 'git status --short')).output).toBe(' M TARDIS.md\n');
+  });
 });
 
 describe('meetsExpectation', () => {

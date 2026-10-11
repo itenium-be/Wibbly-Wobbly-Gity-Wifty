@@ -51,6 +51,16 @@ const scenes: SceneView[] = [
     story: [{ title: 'Platform One', text: 'The sun expands.', images: [] }],
     steps: [{ episode: { code: 'S01E02', title: 'The End of the World' } }, { cmd: 'git log', caption: 'After' }],
   },
+  {
+    id: 'journeys-end',
+    episode: 'S04E13',
+    title: "Journey's End",
+    story: [{ title: 'Universes Collide', text: 'Everyone is here.', images: [] }],
+    steps: [
+      { edit: { 'episodes/rose.md': '# Everyone\n' }, caption: 'Resolve it in the editor' },
+      { cmd: 'git log', caption: 'After' },
+    ],
+  },
 ];
 
 function deferred<T>() {
@@ -277,6 +287,17 @@ describe('App', () => {
     const row = (await screen.findByText('episodes/rose.md')).closest('li');
     expect(row?.className).toContain('clean');
     expect(row?.className).not.toContain('flash');
+  });
+
+  test('an edit step shows its caption and saving that file moves to the next cue', async () => {
+    history.replaceState(null, '', '/?scene=journeys-end&card=1');
+    render(<App />);
+    expect(await screen.findByText('Resolve it in the editor')).toBeTruthy();
+    fireEvent.click(await screen.findByText('episodes/rose.md'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    fireEvent.change(screen.getByLabelText('edit episodes/rose.md'), { target: { value: '# Everyone\n' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByText('After')).toBeTruthy();
   });
 
   test('starts at the story card in the URL', async () => {
