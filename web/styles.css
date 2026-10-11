@@ -685,6 +685,83 @@ main {
   background: linear-gradient(to right, transparent 3px, var(--glow) 3px, var(--glow) 7px, transparent 7px);
 }
 
+/* commit diff */
+.viewer.commit-view {
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 10px;
+}
+
+.viewer.commit-view .bar {
+  margin-bottom: 0;
+}
+
+.diff {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  font:
+    18px / 1.5 "JetBrains Mono",
+    monospace;
+}
+
+.diff .file {
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px;
+  color: var(--glow);
+  background: var(--space-2);
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+}
+
+.diff .stat {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.diff .stat b {
+  color: var(--st-staged);
+  font-weight: 400;
+}
+
+.diff .stat i {
+  color: var(--danger);
+  font-style: normal;
+}
+
+.diff .hunk {
+  padding: 2px 12px;
+  color: var(--muted);
+  background: rgba(127, 212, 255, 0.05);
+}
+
+.diff .ln {
+  display: grid;
+  grid-template-columns: 1.4em minmax(0, 1fr);
+  padding: 0 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.diff .add {
+  color: var(--st-staged);
+  background: rgba(95, 227, 154, 0.1);
+}
+
+.diff .del {
+  color: var(--danger);
+  background: rgba(255, 90, 110, 0.1);
+}
+
+.diff .ctx {
+  color: var(--muted);
+}
+
 /* console */
 .console {
   grid-column: 1 / -1;

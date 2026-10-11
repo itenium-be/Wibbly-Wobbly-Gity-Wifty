@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Episode, GraphModel, RunResult, SceneView, WorkDir } from '../shared/types';
-import { enterScene, fetchScenes, playEpisode, readFile, runCommand, writeFile } from './api';
+import { enterScene, fetchScenes, playEpisode, readFile, runCommand, showCommit, writeFile } from './api';
 import { Console } from './console/Console';
 import { advance, type Cue, current, played, start } from './cue';
 import { episodeCodes } from './episodes';
@@ -191,6 +191,7 @@ export function App() {
               graph={graph}
               branch={graph?.initialized ? (graph.head.branch ?? 'HEAD (detached)') : ''}
               load={readFile}
+              show={showCommit}
               save={save}
               onDone={() => inputRef.current?.focus()}
             />

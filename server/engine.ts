@@ -2,6 +2,7 @@ import { copyFile, cp, mkdir, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import type { EpisodeResult, LiveState, RunResult, Scene, WorkDir } from '../shared/types';
 import { buildSnapshot, DAY, ROSE_AIRED } from './build';
+import { git } from './git';
 import { readGraph } from './graph';
 import { collapseCarriageReturns } from './output';
 import { meetsExpectation, play } from './play';
@@ -9,6 +10,8 @@ import { GITCONFIG, sh } from './shell';
 import { livePath, readWorkDir } from './workdir';
 
 export class UnknownEpisodeError extends Error {}
+export class InvalidCommitError extends Error {}
+export class UnknownCommitError extends Error {}
 
 /** Every repo dir carries its own global git config next to it, so aliases travel with snapshots. */
 const configOf = (dir: string) => `${dir}.gitconfig`;
@@ -80,6 +83,16 @@ export class Engine {
       if (!step) throw new UnknownEpisodeError(`unknown episode: ${code}`);
       const { cmd, ...result } = await play(this.live, step, { config: configOf(this.live) });
       return { cmd, ...(await this.withLive(result)) };
+    });
+  }
+
+  /** A merge diffs against its first parent: what it brought into the branch it was merged into. */
+  show(hash: string): Promise<string> {
+    return this.serialise(async () => {
+      if (!/^[0-9a-f]{4,64}$/.test(hash)) throw new InvalidCommitError(`invalid commit: ${hash}`);
+      const { output, code } = await git(this.live, ['show', '--format=', '--diff-merges=first-parent', hash]);
+      if (code !== 0) throw new UnknownCommitError(`unknown commit: ${hash}`);
+      return output;
     });
   }
 

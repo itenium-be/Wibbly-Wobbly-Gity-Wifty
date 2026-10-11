@@ -95,6 +95,7 @@ mock.module('./api', () => ({
   playEpisode,
   readFile,
   writeFile,
+  showCommit: async () => '',
 }));
 const { App } = await import('./App');
 

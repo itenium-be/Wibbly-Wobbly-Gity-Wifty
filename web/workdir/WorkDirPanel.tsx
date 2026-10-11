@@ -7,6 +7,7 @@ type Props = {
   branch: string;
   graph: GraphModel;
   load: (path: string) => Promise<string>;
+  show: (hash: string) => Promise<string>;
   save: (path: string, content: string) => Promise<void>;
   /** Called after a click or edit ends, so the keyboard returns to the console. */
   onDone: () => void;
@@ -65,7 +66,7 @@ function ResizeHandle() {
   );
 }
 
-export function WorkDirPanel({ workdir, branch, graph, load, save, onDone }: Props) {
+export function WorkDirPanel({ workdir, branch, graph, load, show, save, onDone }: Props) {
   const [tab, setTab] = useState<'files' | 'history'>('files');
   const [flashing, setFlashing] = useState<Set<string>>(new Set());
   const previous = useRef<Map<string, FileStatus>>(new Map());
@@ -175,7 +176,7 @@ export function WorkDirPanel({ workdir, branch, graph, load, save, onDone }: Pro
           {workdir.merging ? `${branch}|MERGING` : branch}
         </span>
       </h3>
-      {tab === 'history' && <HistoryView graph={graph} onDone={onDone} />}
+      {tab === 'history' && <HistoryView graph={graph} show={show} onDone={onDone} />}
       {tab === 'files' && (
         <div>
           <ul className="files">

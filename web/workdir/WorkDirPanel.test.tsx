@@ -32,7 +32,8 @@ function setup(content = CONFLICT) {
   const load = mock(async (_path: string) => content);
   const save = mock(async (_path: string, _content: string) => {});
   const onDone = mock(() => {});
-  const props = { branch: 'prime-timeline', graph, load, save, onDone };
+  const show = mock(async (_hash: string) => '');
+  const props = { branch: 'prime-timeline', graph, load, show, save, onDone };
   const view = render(<WorkDirPanel workdir={workdir} {...props} />);
   return { load, save, onDone, props, ...view };
 }

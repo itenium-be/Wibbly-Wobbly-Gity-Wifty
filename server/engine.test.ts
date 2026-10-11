@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test } from 'bun:test';
 import { join } from 'node:path';
 import type { Scene } from '../shared/types';
 import { tmp } from '../test/tmp';
-import { Engine, UnknownEpisodeError } from './engine';
+import { Engine, InvalidCommitError, UnknownCommitError, UnknownEpisodeError } from './engine';
 import { GITCONFIG } from './shell';
 import { InvalidPathError } from './workdir';
 
@@ -85,6 +85,31 @@ describe('Engine', () => {
     await engine.enter('rose');
     const workdir = await engine.writeFile('companions/jack.md', 'Jack\n');
     expect(workdir.files).toContainEqual({ path: 'companions/jack.md', status: 'untracked', code: '??' });
+  });
+
+  test('shows the diff a commit made', async () => {
+    await engine.enter('rose');
+    await engine.episode('S01E02');
+    const head = (await engine.run('git rev-parse HEAD')).output.trim();
+    const diff = await engine.show(head);
+    expect(diff).toContain('-Location: London, 2005\n+Location: Platform One\n');
+    expect(diff).not.toContain('The End of the World');
+  });
+
+  test('shows a merge as the diff against its first parent', async () => {
+    await engine.enter('rose');
+    await engine.run(
+      'git switch -q -c side && echo Dalek > dalek.md && git add dalek.md && git commit -qm Dalek && git switch -q - && git merge -q --no-ff -m Merge side',
+    );
+    const head = (await engine.run('git rev-parse HEAD')).output.trim();
+    expect(await engine.show(head)).toContain('+++ b/dalek.md\n@@ -0,0 +1 @@\n+Dalek\n');
+  });
+
+  test('rejects a malformed or unknown commit', async () => {
+    await engine.enter('rose');
+    await expect(engine.show('HEAD; rm -rf /')).rejects.toBeInstanceOf(InvalidCommitError);
+    await expect(engine.show('--output=x')).rejects.toBeInstanceOf(InvalidCommitError);
+    await expect(engine.show('deadbeef')).rejects.toBeInstanceOf(UnknownCommitError);
   });
 
   test('rejects paths outside the live dir', async () => {

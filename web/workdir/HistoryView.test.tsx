@@ -1,5 +1,5 @@
 import { describe, expect, mock, test } from 'bun:test';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { Commit, GraphModel } from '../../shared/types';
 import { HistoryView } from './HistoryView';
 
@@ -21,10 +21,19 @@ const graph: GraphModel = {
   head: { hash: 'bbb000000000', branch: 'main' },
 };
 
-function setup() {
+const DIFF = `diff --git a/TARDIS.md b/TARDIS.md
+--- a/TARDIS.md
++++ b/TARDIS.md
+@@ -1,2 +1,2 @@
+ # TARDIS log
+-Pete Tyler: dead
++Pete Tyler: alive
+`;
+
+function setup(show = mock(async (_hash: string) => DIFF)) {
   const onDone = mock(() => {});
-  const view = render(<HistoryView graph={graph} onDone={onDone} />);
-  return { onDone, ...view };
+  const view = render(<HistoryView graph={graph} show={show} onDone={onDone} />);
+  return { onDone, show, ...view };
 }
 
 const rows = () => screen.getAllByRole('listitem').map((li) => li.textContent);
@@ -58,5 +67,28 @@ describe('HistoryView', () => {
     expect(screen.getByText(/commit bbb000000000/)).toBeTruthy();
     expect(screen.getByText('Pete lives').closest('li')?.className).toContain('open');
     expect(onDone).toHaveBeenCalled();
+  });
+
+  test('clicking a commit shows its diff below the details', async () => {
+    const { show, container } = setup();
+    fireEvent.click(screen.getByText('Pete lives'));
+    expect(show).toHaveBeenCalledWith('bbb000000000');
+    expect(await screen.findByText('Pete Tyler: alive')).toBeTruthy();
+    expect(container.querySelector('.diff .file')?.textContent).toBe('TARDIS.md+1 −1');
+    expect([...container.querySelectorAll('.diff .ln')].map((l) => [l.className, l.textContent])).toEqual([
+      ['ln ctx', ' # TARDIS log'],
+      ['ln del', '-Pete Tyler: dead'],
+      ['ln add', '+Pete Tyler: alive'],
+    ]);
+  });
+
+  test('a failed diff shows the error', async () => {
+    setup(
+      mock(async () => {
+        throw new Error('404 unknown commit');
+      }),
+    );
+    fireEvent.click(screen.getByText('Pete lives'));
+    await waitFor(() => expect(screen.getByText('404 unknown commit')).toBeTruthy());
   });
 });

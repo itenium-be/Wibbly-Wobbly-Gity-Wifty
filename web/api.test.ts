@@ -55,6 +55,17 @@ describe('api', () => {
     expect(url).toBe('/api/file?path=episodes%2Fbad%20wolf.md');
   });
 
+  test('showCommit fetches the diff of a commit as text', async () => {
+    let url = '';
+    globalThis.fetch = (async (u: string) => {
+      url = u;
+      return new Response('diff --git a/x b/x\n', { status: 200 });
+    }) as unknown as typeof fetch;
+    const { showCommit } = await real();
+    expect(await showCommit('abc1234')).toBe('diff --git a/x b/x\n');
+    expect(url).toBe('/api/show?hash=abc1234');
+  });
+
   test('readFile throws on a non-OK response', async () => {
     respond('no such file', 404);
     const { readFile } = await real();

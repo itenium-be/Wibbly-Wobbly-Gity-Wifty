@@ -101,6 +101,24 @@ describe('api', () => {
     expect((await routes['/api/run'].POST(post('/api/run', null))).status).toBe(400);
   });
 
+  describe('/api/show', () => {
+    const enter = () => routes['/api/scenes/:id/enter'].POST(post('/api/scenes/rose/enter', undefined, { id: 'rose' }));
+
+    test('GET returns the diff of a commit', async () => {
+      const { graph } = (await (await enter()).json()) as LiveState;
+      const res = await routes['/api/show'].GET(get(`/api/show?hash=${graph.head.hash}`));
+      expect(res.status).toBe(200);
+      expect(await res.text()).toContain('+# Rose\n');
+    });
+
+    test('a missing or malformed hash is a 400, an unknown one a 404', async () => {
+      await enter();
+      expect((await routes['/api/show'].GET(get('/api/show'))).status).toBe(400);
+      expect((await routes['/api/show'].GET(get('/api/show?hash=HEAD'))).status).toBe(400);
+      expect((await routes['/api/show'].GET(get('/api/show?hash=deadbeef'))).status).toBe(404);
+    });
+  });
+
   describe('/api/file', () => {
     const enter = () => routes['/api/scenes/:id/enter'].POST(post('/api/scenes/rose/enter', undefined, { id: 'rose' }));
 

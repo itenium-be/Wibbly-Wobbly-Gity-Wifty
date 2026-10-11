@@ -30,4 +30,8 @@ export async function readFile(path: string): Promise<string> {
   return (await ok(await fetch(`/api/file?path=${encodeURIComponent(path)}`))).text();
 }
 
+export async function showCommit(hash: string): Promise<string> {
+  return (await ok(await fetch(`/api/show?hash=${encodeURIComponent(hash)}`))).text();
+}
+
 export const writeFile = (path: string, content: string) => send<WorkDir>('PUT', '/api/file', { path, content });
