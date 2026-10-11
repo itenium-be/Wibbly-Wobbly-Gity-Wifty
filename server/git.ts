@@ -1,4 +1,4 @@
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 const GITCONFIG = join(import.meta.dir, 'tardis.gitconfig');
 
@@ -13,7 +13,7 @@ export async function git(cwd: string, args: string[], date?: string): Promise<G
     GIT_CONFIG_GLOBAL: GITCONFIG,
     GIT_CONFIG_NOSYSTEM: '1',
     // Before `git init`, the live dir must not resolve to an enclosing repo.
-    GIT_CEILING_DIRECTORIES: dirname(cwd),
+    GIT_CEILING_DIRECTORIES: dirname(resolve(cwd)),
     GIT_EDITOR: 'true',
     GIT_TERMINAL_PROMPT: '0',
   };

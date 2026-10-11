@@ -59,4 +59,18 @@ describe('git', () => {
       process.env.HOME = realHome;
     }
   });
+
+  test('does not resolve an enclosing repo from a relative cwd', async () => {
+    const outer = await tmp();
+    await git(outer, ['init', '-q']);
+    await mkdir(join(outer, 'live'));
+    const original = process.cwd();
+    process.chdir(outer);
+    try {
+      const { code } = await git('live', ['rev-parse', '--git-dir']);
+      expect(code).not.toBe(0);
+    } finally {
+      process.chdir(original);
+    }
+  });
 });
