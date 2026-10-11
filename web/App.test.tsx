@@ -243,4 +243,24 @@ describe('App', () => {
 
     expect(enterScene).toHaveBeenCalledTimes(1);
   });
+
+  test('returning to a scene does not flash files against the previous scene', async () => {
+    const untracked: WorkDir = {
+      files: [{ path: 'episodes/rose.md', status: 'untracked', code: '??' }],
+      merging: false,
+    };
+    enterScene.mockImplementation(async (id) => (id === 'dalek' ? { graph, workdir: untracked } : live(graph)));
+    await toGitPhase();
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(await screen.findByText('The Last Dalek')).toBeTruthy();
+    await waitFor(() => expect(enterScene).toHaveBeenCalledWith('dalek'));
+    const slow = deferred<LiveState>();
+    enterScene.mockImplementationOnce(() => slow.promise);
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    await screen.findByLabelText('git command');
+    await act(async () => slow.resolve(live(graph)));
+    const row = (await screen.findByText('episodes/rose.md')).closest('li');
+    expect(row?.className).toContain('clean');
+    expect(row?.className).not.toContain('flash');
+  });
 });

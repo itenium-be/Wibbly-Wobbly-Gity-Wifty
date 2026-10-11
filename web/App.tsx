@@ -33,6 +33,8 @@ export function App() {
   const reset = useCallback(async () => {
     if (!sceneId) return;
     const mine = ++epoch.current;
+    // Keeps the panel from diffing the next scene's statuses against this one's.
+    setWorkdir(null);
     const entered = await enterScene(sceneId);
     if (mine !== epoch.current) return;
     setGraph(entered.graph);
