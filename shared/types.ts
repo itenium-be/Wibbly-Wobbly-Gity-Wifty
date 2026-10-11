@@ -56,7 +56,8 @@ export type Scene = {
 };
 export type SceneView = Omit<Scene, 'build'>;
 
-export type Commit = { hash: string; short: string; message: string; parents: string[] };
+/** `lost`: HEAD was on it this scene, but no branch, tag or HEAD reaches it any more. */
+export type Commit = { hash: string; short: string; message: string; parents: string[]; lost?: true };
 export type Ref = { name: string; hash: string };
 export type GraphModel = {
   initialized: boolean;

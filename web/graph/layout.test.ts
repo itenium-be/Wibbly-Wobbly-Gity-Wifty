@@ -139,6 +139,30 @@ describe('layout', () => {
     expect(l.nodes[1].lane).toBe(1);
   });
 
+  test('lost commits get their own dashed lane just below prime, even when HEAD is elsewhere', () => {
+    const l = layout(
+      graph({
+        commits: [
+          c('a', 'The Runaway Bride'),
+          { ...c('b', 'Blink', 'a'), lost: true },
+          { ...c('f', 'Forest of the Dead', 'b'), lost: true },
+          c('p', 'Rise of the Cybermen', 'a'),
+        ],
+        branches: [
+          { name: 'prime-timeline', hash: 'a' },
+          { name: 'petes-world', hash: 'p' },
+        ],
+        head: { hash: 'a', branch: 'prime-timeline' },
+      }),
+    );
+    expect(l.lanes).toEqual([
+      { name: 'prime-timeline', kind: 'prime' },
+      { name: 'lost', kind: 'detached' },
+      { name: 'petes-world', kind: 'parallel' },
+    ]);
+    expect(l.nodes.map((n) => n.lane)).toEqual([0, 1, 1, 2]);
+  });
+
   test('tags are attached to their commit', () => {
     const l = layout(graph({ commits: [c('a', 'Pompeii')], tags: [{ name: 'fixed-point/pompeii', hash: 'a' }] }));
     expect(l.nodes[0].tags).toEqual(['fixed-point/pompeii']);

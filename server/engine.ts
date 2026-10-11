@@ -4,7 +4,7 @@ import type { BlameHunk, EpisodeResult, LiveState, RunResult, Scene, WorkDir } f
 import { parseBlame } from './blame';
 import { buildSnapshot, DAY, ROSE_AIRED } from './build';
 import { git } from './git';
-import { readGraph } from './graph';
+import { readGraph, reflogLength } from './graph';
 import { collapseCarriageReturns } from './output';
 import { meetsExpectation, play } from './play';
 import { GITCONFIG, sh } from './shell';
@@ -29,6 +29,8 @@ export class Engine {
   private readonly scenes: Scene[];
   private readonly live: string;
   private current: Scene | undefined;
+  // Where the scene's own reflog starts: commits lost before it belong to earlier scenes.
+  private reflogMark = 0;
   // every call shares one live dir; interleaved rm/cp corrupts it.
   private queue: Promise<unknown> = Promise.resolve();
 
@@ -124,7 +126,7 @@ export class Engine {
     return {
       ...result,
       output: collapseCarriageReturns(result.output),
-      graph: await readGraph(this.live),
+      graph: await readGraph(this.live, this.reflogMark),
       workdir: await readWorkDir(this.live),
     };
   }
@@ -134,7 +136,8 @@ export class Engine {
     if (!scene) throw new Error(`unknown scene: ${id}`);
     this.current = undefined;
     await copyRepo(this.snapshot(id), this.live);
+    this.reflogMark = await reflogLength(this.live);
     this.current = scene;
-    return { graph: await readGraph(this.live), workdir: await readWorkDir(this.live) };
+    return { graph: await readGraph(this.live, this.reflogMark), workdir: await readWorkDir(this.live) };
   }
 }

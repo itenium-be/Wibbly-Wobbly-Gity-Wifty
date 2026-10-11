@@ -27,18 +27,20 @@ export type Layout = {
 const PRIME = 'prime-timeline';
 const DETACHED = 'detached';
 const REFLOG = 'reflog';
+const LOST = 'lost';
 const UNIVERSES = new Set(['petes-world']);
 
 const kindOf = (name: string): LaneKind => {
   if (name === PRIME) return 'prime';
-  if (name === DETACHED || name === REFLOG) return 'detached';
+  if (name === DETACHED || name === REFLOG || name === LOST) return 'detached';
   return UNIVERSES.has(name) ? 'parallel' : 'branch';
 };
 
 // Top to bottom: ordinary branches above prime, parallel universes and merged-in commits below.
 // Commits only HEAD reaches (a deleted branch checked out from the reflog) sit above prime, where that branch was.
-const ORDER = ['branch', REFLOG, 'prime', 'parallel', 'detached'];
-const slotOf = (name: string) => (name === REFLOG ? REFLOG : kindOf(name));
+// Lost commits sit just below prime, so the shas the presenter still types stay on screen next to where they were.
+const ORDER = ['branch', REFLOG, 'prime', LOST, 'parallel', 'detached'];
+const slotOf = (name: string) => (name === REFLOG || name === LOST ? name : kindOf(name));
 
 export function layout(graph: GraphModel, dirty = false): Layout {
   const firstParent = new Map(graph.commits.map((c) => [c.hash, c.parents[0] ?? null]));
@@ -60,10 +62,10 @@ export function layout(graph: GraphModel, dirty = false): Layout {
       reachable.add(h);
       stack.push(...(parents.get(h) ?? []));
     }
-  for (const c of graph.commits) claim(c.hash, reachable.has(c.hash) ? DETACHED : REFLOG);
+  for (const c of graph.commits) claim(c.hash, c.lost ? LOST : reachable.has(c.hash) ? DETACHED : REFLOG);
 
   const used = new Set(owner.values());
-  const laneNames = [...branches.map((b) => b.name), REFLOG, DETACHED]
+  const laneNames = [...branches.map((b) => b.name), REFLOG, LOST, DETACHED]
     .filter((n) => used.has(n))
     .sort((a, b) => ORDER.indexOf(slotOf(a)) - ORDER.indexOf(slotOf(b)));
   const lanes = laneNames.map((name) => ({ name, kind: kindOf(name) }));

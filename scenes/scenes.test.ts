@@ -152,6 +152,14 @@ describe('scenes', () => {
     expect(await out('git log -1 --format=%s ebf7702')).toBe('Forest of the Dead\n');
   });
 
+  test('turn left starts with nothing lost; the time beetle loses everything after The Runaway Bride', async () => {
+    const { graph } = await engine.enter('turn-left');
+    expect(graph.commits.filter((c) => c.lost)).toEqual([]);
+    const { graph: reset } = await engine.run((sceneOf('turn-left').steps[0] as { cmd: string }).cmd);
+    expect(reset.commits.filter((c) => c.lost).map((c) => c.message)).toContain('Forest of the Dead');
+    expect(reset.commits.find((c) => c.short === '4e05f6c')?.lost).toBe(true);
+  });
+
   test('turn left squashes the dark world into one episode, in broadcast order, and rerere replays the merge', async () => {
     const scene = sceneOf('turn-left');
     const replay = scene.steps.findIndex((s) => 'cmd' in s && s.cmd.includes('--rebase-merges'));

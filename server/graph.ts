@@ -20,10 +20,28 @@ async function refs(cwd: string, namespace: string): Promise<Ref[]> {
   });
 }
 
-export async function readGraph(cwd: string): Promise<GraphModel> {
+const reflog = (cwd: string) => lines(cwd, ['reflog', 'show', '--format=%H', 'HEAD']);
+
+/** HEAD's reflog entries so far: pass it back to `readGraph` to show what later commands leave behind. */
+export async function reflogLength(cwd: string) {
+  return (await reflog(cwd)).length;
+}
+
+async function visitedSince(cwd: string, mark: number) {
+  const visited = await reflog(cwd);
+  // Each entry records where HEAD went; the one at the mark is where HEAD stood before the first move.
+  return [...new Set(visited.slice(0, visited.length - mark + 1))];
+}
+
+export async function readGraph(cwd: string, reflogMark?: number): Promise<GraphModel> {
   if ((await git(cwd, ['rev-parse', '--git-dir'])).code !== 0) {
     return { initialized: false, commits: [], branches: [], tags: [], head: { hash: null, branch: null } };
   }
+
+  const since = reflogMark === undefined ? [] : await visitedSince(cwd, reflogMark);
+  const lost = new Set(
+    since.length ? await lines(cwd, ['rev-list', ...since, '--not', '--branches', '--tags', 'HEAD']) : [],
+  );
 
   const commits: Commit[] = (
     await lines(cwd, [
@@ -31,13 +49,14 @@ export async function readGraph(cwd: string): Promise<GraphModel> {
       '--branches',
       '--tags',
       'HEAD',
+      ...since,
       '--date-order',
       '--reverse',
       '--format=%H%x1f%h%x1f%P%x1f%s',
     ])
   ).map((row) => {
     const [hash, short, parents, message] = row.split(SEP);
-    return { hash, short, message, parents: parents ? parents.split(' ') : [] };
+    return { hash, short, message, parents: parents ? parents.split(' ') : [], ...(lost.has(hash) && { lost: true }) };
   });
 
   const branch = await git(cwd, ['symbolic-ref', '-q', '--short', 'HEAD']);

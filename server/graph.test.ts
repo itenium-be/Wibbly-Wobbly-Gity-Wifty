@@ -3,7 +3,7 @@ import type { GitStep } from '../shared/types';
 import { tmp } from '../test/tmp';
 import { buildSnapshot } from './build';
 import { git } from './git';
-import { readGraph } from './graph';
+import { readGraph, reflogLength } from './graph';
 
 async function repo(steps: GitStep[]) {
   const dir = await tmp();
@@ -104,6 +104,26 @@ describe('readGraph', () => {
       { git: ['checkout', '-q', 'HEAD~1'] },
     ]);
     expect(g.head).toEqual({ hash: g.commits[0].hash, branch: null });
+  });
+
+  test('commits HEAD left behind since the reflog mark are lost; older ones stay hidden', async () => {
+    const dir = await tmp();
+    await buildSnapshot(dir, [
+      { git: ['init', '-q'] },
+      { commit: 'Rose' },
+      { commit: 'Dalek' },
+      { git: ['reset', '-q', '--hard', 'HEAD~1'] },
+      { commit: 'Blink' },
+    ]);
+    const mark = await reflogLength(dir);
+    await git(dir, ['reset', '-q', '--hard', 'HEAD~1']);
+
+    const g = await readGraph(dir, mark);
+    expect(g.commits.map((c) => [c.message, c.lost ?? false])).toEqual([
+      ['Rose', false],
+      ['Blink', true],
+    ]);
+    expect((await readGraph(dir)).commits.map((c) => c.message)).toEqual(['Rose']);
   });
 
   test('a stash does not add phantom commits', async () => {
