@@ -156,6 +156,10 @@ describe('pending', () => {
     expect(layout(one, true).pending).toEqual({ col: 1, lane: 0, from: { col: 0, lane: 0 } });
   });
 
+  test('a detached HEAD gets no pending node: nothing will be committed there', () => {
+    expect(layout({ ...one, head: { hash: 'a1', branch: null } }, true).pending).toBeNull();
+  });
+
   test('during a merge the pending node also comes from the commit being merged in', () => {
     const merging = graph({
       commits: [c('a', 'Rose'), c('b', "Father's Day", 'a'), c('x', 'Rose saves Pete', 'a')],

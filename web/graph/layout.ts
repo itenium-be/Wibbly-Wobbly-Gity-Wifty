@@ -94,7 +94,7 @@ export function layout(graph: GraphModel, dirty = false): Layout {
 
   const merged = graph.mergeHead ? byHash.get(graph.mergeHead) : undefined;
   const pending =
-    dirty && graph.initialized
+    dirty && graph.initialized && graph.head.branch
       ? {
           col: nodes.length,
           lane: at?.lane ?? Math.max(0, laneNames.indexOf(PRIME)),
