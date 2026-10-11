@@ -1,5 +1,5 @@
 import type { Scene } from '../shared/types';
-import { blink, forestOfTheDead, partingOfTheWays } from './episodes';
+import { blink, forestOfTheDead } from './episodes';
 
 export const partingOfTheWaysScene: Scene = {
   id: 'parting-of-the-ways',
@@ -13,27 +13,9 @@ export const partingOfTheWaysScene: Scene = {
     },
   ],
   steps: [
-    { episode: partingOfTheWays },
+    { cmd: "sed -i 's/Ninth/Tenth/' TARDIS.md", caption: 'The Doctor regenerates' },
     {
-      edit: {
-        'TARDIS.md': [
-          '# TARDIS log',
-          'Doctor: The Tenth Doctor',
-          'Companions:',
-          '- Rose Tyler',
-          'Location: The Game Station, the year 200,100',
-          'Pete Tyler: dead',
-          '',
-          'Events:',
-          '- Game Station run by Bad Wolf Corp',
-          '- I am the Bad Wolf. I create myself.',
-          '',
-        ].join('\n'),
-      },
-      caption: 'The Doctor regenerates',
-    },
-    {
-      cmd: 'git commit -a --amend --no-edit',
+      cmd: 'git commit -a --amend',
       caption: 'Same episode, new face: the commit gets a new hash',
       accepts: 'git commit',
     },
