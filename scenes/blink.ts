@@ -8,7 +8,7 @@ export const blinkScene: Scene = {
     {
       title: "Don't Blink",
       text: 'The Weeping Angels only move when nobody is looking. One got into the TARDIS log somewhere along the way. Which episode let it in? In git, that is a bisect.',
-      images: [],
+      images: [{ src: '/assets/episodes/blink.jpg' }],
     },
   ],
   steps: [

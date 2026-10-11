@@ -8,7 +8,7 @@ export const riversDiary: Scene = {
     {
       title: "River's Diary",
       text: 'River Song meets the Doctor in the wrong order, and keeps every jump in her diary. Wipe a timeline and the diary still remembers. In git, that is the reflog.',
-      images: [],
+      images: [{ src: '/assets/episodes/rivers-diary.jpg' }],
     },
   ],
   steps: [

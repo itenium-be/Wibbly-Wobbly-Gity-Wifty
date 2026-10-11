@@ -8,7 +8,7 @@ export const badWolfScene: Scene = {
     {
       title: 'Bad Wolf',
       text: 'Two words, scattered through time and space, following the Doctor everywhere. Who wrote them, and when? In git, that is log -S and blame.',
-      images: [],
+      images: [{ src: '/assets/episodes/bad-wolf.jpg' }],
     },
   ],
   steps: [
