@@ -27,9 +27,11 @@ export type GraphModel = {
   tags: Ref[];
   head: { hash: string | null; branch: string | null };
 };
-export type RunResult = { output: string; code: number; graph: GraphModel };
 
 export type FileStatus = 'clean' | 'untracked' | 'modified' | 'staged' | 'conflicted';
 /** `code`: the two-letter `git status --short` code, '' when clean. */
 export type WorkFile = { path: string; status: FileStatus; code: string };
 export type WorkDir = { files: WorkFile[]; merging: boolean };
+
+export type LiveState = { graph: GraphModel; workdir: WorkDir };
+export type RunResult = LiveState & { output: string; code: number };

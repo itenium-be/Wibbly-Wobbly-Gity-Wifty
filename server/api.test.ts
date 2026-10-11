@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from 'bun:test';
-import type { GraphModel, RunResult, Scene, SceneView } from '../shared/types';
+import type { LiveState, RunResult, Scene, SceneView } from '../shared/types';
 import { tmp } from '../test/tmp';
 import { createRoutes } from './api';
 import { Engine } from './engine';
@@ -45,9 +45,11 @@ describe('api', () => {
     ]);
   });
 
-  test('entering a scene returns its graph', async () => {
+  test('entering a scene returns its graph and working directory', async () => {
     const res = await routes['/api/scenes/:id/enter'].POST(post('/api/scenes/rose/enter', undefined, { id: 'rose' }));
-    expect(((await res.json()) as GraphModel).commits.map((c) => c.message)).toEqual(['Rose']);
+    const body = (await res.json()) as LiveState;
+    expect(body.graph.commits.map((c) => c.message)).toEqual(['Rose']);
+    expect(body.workdir.files.map((f) => f.path)).toEqual(['episodes/rose.md']);
   });
 
   test('entering an unknown scene is a 404', async () => {

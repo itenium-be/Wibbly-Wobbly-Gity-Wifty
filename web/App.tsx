@@ -33,7 +33,7 @@ export function App() {
     const mine = ++epoch.current;
     const entered = await enterScene(sceneId);
     if (mine !== epoch.current) return;
-    setGraph(entered);
+    setGraph(entered.graph);
     setCueIndex(0);
     setInput('');
     setOutput('');

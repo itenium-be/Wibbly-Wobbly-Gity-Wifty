@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { GraphModel, RunResult, SceneView } from '../shared/types';
+import type { GraphModel, LiveState, RunResult, SceneView, WorkDir } from '../shared/types';
 
 const graphOf = (message: string): GraphModel => ({
   initialized: true,
@@ -10,6 +10,8 @@ const graphOf = (message: string): GraphModel => ({
   head: { hash: 'a1', branch: 'prime-timeline' },
 });
 const graph = graphOf('Episode one');
+const workdir: WorkDir = { files: [{ path: 'episodes/rose.md', status: 'clean', code: '' }], merging: false };
+const live = (g: GraphModel): LiveState => ({ graph: g, workdir });
 const scenes: SceneView[] = [
   {
     id: 'rose',
@@ -52,8 +54,9 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-const enterScene = mock(async (_id: string) => graph);
-const runCommand = mock(async (_input: string): Promise<RunResult> => ({ output: 'a1 Episode one', code: 0, graph }));
+const enterScene = mock(async (_id: string) => live(graph));
+const ran = (output: string, g = graph): RunResult => ({ output, code: 0, ...live(g) });
+const runCommand = mock(async (_input: string) => ran('a1 Episode one'));
 
 mock.module('./api', () => ({
   fetchScenes: async () => scenes,
@@ -71,9 +74,9 @@ async function toGitPhase() {
 
 beforeEach(() => {
   enterScene.mockReset();
-  enterScene.mockImplementation(async () => graph);
+  enterScene.mockImplementation(async () => live(graph));
   runCommand.mockReset();
-  runCommand.mockImplementation(async () => ({ output: 'a1 Episode one', code: 0, graph }));
+  runCommand.mockImplementation(async () => ran('a1 Episode one'));
 });
 
 describe('App', () => {
@@ -103,16 +106,16 @@ describe('App', () => {
   });
 
   test('a slow enterScene response for a scene we left does not overwrite the graph', async () => {
-    const slow = deferred<GraphModel>();
+    const slow = deferred<LiveState>();
     enterScene.mockImplementationOnce(() => slow.promise);
-    enterScene.mockImplementationOnce(async () => graphOf('Dalek graph'));
+    enterScene.mockImplementationOnce(async () => live(graphOf('Dalek graph')));
     render(<App />);
     expect(await screen.findByText('The Doctor')).toBeTruthy();
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(await screen.findByText('The Last Dalek')).toBeTruthy();
     await waitFor(() => expect(enterScene).toHaveBeenCalledTimes(2));
-    await act(async () => slow.resolve(graphOf('Rose graph')));
+    await act(async () => slow.resolve(live(graphOf('Rose graph'))));
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(await screen.findByLabelText('git command')).toBeTruthy();
     expect(await screen.findByText('Dalek graph')).toBeTruthy();
@@ -127,7 +130,7 @@ describe('App', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(await screen.findByText('The Last Dalek')).toBeTruthy();
-    await act(async () => slow.resolve({ output: 'STALE OUTPUT', code: 0, graph: graphOf('Stale graph') }));
+    await act(async () => slow.resolve(ran('STALE OUTPUT', graphOf('Stale graph'))));
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     await screen.findByLabelText('git command');
     expect(screen.queryByText(/STALE OUTPUT/)).toBeNull();
@@ -141,7 +144,7 @@ describe('App', () => {
     fireEvent.change(input, { target: { value: 'git log' } });
     fireEvent.keyDown(input, { key: 'Enter' });
     fireEvent.keyDown(input, { key: 'Enter' });
-    await act(async () => slow.resolve({ output: 'done', code: 0, graph }));
+    await act(async () => slow.resolve(ran('done')));
     expect(runCommand).toHaveBeenCalledTimes(1);
   });
 

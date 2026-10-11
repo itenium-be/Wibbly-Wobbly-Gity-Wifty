@@ -1,4 +1,4 @@
-import type { GraphModel, RunResult, SceneView } from '../shared/types';
+import type { LiveState, RunResult, SceneView } from '../shared/types';
 
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
@@ -18,5 +18,5 @@ export async function fetchScenes(): Promise<SceneView[]> {
   return json(await fetch('/api/scenes'));
 }
 
-export const enterScene = (id: string) => post<GraphModel>(`/api/scenes/${id}/enter`);
+export const enterScene = (id: string) => post<LiveState>(`/api/scenes/${id}/enter`);
 export const runCommand = (input: string) => post<RunResult>('/api/run', { input });

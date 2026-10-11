@@ -20,7 +20,7 @@ describe('Engine', () => {
   });
 
   test('entering a scene loads its snapshot', async () => {
-    expect((await engine.enter('dalek')).commits.map((c) => c.message)).toEqual(['Rose', 'Dalek']);
+    expect((await engine.enter('dalek')).graph.commits.map((c) => c.message)).toEqual(['Rose', 'Dalek']);
   });
 
   test('runs git in the live repo and returns the new graph', async () => {
@@ -30,10 +30,18 @@ describe('Engine', () => {
     expect(result.graph.commits.map((c) => c.message)).toEqual(['Rose', 'The End of the World']);
   });
 
+  test('entering a scene and running a command return the working directory', async () => {
+    expect((await engine.enter('rose')).workdir.files).toEqual([
+      { path: 'episodes/rose.md', status: 'clean', code: '' },
+    ]);
+    const result = await engine.run('git rm -q --cached episodes/rose.md');
+    expect(result.workdir.files).toEqual([{ path: 'episodes/rose.md', status: 'untracked', code: '??' }]);
+  });
+
   test('re-entering a scene resets it', async () => {
     await engine.enter('rose');
     await engine.run('git commit --allow-empty -m "Changed"');
-    expect((await engine.enter('rose')).commits).toHaveLength(1);
+    expect((await engine.enter('rose')).graph.commits).toHaveLength(1);
   });
 
   test('rejects non-git input without running it', async () => {
@@ -52,7 +60,7 @@ describe('Engine', () => {
   test('concurrent enters are serialised and the live repo matches the last one', async () => {
     const ids = Array.from({ length: 10 }, (_, i) => (i % 2 === 0 ? 'rose' : 'dalek'));
     const graphs = await Promise.all(ids.map((id) => engine.enter(id)));
-    expect(graphs.map((g) => g.commits.length)).toEqual(ids.map((id) => (id === 'rose' ? 1 : 2)));
+    expect(graphs.map((g) => g.graph.commits.length)).toEqual(ids.map((id) => (id === 'rose' ? 1 : 2)));
     expect((await engine.run('git log --format=%s')).output).toBe('Dalek\nRose\n');
   });
 
