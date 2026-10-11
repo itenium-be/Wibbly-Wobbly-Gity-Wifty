@@ -21,3 +21,17 @@ export function move(pos: Position, dir: 1 | -1, scenes: { story: NavCard[] }[])
   if (pos.scene > 0) return enterBack(pos.scene - 1, last(pos.scene - 1));
   return pos;
 }
+
+type NamedScene = { id: string; story: unknown[] };
+
+export function toQuery(pos: Position, scenes: NamedScene[]): string {
+  return `?${new URLSearchParams({ scene: scenes[pos.scene].id, card: String(pos.card) })}`;
+}
+
+export function fromQuery(search: string, scenes: NamedScene[]): Position {
+  const params = new URLSearchParams(search);
+  const scene = scenes.findIndex((s) => s.id === params.get('scene'));
+  if (scene < 0) return { scene: 0, card: 0, image: 0 };
+  const card = Number.parseInt(params.get('card') ?? '', 10) || 0;
+  return { scene, card: Math.min(Math.max(card, 0), scenes[scene].story.length), image: 0 };
+}

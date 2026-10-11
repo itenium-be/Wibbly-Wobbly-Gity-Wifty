@@ -1,11 +1,12 @@
 import { cp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { GraphModel, RunResult, Scene } from '../shared/types';
+import type { LiveState, RunResult, Scene, WorkDir } from '../shared/types';
 import { buildSnapshot } from './build';
 import { tokenize } from './command';
 import { git } from './git';
 import { readGraph } from './graph';
 import { collapseCarriageReturns } from './output';
+import { livePath, readWorkDir } from './workdir';
 
 export class Engine {
   private readonly home: string;
@@ -34,7 +35,7 @@ export class Engine {
     return result;
   }
 
-  enter(id: string): Promise<GraphModel> {
+  enter(id: string): Promise<LiveState> {
     return this.serialise(() => this.doEnter(id));
   }
 
@@ -42,16 +43,31 @@ export class Engine {
     return this.serialise(() => this.doRun(input));
   }
 
-  private async doEnter(id: string): Promise<GraphModel> {
+  readFile(path: string): Promise<string> {
+    return this.serialise(async () => Bun.file(await livePath(this.live, path)).text());
+  }
+
+  writeFile(path: string, content: string): Promise<WorkDir> {
+    return this.serialise(async () => {
+      await Bun.write(await livePath(this.live, path), content);
+      return readWorkDir(this.live);
+    });
+  }
+
+  private async readLive(): Promise<LiveState> {
+    return { graph: await readGraph(this.live), workdir: await readWorkDir(this.live) };
+  }
+
+  private async doEnter(id: string): Promise<LiveState> {
     if (!this.scenes.some((s) => s.id === id)) throw new Error(`unknown scene: ${id}`);
     await rm(this.live, { recursive: true, force: true });
     await cp(this.snapshot(id), this.live, { recursive: true });
-    return readGraph(this.live);
+    return this.readLive();
   }
 
   private async doRun(input: string): Promise<RunResult> {
     const parsed = tokenize(input);
     const result = parsed.ok ? await git(this.live, parsed.args) : { output: parsed.error, code: 1 };
-    return { ...result, output: collapseCarriageReturns(result.output), graph: await readGraph(this.live) };
+    return { ...result, output: collapseCarriageReturns(result.output), ...(await this.readLive()) };
   }
 }

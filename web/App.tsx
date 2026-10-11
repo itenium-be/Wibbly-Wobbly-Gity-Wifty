@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { GraphModel, RunResult, SceneView } from '../shared/types';
-import { enterScene, fetchScenes, runCommand } from './api';
+import type { GraphModel, RunResult, SceneView, WorkDir } from '../shared/types';
+import { enterScene, fetchScenes, readFile, runCommand, writeFile } from './api';
 import { Console } from './console/Console';
 import { advance } from './cue';
 import { FlatTimeline } from './graph/FlatTimeline';
 import { layout } from './graph/layout';
-import { move, type Position } from './nav';
+import { fromQuery, move, type Position, toQuery } from './nav';
 import { StoryCardView } from './story/StoryCardView';
+import { WorkDirPanel } from './workdir/WorkDirPanel';
 
 export function App() {
   const [scenes, setScenes] = useState<SceneView[]>([]);
   const [pos, setPos] = useState<Position>({ scene: 0, card: 0, image: 0 });
   const [graph, setGraph] = useState<GraphModel | null>(null);
+  const [workdir, setWorkdir] = useState<WorkDir | null>(null);
   const [cueIndex, setCueIndex] = useState(0);
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
@@ -21,8 +23,16 @@ export function App() {
   const running = useRef(false);
 
   useEffect(() => {
-    fetchScenes().then(setScenes);
+    fetchScenes().then((loaded) => {
+      setScenes(loaded);
+      setPos(fromQuery(location.search, loaded));
+    });
   }, []);
+
+  useEffect(() => {
+    // replaceState, not pushState: one history entry per card would make Back useless.
+    if (scenes.length) history.replaceState(null, '', toQuery(pos, scenes));
+  }, [pos, scenes]);
 
   const scene = scenes[pos.scene];
   const sceneId = scene?.id;
@@ -31,9 +41,12 @@ export function App() {
   const reset = useCallback(async () => {
     if (!sceneId) return;
     const mine = ++epoch.current;
+    // Keeps the panel from diffing the next scene's statuses against this one's.
+    setWorkdir(null);
     const entered = await enterScene(sceneId);
     if (mine !== epoch.current) return;
-    setGraph(entered);
+    setGraph(entered.graph);
+    setWorkdir(entered.workdir);
     setCueIndex(0);
     setInput('');
     setOutput('');
@@ -50,6 +63,7 @@ export function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLTextAreaElement) return;
       const typing = e.target instanceof HTMLInputElement;
       if (typing && (e.target as HTMLInputElement).value !== '') return;
       if (e.key === 'ArrowRight') setPos((p) => move(p, 1, scenes));
@@ -78,8 +92,15 @@ export function App() {
     if (mine !== epoch.current) return;
     setOutput(`$ ${cmd}\n${result.output}`);
     setGraph(result.graph);
+    setWorkdir(result.workdir);
     setCueIndex((i) => advance(scene.steps, i, cmd, result.code));
     setInput('');
+  };
+
+  const save = async (path: string, content: string) => {
+    const mine = epoch.current;
+    const updated = await writeFile(path, content);
+    if (mine === epoch.current) setWorkdir(updated);
   };
 
   return (
@@ -96,6 +117,16 @@ export function App() {
       {gitPhase ? (
         <>
           <main>{graph && <FlatTimeline layout={layout(graph)} />}</main>
+          {workdir && (
+            <WorkDirPanel
+              key={scene.id}
+              workdir={workdir}
+              branch={graph?.initialized ? (graph.head.branch ?? 'HEAD (detached)') : ''}
+              load={readFile}
+              save={save}
+              onDone={() => inputRef.current?.focus()}
+            />
+          )}
           <Console
             cue={scene.steps[cueIndex]}
             value={input}

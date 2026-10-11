@@ -1,5 +1,6 @@
 import type { Scene, SceneView } from '../shared/types';
 import type { Engine } from './engine';
+import { InvalidPathError } from './workdir';
 
 type RouteRequest = Request & { params: Record<string, string> };
 
@@ -10,6 +11,18 @@ const toView = (s: Scene): SceneView => ({
   story: s.story,
   steps: s.steps,
 });
+
+async function fileErrors(task: () => Promise<Response>): Promise<Response> {
+  try {
+    return await task();
+  } catch (e) {
+    if (e instanceof InvalidPathError) return new Response(e.message, { status: 400 });
+    const code = (e as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') return new Response('no such file', { status: 404 });
+    if (code === 'EISDIR' || code === 'ENOTDIR') return new Response('not a file', { status: 400 });
+    throw e;
+  }
+}
 
 export function createRoutes(engine: Engine, scenes: Scene[]) {
   return {
@@ -27,6 +40,20 @@ export function createRoutes(engine: Engine, scenes: Scene[]) {
         const body = (await req.json().catch(() => null)) as { input?: unknown } | null;
         if (typeof body?.input !== 'string') return new Response('bad request', { status: 400 });
         return Response.json(await engine.run(body.input));
+      },
+    },
+    '/api/file': {
+      GET: (req: Request) => {
+        const path = new URL(req.url).searchParams.get('path');
+        if (path === null) return new Response('bad request', { status: 400 });
+        return fileErrors(async () => new Response(await engine.readFile(path)));
+      },
+      PUT: async (req: Request) => {
+        const body = (await req.json().catch(() => null)) as { path?: unknown; content?: unknown } | null;
+        const { path, content } = body ?? {};
+        if (typeof path !== 'string' || typeof content !== 'string')
+          return new Response('bad request', { status: 400 });
+        return fileErrors(async () => Response.json(await engine.writeFile(path, content)));
       },
     },
   };

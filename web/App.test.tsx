@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { GraphModel, RunResult, SceneView } from '../shared/types';
+import type { GraphModel, LiveState, RunResult, SceneView, WorkDir } from '../shared/types';
 
 const graphOf = (message: string): GraphModel => ({
   initialized: true,
@@ -10,6 +10,8 @@ const graphOf = (message: string): GraphModel => ({
   head: { hash: 'a1', branch: 'prime-timeline' },
 });
 const graph = graphOf('Episode one');
+const workdir: WorkDir = { files: [{ path: 'episodes/rose.md', status: 'clean', code: '' }], merging: false };
+const live = (g: GraphModel): LiveState => ({ graph: g, workdir });
 const scenes: SceneView[] = [
   {
     id: 'rose',
@@ -52,13 +54,24 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-const enterScene = mock(async (_id: string) => graph);
-const runCommand = mock(async (_input: string): Promise<RunResult> => ({ output: 'a1 Episode one', code: 0, graph }));
+const enterScene = mock(async (_id: string) => live(graph));
+const ran = (output: string, g = graph): RunResult => ({ output, code: 0, ...live(g) });
+const runCommand = mock(async (_input: string) => ran('a1 Episode one'));
+
+const readFile = mock(async (_path: string) => '# Rose\n');
+const writeFile = mock(
+  async (path: string, _content: string): Promise<WorkDir> => ({
+    files: [{ path, status: 'modified', code: ' M' }],
+    merging: false,
+  }),
+);
 
 mock.module('./api', () => ({
   fetchScenes: async () => scenes,
   enterScene,
   runCommand,
+  readFile,
+  writeFile,
 }));
 const { App } = await import('./App');
 
@@ -71,10 +84,19 @@ async function toGitPhase() {
 
 beforeEach(() => {
   enterScene.mockReset();
-  enterScene.mockImplementation(async () => graph);
+  enterScene.mockImplementation(async () => live(graph));
   runCommand.mockReset();
-  runCommand.mockImplementation(async () => ({ output: 'a1 Episode one', code: 0, graph }));
+  runCommand.mockImplementation(async () => ran('a1 Episode one'));
+  writeFile.mockClear();
+  history.replaceState(null, '', '/');
 });
+
+async function editRose() {
+  await toGitPhase();
+  fireEvent.click(await screen.findByText('episodes/rose.md'));
+  fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+  return screen.getByLabelText('edit episodes/rose.md') as HTMLTextAreaElement;
+}
 
 describe('App', () => {
   test('→ on a reveal card shows its next image before leaving the card', async () => {
@@ -93,6 +115,26 @@ describe('App', () => {
     expect(screen.getByText('Where is the TARDIS?')).toBeTruthy();
   });
 
+  test('shows the working directory and updates it after a run', async () => {
+    runCommand.mockImplementationOnce(async () => ({
+      ...ran('rm episodes/rose.md'),
+      workdir: { files: [{ path: 'episodes/rose.md', status: 'untracked', code: '??' }], merging: false },
+    }));
+    const input = await toGitPhase();
+    const row = () => screen.getByText('episodes/rose.md').closest('li');
+    expect((await screen.findByText('episodes/rose.md')).closest('li')?.className).toContain('clean');
+    expect(screen.getByText('prime-timeline', { selector: '.branch' })).toBeTruthy();
+    fireEvent.change(input, { target: { value: 'git rm --cached episodes/rose.md' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(row()?.className).toContain('untracked'));
+  });
+
+  test('a detached HEAD shows as such in the working directory header', async () => {
+    enterScene.mockImplementation(async () => live({ ...graph, head: { hash: 'a1', branch: null } }));
+    await toGitPhase();
+    expect(await screen.findByText('HEAD (detached)', { selector: '.branch' })).toBeTruthy();
+  });
+
   test('running the cued command shows its output and advances the cue', async () => {
     const input = await toGitPhase();
     fireEvent.change(input, { target: { value: 'git log' } });
@@ -103,16 +145,16 @@ describe('App', () => {
   });
 
   test('a slow enterScene response for a scene we left does not overwrite the graph', async () => {
-    const slow = deferred<GraphModel>();
+    const slow = deferred<LiveState>();
     enterScene.mockImplementationOnce(() => slow.promise);
-    enterScene.mockImplementationOnce(async () => graphOf('Dalek graph'));
+    enterScene.mockImplementationOnce(async () => live(graphOf('Dalek graph')));
     render(<App />);
     expect(await screen.findByText('The Doctor')).toBeTruthy();
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(await screen.findByText('The Last Dalek')).toBeTruthy();
     await waitFor(() => expect(enterScene).toHaveBeenCalledTimes(2));
-    await act(async () => slow.resolve(graphOf('Rose graph')));
+    await act(async () => slow.resolve(live(graphOf('Rose graph'))));
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(await screen.findByLabelText('git command')).toBeTruthy();
     expect(await screen.findByText('Dalek graph')).toBeTruthy();
@@ -127,7 +169,7 @@ describe('App', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(await screen.findByText('The Last Dalek')).toBeTruthy();
-    await act(async () => slow.resolve({ output: 'STALE OUTPUT', code: 0, graph: graphOf('Stale graph') }));
+    await act(async () => slow.resolve(ran('STALE OUTPUT', graphOf('Stale graph'))));
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     await screen.findByLabelText('git command');
     expect(screen.queryByText(/STALE OUTPUT/)).toBeNull();
@@ -141,7 +183,7 @@ describe('App', () => {
     fireEvent.change(input, { target: { value: 'git log' } });
     fireEvent.keyDown(input, { key: 'Enter' });
     fireEvent.keyDown(input, { key: 'Enter' });
-    await act(async () => slow.resolve({ output: 'done', code: 0, graph }));
+    await act(async () => slow.resolve(ran('done')));
     expect(runCommand).toHaveBeenCalledTimes(1);
   });
 
@@ -164,5 +206,95 @@ describe('App', () => {
     expect(await screen.findByText(/500 boom/)).toBeTruthy();
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(await screen.findByText(/a1 Episode one/)).toBeTruthy();
+  });
+
+  test('saving an edited file writes it and refreshes the working directory', async () => {
+    const editor = await editRose();
+    fireEvent.change(editor, { target: { value: '# Bad Wolf\n' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(screen.getByText('episodes/rose.md').closest('li')?.className).toContain('modified'));
+    expect(writeFile).toHaveBeenCalledWith('episodes/rose.md', '# Bad Wolf\n');
+  });
+
+  test('arrow keys and r do nothing while typing in the editor', async () => {
+    const editor = await editRose();
+    fireEvent.keyDown(editor, { key: 'ArrowRight' });
+    fireEvent.keyDown(editor, { key: 'ArrowLeft' });
+    fireEvent.keyDown(editor, { key: 'r' });
+    expect(screen.getByLabelText('edit episodes/rose.md')).toBeTruthy();
+    expect(enterScene).toHaveBeenCalledTimes(1);
+  });
+
+  test('after opening, saving or cancelling a file, focus is back on the console input', async () => {
+    const input = await toGitPhase();
+    const typeR = () => fireEvent.keyDown(document.activeElement ?? window, { key: 'r' });
+    fireEvent.click(await screen.findByText('episodes/rose.md'));
+    await waitFor(() => expect(document.activeElement === input).toBe(true));
+    typeR();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    fireEvent.keyDown(screen.getByLabelText('edit episodes/rose.md'), { key: 'Escape' });
+    await waitFor(() => expect(document.activeElement === input).toBe(true));
+    typeR();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(document.activeElement === input).toBe(true));
+    typeR();
+
+    expect(enterScene).toHaveBeenCalledTimes(1);
+  });
+
+  test('returning to a scene does not flash files against the previous scene', async () => {
+    const untracked: WorkDir = {
+      files: [{ path: 'episodes/rose.md', status: 'untracked', code: '??' }],
+      merging: false,
+    };
+    enterScene.mockImplementation(async (id) => (id === 'dalek' ? { graph, workdir: untracked } : live(graph)));
+    await toGitPhase();
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(await screen.findByText('The Last Dalek')).toBeTruthy();
+    await waitFor(() => expect(enterScene).toHaveBeenCalledWith('dalek'));
+    const slow = deferred<LiveState>();
+    enterScene.mockImplementationOnce(() => slow.promise);
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    await screen.findByLabelText('git command');
+    await act(async () => slow.resolve(live(graph)));
+    const row = (await screen.findByText('episodes/rose.md')).closest('li');
+    expect(row?.className).toContain('clean');
+    expect(row?.className).not.toContain('flash');
+  });
+
+  test('starts at the story card in the URL', async () => {
+    history.replaceState(null, '', '/?scene=dalek&card=0');
+    render(<App />);
+    expect(await screen.findByText('The Last Dalek')).toBeTruthy();
+    await waitFor(() => expect(enterScene).toHaveBeenCalledWith('dalek'));
+    expect(enterScene).not.toHaveBeenCalledWith('rose');
+  });
+
+  test('starts in the git phase when the URL card is past the story', async () => {
+    history.replaceState(null, '', '/?scene=rose&card=1');
+    render(<App />);
+    expect(await screen.findByLabelText('git command')).toBeTruthy();
+    expect(screen.getByText('Where is the TARDIS?')).toBeTruthy();
+  });
+
+  test('navigating keeps the position in the URL', async () => {
+    render(<App />);
+    expect(await screen.findByText('The Doctor')).toBeTruthy();
+    await waitFor(() => expect(location.search).toBe('?scene=rose&card=0'));
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    await waitFor(() => expect(location.search).toBe('?scene=rose&card=1'));
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    await waitFor(() => expect(location.search).toBe('?scene=dalek&card=0'));
+    expect(history.length).toBe(1);
+  });
+
+  test('an unknown scene in the URL falls back to the start', async () => {
+    history.replaceState(null, '', '/?scene=nope&card=1');
+    render(<App />);
+    expect(await screen.findByText('The Doctor')).toBeTruthy();
+    await waitFor(() => expect(location.search).toBe('?scene=rose&card=0'));
   });
 });
