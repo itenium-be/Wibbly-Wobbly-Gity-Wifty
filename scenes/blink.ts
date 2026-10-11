@@ -9,11 +9,7 @@ export const blinkScene: Scene = {
       title: "Don't Blink",
       text: 'A Weeping Angel got into the TARDIS log.',
       images: [{ src: '/assets/episodes/blink.jpg' }],
-      boxes: [
-        { boxes: ["Don't blink"] },
-        { boxes: ["Don't look away"] },
-        { boxes: ['Which episode let it in?'] },
-      ],
+      boxes: [{ boxes: ["Don't blink"] }, { boxes: ["Don't look away"] }, { boxes: ['Which episode let it in?'] }],
     },
   ],
   steps: [
