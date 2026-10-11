@@ -27,9 +27,14 @@ function star(x: number, y: number, r: number) {
   }).join(' ');
 }
 
-type Props = { layout: Layout; codes?: Record<string, string>; zoom?: number };
+type Props = {
+  layout: Layout;
+  codes?: Record<string, string>;
+  zoom?: number;
+  onSelect?: (hash: string, at: { x: number; y: number }) => void;
+};
 
-export function FlatTimeline({ layout, codes = {}, zoom = 1 }: Props) {
+export function FlatTimeline({ layout, codes = {}, zoom = 1, onSelect }: Props) {
   const cols = Math.max(0, layout.pending?.col ?? 0, ...layout.nodes.map((n) => n.col));
   const labels = Array.from({ length: cols + 1 }, () => 0);
   for (const n of layout.nodes)
@@ -104,11 +109,14 @@ export function FlatTimeline({ layout, codes = {}, zoom = 1 }: Props) {
         const { x, y } = at(n);
         return (
           <g key={n.hash}>
-            {n.tags.length > 0 ? (
-              <polygon points={star(x, y, 22)} className="fixed-point" />
-            ) : (
-              <circle cx={x} cy={y} r={13} className={`node lane-${kind(n.lane)}`} />
-            )}
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: a mouse shortcut; the History tab shows the same diff. */}
+            <g className="dot" onClick={(e) => onSelect?.(n.hash, { x: e.clientX, y: e.clientY })}>
+              {n.tags.length > 0 ? (
+                <polygon points={star(x, y, 22)} className="fixed-point" />
+              ) : (
+                <circle cx={x} cy={y} r={13} className={`node lane-${kind(n.lane)}`} />
+              )}
+            </g>
             {codes[n.message] && (
               <text x={x} y={y + 42} className="episode-code">
                 {codes[n.message]}

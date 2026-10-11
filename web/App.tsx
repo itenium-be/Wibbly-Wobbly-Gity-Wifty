@@ -4,6 +4,7 @@ import { enterScene, fetchScenes, playEpisode, readFile, runCommand, showCommit,
 import { Console } from './console/Console';
 import { advance, type Cue, current, played, start } from './cue';
 import { episodeCodes } from './episodes';
+import { CommitPopover } from './graph/CommitPopover';
 import { FlatTimeline } from './graph/FlatTimeline';
 import { layout } from './graph/layout';
 import { Pan } from './graph/Pan';
@@ -24,6 +25,8 @@ export function App() {
   const [zoom, setZoom] = useState(1);
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
+  const [popover, setPopover] = useState<{ hash: string; at: { x: number; y: number } } | null>(null);
+  const closePopover = useCallback(() => setPopover(null), []);
   const inputRef = useRef<HTMLInputElement>(null);
   // Bumped on every reset so responses for a scene we already left are dropped.
   const epoch = useRef(0);
@@ -59,6 +62,7 @@ export function App() {
     setResets((n) => n + 1);
     setInput('');
     setOutput('');
+    setPopover(null);
     inputRef.current?.focus();
   }, [sceneId]);
 
@@ -181,9 +185,13 @@ export function App() {
                 codes={codes}
                 zoom={zoom}
                 layout={layout(graph, workdir?.files.some((f) => f.status !== 'clean') ?? false)}
+                onSelect={(hash, at) => setPopover({ hash, at })}
               />
             )}
           </Pan>
+          {popover && graph && (
+            <CommitPopover graph={graph} hash={popover.hash} at={popover.at} show={showCommit} onClose={closePopover} />
+          )}
           {workdir && graph && (
             <WorkDirPanel
               key={scene.id}

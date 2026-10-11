@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test';
-import { render, screen } from '@testing-library/react';
+import { describe, expect, mock, test } from 'bun:test';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { FlatTimeline } from './FlatTimeline';
 import { layout } from './layout';
 
@@ -225,5 +225,16 @@ describe('FlatTimeline', () => {
     const edge = container.querySelector('path.pending');
     const pill = container.querySelector('.pill');
     expect((edge as Element).compareDocumentPosition(pill as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  test('clicking a commit dot or fixed point selects that commit at the click', () => {
+    const onSelect = mock((_hash: string, _at: { x: number; y: number }) => {});
+    const { container } = render(<FlatTimeline layout={pompeii} onSelect={onSelect} />);
+    fireEvent.click(container.querySelector('circle.node') as Element, { clientX: 30, clientY: 40 });
+    fireEvent.click(container.querySelector('.fixed-point') as Element, { clientX: 50, clientY: 60 });
+    expect(onSelect.mock.calls).toEqual([
+      ['b2', { x: 30, y: 40 }],
+      ['a1', { x: 50, y: 60 }],
+    ]);
   });
 });

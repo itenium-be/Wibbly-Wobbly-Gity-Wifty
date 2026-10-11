@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { GraphModel } from '../../shared/types';
-import { type DiffFile, parseDiff } from './diff';
-import { type HistoryEdge, type HistoryRow, history, type Scope } from './history';
+import { CommitView } from './CommitView';
+import { type HistoryEdge, history, type Scope } from './history';
 
 const ROW = 38;
 const LANE = 20;
@@ -32,49 +32,6 @@ function route(e: HistoryEdge): string {
   return d;
 }
 
-function details(row: HistoryRow) {
-  const { commit, refs } = row;
-  const names = refs.length ? ` (${refs.map((r) => r.name).join(', ')})` : '';
-  const merge = commit.parents.length > 1 ? `Merge: ${commit.parents.map((p) => p.slice(0, 7)).join(' ')}\n` : '';
-  return (
-    <pre>
-      <span className="hash">commit {commit.hash}</span>
-      {`${names}\n${merge}\n    ${commit.message}`}
-    </pre>
-  );
-}
-
-const SIGN = { add: '+', del: '-', ctx: ' ' };
-
-function Diff({ files }: { files: DiffFile[] }) {
-  return (
-    <div className="diff">
-      {files.map((f) => (
-        <section key={f.path}>
-          <div className="file">
-            <span>
-              {f.path}
-              {f.status !== 'modified' && <span className="stat"> ({f.status} file)</span>}
-            </span>
-            <span className="stat">
-              {f.added > 0 && <b>+{f.added}</b>}
-              {f.added > 0 && f.removed > 0 && ' '}
-              {f.removed > 0 && <i>−{f.removed}</i>}
-            </span>
-          </div>
-          {f.lines.map((l, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: diff lines repeat and never reorder.
-            <div key={i} className={`ln ${l.kind}`}>
-              <span>{SIGN[l.kind]}</span>
-              <span>{l.text}</span>
-            </div>
-          ))}
-        </section>
-      ))}
-    </div>
-  );
-}
-
 type Props = {
   graph: GraphModel;
   show: (hash: string) => Promise<string>;
@@ -87,25 +44,6 @@ export function HistoryView({ graph, show, onDone }: Props) {
   const { rows, edges, lanes } = history(graph, scope);
   const gutter = PAD * 2 + Math.max(lanes - 1, 0) * LANE;
   const open = rows.find((r) => r.commit.hash === openHash);
-  const [files, setFiles] = useState<DiffFile[] | null>(null);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (!openHash) return;
-    let current = true;
-    setFiles(null);
-    setError('');
-    show(openHash)
-      .then((text) => {
-        if (current) setFiles(parseDiff(text));
-      })
-      .catch((e) => {
-        if (current) setError(e instanceof Error ? e.message : String(e));
-      });
-    return () => {
-      current = false;
-    };
-  }, [openHash, show]);
 
   return (
     <>
@@ -162,12 +100,7 @@ export function HistoryView({ graph, show, onDone }: Props) {
           </ul>
         </div>
       </div>
-      {open && (
-        <div className="viewer commit-view">
-          {details(open)}
-          {error ? <div className="error">{error}</div> : files && <Diff files={files} />}
-        </div>
-      )}
+      {open && <CommitView commit={open.commit} refs={open.refs} show={show} />}
     </>
   );
 }

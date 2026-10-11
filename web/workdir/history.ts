@@ -19,7 +19,7 @@ function reachable(commits: Commit[], from: string | null): Set<string> {
   return seen;
 }
 
-function labels(graph: GraphModel, hash: string): RefLabel[] {
+export function labels(graph: GraphModel, hash: string): RefLabel[] {
   const { head } = graph;
   const refs: RefLabel[] = [];
   if (head.hash === hash) refs.push({ kind: 'head', name: head.branch ? `HEAD → ${head.branch}` : 'HEAD' });
