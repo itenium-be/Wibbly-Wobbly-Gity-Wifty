@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { GraphModel, RunResult, SceneView, WorkDir } from '../shared/types';
-import { enterScene, fetchScenes, readFile, runCommand, writeFile } from './api';
+import type { Episode, GraphModel, RunResult, SceneView, WorkDir } from '../shared/types';
+import { enterScene, fetchScenes, playEpisode, readFile, runCommand, writeFile } from './api';
 import { Console } from './console/Console';
 import { advance } from './cue';
 import { FlatTimeline } from './graph/FlatTimeline';
 import { layout } from './graph/layout';
+import { NextEpisode } from './NextEpisode';
 import { fromQuery, move, type Position, toQuery } from './nav';
 import { StoryCardView } from './story/StoryCardView';
 import { WorkDirPanel } from './workdir/WorkDirPanel';
@@ -77,6 +78,25 @@ export function App() {
   if (!scene) return null;
   const step = scene.steps[cueIndex];
   const cue = step && 'cmd' in step ? step : undefined;
+  const next = step && 'episode' in step && graph?.head.branch ? step.episode : undefined;
+
+  const playNext = async (episode: Episode) => {
+    if (running.current) return;
+    running.current = true;
+    const mine = epoch.current;
+    try {
+      const result = await playEpisode(episode.code);
+      if (mine !== epoch.current) return;
+      setOutput(`$ ${result.cmd}\n${result.output}`);
+      setGraph(result.graph);
+      setWorkdir(result.workdir);
+      setCueIndex((i) => i + 1);
+    } catch (e) {
+      if (mine === epoch.current) setOutput(`${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      running.current = false;
+    }
+  };
 
   const run = async (cmd: string) => {
     if (running.current) return;
@@ -130,6 +150,7 @@ export function App() {
             />
           )}
           <Console cue={cue} value={input} onChange={setInput} onRun={run} output={output} inputRef={inputRef} />
+          {next && <NextEpisode key={`${scene.id}-${cueIndex}`} episode={next} onPlay={() => playNext(next)} />}
         </>
       ) : (
         <StoryCardView key={`${scene.id}-${pos.card}`} card={scene.story[pos.card]} image={pos.image} />

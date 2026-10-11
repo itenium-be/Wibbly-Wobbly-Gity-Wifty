@@ -44,6 +44,13 @@ const scenes: SceneView[] = [
     ],
     steps: [],
   },
+  {
+    id: 'episodes',
+    episode: 'S01E02',
+    title: 'The End of the World',
+    story: [{ title: 'Platform One', text: 'The sun expands.', images: [] }],
+    steps: [{ episode: { code: 'S01E02', title: 'The End of the World' } }, { cmd: 'git log', caption: 'After' }],
+  },
 ];
 
 function deferred<T>() {
@@ -58,6 +65,11 @@ const enterScene = mock(async (_id: string) => live(graph));
 const ran = (output: string, g = graph): RunResult => ({ output, code: 0, ...live(g) });
 const runCommand = mock(async (_input: string) => ran('a1 Episode one'));
 
+const playEpisode = mock(async (_code: string) => ({
+  cmd: 'git commit -am "The End of the World"',
+  ...ran('[prime-timeline b2] The End of the World', graphOf('The End of the World')),
+}));
+
 const readFile = mock(async (_path: string) => '# Rose\n');
 const writeFile = mock(
   async (path: string, _content: string): Promise<WorkDir> => ({
@@ -70,6 +82,7 @@ mock.module('./api', () => ({
   fetchScenes: async () => scenes,
   enterScene,
   runCommand,
+  playEpisode,
   readFile,
   writeFile,
 }));
@@ -87,6 +100,7 @@ beforeEach(() => {
   enterScene.mockImplementation(async () => live(graph));
   runCommand.mockReset();
   runCommand.mockImplementation(async () => ran('a1 Episode one'));
+  playEpisode.mockClear();
   writeFile.mockClear();
   history.replaceState(null, '', '/');
 });
@@ -296,5 +310,23 @@ describe('App', () => {
     render(<App />);
     expect(await screen.findByText('The Doctor')).toBeTruthy();
     await waitFor(() => expect(location.search).toBe('?scene=rose&card=0'));
+  });
+
+  test('an episode step shows Next Episode; playing it shows the commit and moves to the next cue', async () => {
+    history.replaceState(null, '', '/?scene=episodes&card=1');
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /play/i }));
+    expect(playEpisode).toHaveBeenCalledWith('S01E02');
+    expect(await screen.findByText(/\$ git commit -am "The End of the World"/)).toBeTruthy();
+    expect(await screen.findByText('After')).toBeTruthy();
+    expect(screen.queryByLabelText('next episode')).toBeNull();
+  });
+
+  test('Next Episode stays hidden while HEAD is detached', async () => {
+    enterScene.mockImplementation(async () => live({ ...graph, head: { hash: 'a1', branch: null } }));
+    history.replaceState(null, '', '/?scene=episodes&card=1');
+    render(<App />);
+    await screen.findByLabelText('git command');
+    expect(screen.queryByLabelText('next episode')).toBeNull();
   });
 });
