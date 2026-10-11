@@ -141,6 +141,83 @@ describe('FlatTimeline', () => {
     expect(container.querySelectorAll('path.edge.pending')).toHaveLength(2);
   });
 
+  describe('an edge between lanes bends in the column gap next to its lone end', () => {
+    const commit = (hash: string, parents: string[]) => ({ hash, short: hash, message: hash, parents });
+    const pointsOf = (d: string) => [...d.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map(([, x, y]) => `${x} ${y}`);
+    const drawn = (graph: Parameters<typeof layout>[0], dirty = false) => {
+      const { container } = render(<FlatTimeline layout={layout(graph, dirty)} />);
+      const node = (hash: string) => {
+        const g = screen.getAllByText(hash)[0].parentElement as Element;
+        const c = g.querySelector('circle') as SVGCircleElement;
+        return `${c.getAttribute('cx')} ${c.getAttribute('cy')}`;
+      };
+      const paths = (selector: string) =>
+        [...container.querySelectorAll(selector)].map((p) => pointsOf(p.getAttribute('d') ?? ''));
+      return { node, paths, container };
+    };
+    const yOf = (point: string) => point.split(' ')[1];
+    const xOf = (point: string) => point.split(' ')[0];
+
+    test('a branch leaves its fork and runs flat along its own lane', () => {
+      const { node, paths } = drawn({
+        initialized: true,
+        commits: [commit('a1', []), commit('b2', ['a1']), commit('c3', ['b2']), commit('d4', ['a1'])],
+        branches: [
+          { name: 'prime-timeline', hash: 'c3' },
+          { name: 'side', hash: 'd4' },
+        ],
+        tags: [],
+        head: { hash: 'c3', branch: 'prime-timeline' },
+      });
+      const fork = paths('path.edge').find((p) => p[0] === node('a1') && p.at(-1) === node('d4')) ?? [];
+      const bend = fork.at(-2) ?? '';
+      expect(xOf(bend)).toBe(xOf(node('b2')));
+      expect(yOf(bend)).toBe(yOf(node('d4')));
+    });
+
+    test('a merge runs flat along the merged lane and bends just before the merge commit', () => {
+      const { node, paths } = drawn({
+        initialized: true,
+        commits: [
+          commit('a1', []),
+          commit('b2', ['a1']),
+          commit('c3', ['a1']),
+          commit('d4', ['c3']),
+          commit('m5', ['d4', 'b2']),
+        ],
+        branches: [
+          { name: 'prime-timeline', hash: 'm5' },
+          { name: 'side', hash: 'b2' },
+        ],
+        tags: [],
+        head: { hash: 'm5', branch: 'prime-timeline' },
+      });
+      const merge = paths('path.edge').find((p) => p[0] === node('b2') && p.at(-1) === node('m5')) ?? [];
+      expect(merge[1]).toBe(`${xOf(node('d4'))} ${yOf(node('b2'))}`);
+    });
+
+    test('a pending merge takes the same route as the merge commit it becomes', () => {
+      const { node, paths, container } = drawn(
+        {
+          initialized: true,
+          commits: [commit('a1', []), commit('b2', ['a1']), commit('c3', ['a1']), commit('d4', ['c3'])],
+          branches: [
+            { name: 'prime-timeline', hash: 'd4' },
+            { name: 'side', hash: 'b2' },
+          ],
+          tags: [],
+          head: { hash: 'd4', branch: 'prime-timeline' },
+          mergeHead: 'b2',
+        },
+        true,
+      );
+      const merge = paths('path.edge.pending').find((p) => p[0] === node('b2')) ?? [];
+      const dot = container.querySelector('circle.pending') as SVGCircleElement;
+      expect(merge[1]).toBe(`${xOf(node('d4'))} ${yOf(node('b2'))}`);
+      expect(merge.at(-1)).toBe(`${dot.getAttribute('cx')} ${dot.getAttribute('cy')}`);
+    });
+  });
+
   test('paints branch pills over the pending edge', () => {
     const { container } = render(
       <FlatTimeline layout={{ ...pompeii, pending: { col: 2, lane: 0, from: { col: 1, lane: 0 } } }} />,

@@ -11,7 +11,7 @@ export type Node = {
   tags: string[];
   branches: string[];
 };
-export type Edge = { from: Node; to: Node };
+export type Edge = { from: Node; to: Node; merge: boolean };
 export type Head = { col: number; lane: number; label: string };
 type Position = { col: number; lane: number };
 export type Pending = { col: number; lane: number; from: Position | null; merge?: Position };
@@ -68,10 +68,10 @@ export function layout(graph: GraphModel, dirty = false): Layout {
 
   const byHash = new Map(nodes.map((n) => [n.hash, n]));
   const edges: Edge[] = graph.commits.flatMap((c) =>
-    c.parents.flatMap((p) => {
+    c.parents.flatMap((p, i) => {
       const from = byHash.get(p);
       const to = byHash.get(c.hash);
-      return from && to ? [{ from, to }] : [];
+      return from && to ? [{ from, to, merge: i > 0 }] : [];
     }),
   );
 
