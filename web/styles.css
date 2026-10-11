@@ -500,7 +500,7 @@ main {
 }
 
 .output {
-  height: calc(6 * 1.4em + 24px);
+  height: calc(9 * 1.4em + 24px);
   overflow: auto;
   color: var(--muted);
   font-family: inherit;
