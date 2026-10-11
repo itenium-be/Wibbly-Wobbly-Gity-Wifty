@@ -76,6 +76,13 @@ export function FlatTimeline({ layout, codes = {}, zoom = 1 }: Props) {
         return <path key={`${from.hash}-${to.hash}`} d={d} className={`edge lane-${kind(to.lane)}`} />;
       })}
 
+      {layout.pending?.from && (
+        <path
+          d={`M${at(layout.pending.from).x} ${at(layout.pending.from).y} L${at(layout.pending).x} ${at(layout.pending).y}`}
+          className="edge pending"
+        />
+      )}
+
       {layout.nodes.map((n) => {
         const { x, y } = at(n);
         return (
@@ -115,12 +122,6 @@ export function FlatTimeline({ layout, codes = {}, zoom = 1 }: Props) {
 
       {layout.pending && (
         <g className="pending">
-          {layout.pending.from && (
-            <path
-              d={`M${at(layout.pending.from).x} ${at(layout.pending.from).y} L${at(layout.pending).x} ${at(layout.pending).y}`}
-              className="edge pending"
-            />
-          )}
           <circle cx={at(layout.pending).x} cy={at(layout.pending).y} r={13} className="node pending" />
           <text x={at(layout.pending).x} y={at(layout.pending).y + 42} className="message">
             uncommitted

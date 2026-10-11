@@ -99,4 +99,13 @@ describe('FlatTimeline', () => {
     render(<FlatTimeline layout={{ ...pompeii, pending: { col: 2, lane: 0, from: { col: 1, lane: 0 } } }} />);
     expect(screen.getByText('uncommitted')).toBeTruthy();
   });
+
+  test('paints branch pills over the pending edge', () => {
+    const { container } = render(
+      <FlatTimeline layout={{ ...pompeii, pending: { col: 2, lane: 0, from: { col: 1, lane: 0 } } }} />,
+    );
+    const edge = container.querySelector('path.pending');
+    const pill = container.querySelector('.pill');
+    expect(edge?.compareDocumentPosition(pill as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });
