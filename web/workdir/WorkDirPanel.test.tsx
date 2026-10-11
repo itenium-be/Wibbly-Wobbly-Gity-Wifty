@@ -119,6 +119,14 @@ describe('WorkDirPanel', () => {
     expect(load).toHaveBeenCalledWith('TARDIS.md');
   });
 
+  test('clicking the file that is already open keeps its content', async () => {
+    setup('# TARDIS\nBigger on the inside\n');
+    expect(await screen.findByText('Bigger on the inside')).toBeTruthy();
+    fireEvent.click(screen.getByText('TARDIS.md'));
+    fireEvent.click(screen.getByText('TARDIS.md'));
+    expect(await screen.findByText('Bigger on the inside')).toBeTruthy();
+  });
+
   test('clicking a file shows its content', async () => {
     const { load } = setup('# Clean\n');
     await open('clean.md');

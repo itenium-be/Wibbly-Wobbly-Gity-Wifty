@@ -117,6 +117,8 @@ export function WorkDirPanel({ workdir, branch, graph, load, save, onDone }: Pro
     });
 
   const select = (path: string) => {
+    // Clearing the content of the open file would never reload it: the load effect only reruns when the path changes.
+    if (path === openPath) return onDone();
     setOpenPath(path);
     setContent(null);
     setDraft(null);
