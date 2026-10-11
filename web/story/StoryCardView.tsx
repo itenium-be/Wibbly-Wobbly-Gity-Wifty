@@ -3,17 +3,19 @@ import type { StoryCard } from '../../shared/types';
 
 export function StoryCardView({
   card,
-  image = 0,
+  step = 0,
   intervalMs = 3000,
 }: {
   card: StoryCard;
-  image?: number;
+  step?: number;
   intervalMs?: number;
 }) {
   const [rotated, setRotated] = useState(0);
   const [stampedAt, setStampedAt] = useState(-1);
   const count = card.images.length;
-  const index = card.reveal ? image : rotated;
+  const imageSteps = card.reveal ? count : 1;
+  const index = card.reveal ? Math.min(step, count - 1) : rotated;
+  const groups = card.boxes?.slice(0, Math.max(step - imageSteps + 1, 0) + 1) ?? [];
 
   useEffect(() => {
     if (card.reveal || count < 2) return;
@@ -56,6 +58,15 @@ export function StoryCardView({
       <div className="story-text">
         <h2>{card.title}</h2>
         <p>{card.text}</p>
+        {groups.map((group) => (
+          <div key={group.join('|')} className="boxes">
+            {group.map((box) => (
+              <div key={box} className="box">
+                {box}
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     </section>
   );

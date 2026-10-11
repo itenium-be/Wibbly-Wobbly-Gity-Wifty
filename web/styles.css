@@ -1030,6 +1030,36 @@ main {
   color: var(--text);
 }
 
+.story-text .boxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.story-text .box {
+  flex: 1;
+  padding: 16px 20px;
+  border: 2px solid var(--glow);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 0 20px rgba(127, 212, 255, 0.25);
+  text-align: center;
+  font:
+    700 20px Orbitron,
+    sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: box-in 0.4s ease-out;
+}
+
+@keyframes box-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
 /* next episode */
 .next-episode {
   grid-column: 1;

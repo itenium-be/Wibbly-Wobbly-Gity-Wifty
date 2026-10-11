@@ -68,10 +68,10 @@ describe('StoryCardView', () => {
         { src: '/inside.jpg', name: 'Inside' },
       ],
     };
-    const { rerender } = render(<StoryCardView card={tardis} image={0} intervalMs={20} />);
+    const { rerender } = render(<StoryCardView card={tardis} step={0} intervalMs={20} />);
     await new Promise((r) => setTimeout(r, 60));
     expect(screen.getByText('Outside')).toBeTruthy();
-    rerender(<StoryCardView card={tardis} image={1} intervalMs={20} />);
+    rerender(<StoryCardView card={tardis} step={1} intervalMs={20} />);
     expect(screen.getByText('Inside')).toBeTruthy();
   });
 
@@ -80,5 +80,43 @@ describe('StoryCardView', () => {
       <StoryCardView card={{ title: 'The TARDIS', text: 'His time machine.', images: [{ src: '/tardis.jpg' }] }} />,
     );
     expect(container.querySelector('.dots')).toBeNull();
+  });
+  describe('boxes', () => {
+    const show: StoryCard = {
+      title: 'The Show',
+      text: 'Since 1963.',
+      images: [{ src: '/logo.jpg' }],
+      boxes: [['SPOILERS', 'MINIMAL SPOILERS'], ['Upbeat']],
+    };
+
+    test('the first group shows straight away', () => {
+      render(<StoryCardView card={show} />);
+      expect(screen.getByText('SPOILERS')).toBeTruthy();
+      expect(screen.getByText('MINIMAL SPOILERS')).toBeTruthy();
+      expect(screen.queryByText('Upbeat')).toBeNull();
+    });
+
+    test('each step shows the next group', () => {
+      render(<StoryCardView card={show} step={1} />);
+      expect(screen.getByText('MINIMAL SPOILERS')).toBeTruthy();
+      expect(screen.getByText('Upbeat')).toBeTruthy();
+    });
+
+    test('on a reveal card the groups follow its images', () => {
+      const tardis: StoryCard = {
+        ...show,
+        reveal: true,
+        images: [
+          { src: '/outside.jpg', name: 'Outside' },
+          { src: '/inside.jpg', name: 'Inside' },
+        ],
+      };
+      const { rerender } = render(<StoryCardView card={tardis} step={1} />);
+      expect(screen.getByText('Inside')).toBeTruthy();
+      expect(screen.queryByText('Upbeat')).toBeNull();
+      rerender(<StoryCardView card={tardis} step={2} />);
+      expect(screen.getByText('Inside')).toBeTruthy();
+      expect(screen.getByText('Upbeat')).toBeTruthy();
+    });
   });
 });
