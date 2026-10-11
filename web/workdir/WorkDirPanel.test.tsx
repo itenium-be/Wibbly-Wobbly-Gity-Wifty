@@ -23,9 +23,10 @@ Pete
 function setup(content = CONFLICT) {
   const load = mock(async (_path: string) => content);
   const save = mock(async (_path: string, _content: string) => {});
-  const props = { branch: 'prime-timeline', load, save };
+  const onDone = mock(() => {});
+  const props = { branch: 'prime-timeline', load, save, onDone };
   const view = render(<WorkDirPanel workdir={workdir} {...props} />);
-  return { load, save, props, ...view };
+  return { load, save, onDone, props, ...view };
 }
 
 const open = async (path: string) => {
@@ -106,27 +107,31 @@ describe('WorkDirPanel', () => {
   });
 
   test('Edit then Save writes the edited content', async () => {
-    const { save } = setup('# Clean\n');
+    const { save, onDone } = setup('# Clean\n');
     await open('clean.md');
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    onDone.mockClear();
     const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
     expect(textarea.value).toBe('# Clean\n');
     await waitFor(() => expect(document.activeElement === textarea).toBe(true));
     fireEvent.change(textarea, { target: { value: '# Edited\n' } });
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Save' })));
     expect(save).toHaveBeenCalledWith('clean.md', '# Edited\n');
+    expect(onDone).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 
   test('Esc in the editor cancels without saving', async () => {
-    const { save } = setup('# Clean\n');
+    const { save, onDone } = setup('# Clean\n');
     await open('clean.md');
+    expect(onDone).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'discarded' } });
     fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Escape' });
     expect(screen.queryByRole('textbox')).toBeNull();
     expect(screen.getByText('# Clean')).toBeTruthy();
     expect(save).not.toHaveBeenCalled();
+    expect(onDone).toHaveBeenCalledTimes(2);
   });
 
   test('a failed save keeps the editor open and shows the error', async () => {

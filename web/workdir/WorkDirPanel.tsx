@@ -8,6 +8,8 @@ type Props = {
   branch: string;
   load: (path: string) => Promise<string>;
   save: (path: string, content: string) => Promise<void>;
+  /** Called after a click or edit ends, so the keyboard returns to the console. */
+  onDone: () => void;
 };
 
 function Highlighted({ text }: { text: string }) {
@@ -36,7 +38,7 @@ function Highlighted({ text }: { text: string }) {
   return <pre>{lines}</pre>;
 }
 
-export function WorkDirPanel({ workdir, branch, load, save }: Props) {
+export function WorkDirPanel({ workdir, branch, load, save, onDone }: Props) {
   const [flashing, setFlashing] = useState<Set<string>>(new Set());
   const previous = useRef<Map<string, FileStatus>>(new Map());
   const [openPath, setOpenPath] = useState<string | null>(null);
@@ -91,6 +93,7 @@ export function WorkDirPanel({ workdir, branch, load, save }: Props) {
     setContent(null);
     setDraft(null);
     setError('');
+    onDone();
   };
 
   const onSave = async () => {
@@ -99,13 +102,16 @@ export function WorkDirPanel({ workdir, branch, load, save }: Props) {
       await save(openPath, draft);
       setDraft(null);
       setError('');
+      onDone();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
   };
 
   const onEditorKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Escape') setDraft(null);
+    if (e.key !== 'Escape') return;
+    setDraft(null);
+    onDone();
   };
 
   return (

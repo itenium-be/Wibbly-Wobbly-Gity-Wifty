@@ -114,6 +114,7 @@ export function App() {
               branch={graph?.initialized ? (graph.head.branch ?? 'HEAD (detached)') : ''}
               load={readFile}
               save={save}
+              onDone={() => inputRef.current?.focus()}
             />
           )}
           <Console

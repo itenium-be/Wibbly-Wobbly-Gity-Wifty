@@ -223,4 +223,24 @@ describe('App', () => {
     expect(screen.getByLabelText('edit episodes/rose.md')).toBeTruthy();
     expect(enterScene).toHaveBeenCalledTimes(1);
   });
+
+  test('after opening, saving or cancelling a file, focus is back on the console input', async () => {
+    const input = await toGitPhase();
+    const typeR = () => fireEvent.keyDown(document.activeElement ?? window, { key: 'r' });
+    fireEvent.click(await screen.findByText('episodes/rose.md'));
+    await waitFor(() => expect(document.activeElement === input).toBe(true));
+    typeR();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    fireEvent.keyDown(screen.getByLabelText('edit episodes/rose.md'), { key: 'Escape' });
+    await waitFor(() => expect(document.activeElement === input).toBe(true));
+    typeR();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(document.activeElement === input).toBe(true));
+    typeR();
+
+    expect(enterScene).toHaveBeenCalledTimes(1);
+  });
 });
