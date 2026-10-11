@@ -3,9 +3,9 @@ import { dirname, join, resolve } from 'node:path';
 export const GITCONFIG = join(import.meta.dir, 'tardis.gitconfig');
 
 export type ShellResult = { output: string; code: number };
-export type StageOptions = { config?: string; date?: string };
+export type StageOptions = { config?: string; date?: string; author?: string };
 
-function stageEnv(cwd: string, { config = GITCONFIG, date }: StageOptions): Record<string, string> {
+function stageEnv(cwd: string, { config = GITCONFIG, date, author }: StageOptions): Record<string, string> {
   const env: Record<string, string> = {
     PATH: process.env.PATH ?? '',
     HOME: process.env.HOME ?? '',
@@ -22,6 +22,11 @@ function stageEnv(cwd: string, { config = GITCONFIG, date }: StageOptions): Reco
     GIT_PAGER: 'cat',
   };
   if (date) Object.assign(env, { GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date });
+  if (author)
+    Object.assign(env, {
+      GIT_AUTHOR_NAME: author,
+      GIT_AUTHOR_EMAIL: `${author.toLowerCase().replaceAll(' ', '.')}@bbc.co.uk`,
+    });
   return env;
 }
 

@@ -38,6 +38,15 @@ describe('play', () => {
     expect((await sh(dir, 'git log -1 --format=%cd --date=short')).output).toBe('2005-05-14\n');
   });
 
+  test('an episode is authored by its writer and committed by the Doctor', async () => {
+    const dir = await repo();
+    const episode = { code: 'S03E10', title: 'Blink', writer: 'Steven Moffat', set: { Location: 'Wester Drumlins' } };
+    await play(dir, { episode }, {});
+    expect((await sh(dir, 'git log -1 --format="%an <%ae>|%cn"')).output).toBe(
+      'Steven Moffat <steven.moffat@bbc.co.uk>|The Doctor\n',
+    );
+  });
+
   test('an edit step writes the files without committing', async () => {
     const dir = await repo();
     const played = await play(dir, { edit: { 'TARDIS.md': 'Doctor: The Tenth Doctor\n' }, caption: '' }, {});
