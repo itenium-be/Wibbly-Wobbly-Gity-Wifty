@@ -73,4 +73,11 @@ describe('git', () => {
       process.chdir(original);
     }
   });
+
+  test('reports a timeout', async () => {
+    const dir = await tmp();
+    const { code, output } = await git(dir, ['-c', 'alias.zz=!exec sleep 5', 'zz'], undefined, 200);
+    expect(code).not.toBe(0);
+    expect(output).toContain('git -c timed out after 0.2s');
+  });
 });
