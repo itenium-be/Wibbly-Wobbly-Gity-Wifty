@@ -7,7 +7,7 @@ export const blinkScene: Scene = {
   story: [
     {
       title: "Don't Blink",
-      text: 'The Weeping Angels only move when nobody is looking. One got into the TARDIS log.',
+      text: 'A Weeping Angel got into the TARDIS log.',
       images: [{ src: '/assets/episodes/blink.jpg' }],
       boxes: [
         { boxes: ["Don't blink"] },
