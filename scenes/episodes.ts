@@ -58,3 +58,13 @@ export const forestOfTheDead: Episode = {
   set: { Companions: ['Donna Noble'], Location: 'The Library, 51st century' },
   event: 'River Song knows my name. Spoilers.',
 };
+
+export const stolenEarth: Episode = {
+  code: 'S04E12',
+  aired: '2008-06-28',
+  title: 'The Stolen Earth',
+  set: {
+    Companions: ['Donna Noble', 'Martha Jones', 'Sarah Jane Smith', 'Captain Jack Harkness'],
+    Location: 'The Medusa Cascade',
+  },
+};

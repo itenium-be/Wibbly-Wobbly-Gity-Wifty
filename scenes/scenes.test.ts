@@ -96,6 +96,7 @@ describe('scenes', () => {
       'Doomsday',
       'Blink',
       'Forest of the Dead',
+      'The Stolen Earth',
     ]);
   });
 
@@ -103,7 +104,9 @@ describe('scenes', () => {
     const scene = sceneOf('journeys-end');
     await engine.enter(scene.id);
     expect((await engine.run('git merge petes-world')).code).not.toBe(0);
-    expect(await engine.readFile('TARDIS.md')).toContain('Companions:\n<<<<<<< HEAD\n- Donna Noble\n');
+    expect(await engine.readFile('TARDIS.md')).toContain(
+      'Companions:\n<<<<<<< HEAD\n- Donna Noble\n- Martha Jones\n- Sarah Jane Smith\n- Captain Jack Harkness\n',
+    );
     await playScene(engine, scene);
     expect(await out('git log -1 --format=%p')).toMatch(/^\w+ \w+\n$/);
     expect(await out("git branch --format='%(refname:short)'")).toBe('prime-timeline\n');
