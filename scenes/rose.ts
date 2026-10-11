@@ -66,7 +66,12 @@ export const rose: Scene = {
     },
     {
       title: 'The Companions',
-      text: 'These are the companions of the Doctor. They travel with him on his adventures, until they get themselves killed (or worse).',
+      text: 'These are the companions of the Doctor.',
+      boxes: [
+        { boxes: ['They Travel With Him'] },
+        { boxes: ['Until They Get Themselves Killed'] },
+        { boxes: ['(Or Worse)'] },
+      ],
       images: [
         {
           src: '/assets/companions/jack.jpg',
