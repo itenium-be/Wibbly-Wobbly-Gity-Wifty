@@ -1,4 +1,5 @@
 import type { Scene } from '../shared/types';
+import { endOfTheWorld } from './episodes';
 
 export const rose: Scene = {
   id: 'rose',
@@ -113,11 +114,22 @@ export const rose: Scene = {
       images: [{ src: '/assets/episodes/rose.jpg' }],
     },
   ],
-  build: [{ write: { 'episodes/rose.md': '# Rose\n' } }],
+  build: [
+    {
+      write: {
+        'TARDIS.md': '# TARDIS log\nDoctor: The Ninth Doctor\nCompanion: Rose Tyler\nLocation: London, 2005\n',
+      },
+    },
+  ],
   steps: [
+    { cmd: 'git status', caption: 'No timeline yet', fails: true },
     { cmd: 'git init', caption: 'Every timeline has to start somewhere' },
-    { cmd: 'git add .', caption: 'Stage the episode' },
+    { cmd: 'git status', caption: 'The TARDIS log exists, but nobody tracks it' },
+    { cmd: 'git config --global alias.st status', caption: "We'll be asking this a lot" },
+    { cmd: 'git add TARDIS.md', caption: 'Stage the log' },
+    { cmd: 'git st', caption: 'Ready to become history' },
     { cmd: 'git commit -m "Rose"', caption: 'S01E01: the first event in the timeline' },
     { cmd: 'git log', caption: 'HEAD: where the TARDIS is right now' },
+    { episode: endOfTheWorld },
   ],
 };
