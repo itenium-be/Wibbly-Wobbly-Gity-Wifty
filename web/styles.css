@@ -279,10 +279,6 @@ main {
   text-anchor: middle;
 }
 
-.tardis {
-  transition: transform 0.8s ease-in-out;
-}
-
 .tardis-bob {
   animation: bob 3s ease-in-out infinite;
 }
