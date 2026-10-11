@@ -39,6 +39,21 @@ describe('Console', () => {
     expect(screen.getByText('$ git log')).toBeTruthy();
   });
 
+  test('renders ANSI colours as spans', () => {
+    const { container } = render(
+      <Console
+        cue={cue}
+        value=""
+        onChange={() => {}}
+        onRun={() => {}}
+        output={'\x1b[33mabfb21f\x1b[m Rose saves Pete'}
+        inputRef={createRef<HTMLInputElement>()}
+      />,
+    );
+    expect(container.querySelector('.output')?.textContent).toBe('abfb21f Rose saves Pete');
+    expect(container.querySelector('.output .ansi-33')?.textContent).toBe('abfb21f');
+  });
+
   test('Tab accepts the cue', () => {
     const { onChange, input } = setup('git reb');
     fireEvent.keyDown(input, { key: 'Tab' });

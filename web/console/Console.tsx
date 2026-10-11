@@ -2,6 +2,7 @@ import type { KeyboardEvent, RefObject } from 'react';
 import type { CmdStep } from '../../shared/types';
 import { ghost } from '../cue';
 import { ResizeHandle } from '../ResizeHandle';
+import { parseAnsi } from './ansi';
 
 type Props = {
   cue: CmdStep | undefined;
@@ -46,7 +47,18 @@ export function Console({ cue, value, onChange, onRun, output, inputRef }: Props
         </div>
         {cue && <div className="caption">{cue.caption}</div>}
       </div>
-      <pre className="output">{output}</pre>
+      <pre className="output">
+        {parseAnsi(output).map((s, i) =>
+          s.classes.length ? (
+            // biome-ignore lint/suspicious/noArrayIndexKey: segments are positional and never reorder.
+            <span key={i} className={s.classes.join(' ')}>
+              {s.text}
+            </span>
+          ) : (
+            s.text
+          ),
+        )}
+      </pre>
     </div>
   );
 }

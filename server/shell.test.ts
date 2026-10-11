@@ -39,6 +39,13 @@ describe('sh', () => {
     expect((await sh(dir, 'echo $PAGER $GIT_PAGER')).output).toBe('cat cat\n');
   });
 
+  test('colours git output only when asked', async () => {
+    const dir = await tmp();
+    await sh(dir, 'git init -q && git commit -q --allow-empty -m Rose');
+    expect((await sh(dir, 'git log --oneline --decorate')).output).not.toContain('\x1b[');
+    expect((await sh(dir, 'git log --oneline --decorate', { color: true })).output).toContain('\x1b[33m');
+  });
+
   test('kills a line that runs too long', async () => {
     const dir = await tmp();
     const { output } = await sh(dir, 'sleep 5', {}, 200);

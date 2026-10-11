@@ -3,9 +3,9 @@ import { dirname, join, resolve } from 'node:path';
 export const GITCONFIG = join(import.meta.dir, 'tardis.gitconfig');
 
 export type ShellResult = { output: string; code: number };
-export type StageOptions = { config?: string; date?: string };
+export type StageOptions = { config?: string; date?: string; color?: boolean };
 
-function stageEnv(cwd: string, { config = GITCONFIG, date }: StageOptions): Record<string, string> {
+function stageEnv(cwd: string, { config = GITCONFIG, date, color }: StageOptions): Record<string, string> {
   const env: Record<string, string> = {
     PATH: process.env.PATH ?? '',
     HOME: process.env.HOME ?? '',
@@ -21,6 +21,8 @@ function stageEnv(cwd: string, { config = GITCONFIG, date }: StageOptions): Reco
     PAGER: 'cat',
     GIT_PAGER: 'cat',
   };
+  // Command-line scope: outranks the global config, so `git config --global color.ui` can't turn it off mid-talk.
+  if (color) Object.assign(env, { GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'color.ui', GIT_CONFIG_VALUE_0: 'always' });
   if (date) Object.assign(env, { GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date });
   return env;
 }

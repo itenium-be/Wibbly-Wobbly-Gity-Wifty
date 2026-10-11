@@ -74,14 +74,16 @@ export class Engine {
   }
 
   run(input: string): Promise<RunResult> {
-    return this.serialise(async () => this.withLive(await sh(this.live, input, { config: configOf(this.live) })));
+    return this.serialise(async () =>
+      this.withLive(await sh(this.live, input, { config: configOf(this.live), color: true })),
+    );
   }
 
   episode(code: string): Promise<EpisodeResult> {
     return this.serialise(async () => {
       const step = this.current?.steps.find((s) => 'episode' in s && s.episode.code === code);
       if (!step) throw new UnknownEpisodeError(`unknown episode: ${code}`);
-      const { cmd, ...result } = await play(this.live, step, { config: configOf(this.live) });
+      const { cmd, ...result } = await play(this.live, step, { config: configOf(this.live), color: true });
       return { cmd, ...(await this.withLive(result)) };
     });
   }

@@ -875,6 +875,31 @@ main {
   line-height: 1.4;
 }
 
+.ansi-bold {
+  font-weight: 600;
+}
+.ansi-31 {
+  color: var(--danger);
+}
+.ansi-32 {
+  color: var(--st-staged);
+}
+.ansi-33 {
+  color: var(--gold);
+}
+.ansi-34 {
+  color: #6f9bff;
+}
+.ansi-35 {
+  color: var(--st-untracked);
+}
+.ansi-36 {
+  color: var(--glow);
+}
+.ansi-37 {
+  color: var(--text);
+}
+
 /* story cards */
 .story {
   grid-column: 1 / -1;

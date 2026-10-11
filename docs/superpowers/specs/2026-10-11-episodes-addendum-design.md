@@ -54,7 +54,7 @@ type Step =
 
 - Every console line runs through `bash -c` in the live repo: `ls`, `cat TARDIS.md | head`, ….
 - No TTY: `PAGER=cat`, `GIT_PAGER=cat`, `GIT_EDITOR=true`.
-- Colour stays off (the output pane doesn't render ANSI).
+- Console lines run with `color.ui=always`; the output pane renders the ANSI colours.
 
 ## Git config and aliases
 
