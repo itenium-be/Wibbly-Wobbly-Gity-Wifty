@@ -25,6 +25,23 @@ const scenes: SceneView[] = [
     story: [{ title: 'The Last Dalek', text: 'It survived.', images: [] }],
     steps: [],
   },
+  {
+    id: 'tardis',
+    episode: 'S01E13',
+    title: 'The Parting of the Ways',
+    story: [
+      {
+        title: 'The TARDIS',
+        text: 'Bigger on the inside.',
+        reveal: true,
+        images: [
+          { src: '/outside.jpg', name: 'Outside' },
+          { src: '/inside.jpg', name: 'Inside' },
+        ],
+      },
+    ],
+    steps: [],
+  },
 ];
 
 function deferred<T>() {
@@ -60,6 +77,16 @@ beforeEach(() => {
 });
 
 describe('App', () => {
+  test('→ on a reveal card shows its next image before leaving the card', async () => {
+    render(<App />);
+    expect(await screen.findByText('The Doctor')).toBeTruthy();
+    for (let i = 0; i < 4; i++) fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(await screen.findByText('Outside')).toBeTruthy();
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(await screen.findByText('Inside')).toBeTruthy();
+    expect(screen.getByText('The TARDIS')).toBeTruthy();
+  });
+
   test('opens on the first story card, then → reaches the git phase', async () => {
     await toGitPhase();
     expect(await screen.findByText('Episode one')).toBeTruthy();

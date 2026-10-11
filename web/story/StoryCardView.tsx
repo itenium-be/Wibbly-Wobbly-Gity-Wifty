@@ -1,17 +1,26 @@
 import { useEffect, useState } from 'react';
 import type { StoryCard } from '../../shared/types';
 
-export function StoryCardView({ card, intervalMs = 3000 }: { card: StoryCard; intervalMs?: number }) {
-  const [index, setIndex] = useState(0);
+export function StoryCardView({
+  card,
+  image = 0,
+  intervalMs = 3000,
+}: {
+  card: StoryCard;
+  image?: number;
+  intervalMs?: number;
+}) {
+  const [rotated, setRotated] = useState(0);
   const count = card.images.length;
+  const index = card.reveal ? image : rotated;
 
   useEffect(() => {
-    if (count < 2) return;
-    const id = setInterval(() => setIndex((i) => (i + 1) % count), intervalMs);
+    if (card.reveal || count < 2) return;
+    const id = setInterval(() => setRotated((i) => (i + 1) % count), intervalMs);
     return () => clearInterval(id);
-  }, [count, intervalMs]);
+  }, [card.reveal, count, intervalMs]);
 
-  const image = card.images[index];
+  const shown = card.images[index];
   return (
     <section className="story">
       <figure>
@@ -21,8 +30,10 @@ export function StoryCardView({ card, intervalMs = 3000 }: { card: StoryCard; in
           ))}
         </div>
         <figcaption>
-          {image?.name && <div className="name">{image.name}</div>}
-          {image?.fate && <div className="fate">{image.fate}</div>}
+          {shown?.name && <div className="name">{shown.name}</div>}
+          {shown?.quote && <div className="quote">{shown.quote}</div>}
+          {shown?.stamp && <div className="stamp">{shown.stamp}</div>}
+          {shown?.fate && <div className="fate">{shown.fate}</div>}
           {count > 1 && (
             <div className="dots">
               {card.images.map((img, i) => (

@@ -7,8 +7,8 @@ const companions: StoryCard = {
   title: 'The Companions',
   text: 'They travel with him.',
   images: [
-    { src: '/rose.jpg', name: 'Rose Tyler', fate: 'TRAPPED IN A PARALLEL UNIVERSE' },
-    { src: '/donna.jpg', name: 'Donna Noble', fate: 'MEMORY WIPED' },
+    { src: '/clara.jpg', name: 'Clara Oswald', stamp: 'DIED', fate: 'Faced the raven' },
+    { src: '/donna.jpg', name: 'Donna Noble', stamp: 'MEMORY WIPED', fate: 'Her mind would burn' },
   ],
 };
 
@@ -17,14 +17,41 @@ describe('StoryCardView', () => {
     render(<StoryCardView card={companions} />);
     expect(screen.getByText('The Companions')).toBeTruthy();
     expect(screen.getByText('They travel with him.')).toBeTruthy();
-    expect(screen.getByText('Rose Tyler')).toBeTruthy();
-    expect(screen.getByText('TRAPPED IN A PARALLEL UNIVERSE')).toBeTruthy();
+    expect(screen.getByText('Clara Oswald')).toBeTruthy();
+    expect(screen.getByText('DIED')).toBeTruthy();
+    expect(screen.getByText('Faced the raven')).toBeTruthy();
   });
 
   test('rotates to the next image and its captions', async () => {
     render(<StoryCardView card={companions} intervalMs={20} />);
     expect(await screen.findByText('Donna Noble', {}, { timeout: 500 })).toBeTruthy();
     expect(screen.getByText('MEMORY WIPED')).toBeTruthy();
+  });
+
+  test('shows the quote of the image', () => {
+    render(
+      <StoryCardView
+        card={{ title: 'The Doctor', text: 'A Time Lord.', images: [{ src: '/11.jpg', quote: 'Bow ties are cool.' }] }}
+      />,
+    );
+    expect(screen.getByText('Bow ties are cool.')).toBeTruthy();
+  });
+
+  test('a reveal card shows the given image and does not rotate', async () => {
+    const tardis: StoryCard = {
+      title: 'The TARDIS',
+      text: 'Bigger on the inside.',
+      reveal: true,
+      images: [
+        { src: '/outside.jpg', name: 'Outside' },
+        { src: '/inside.jpg', name: 'Inside' },
+      ],
+    };
+    const { rerender } = render(<StoryCardView card={tardis} image={0} intervalMs={20} />);
+    await new Promise((r) => setTimeout(r, 60));
+    expect(screen.getByText('Outside')).toBeTruthy();
+    rerender(<StoryCardView card={tardis} image={1} intervalMs={20} />);
+    expect(screen.getByText('Inside')).toBeTruthy();
   });
 
   test('a single image shows no position dots', () => {

@@ -338,16 +338,32 @@ main {
   text-transform: uppercase;
 }
 
+.story .quote {
+  grid-column: 1;
+  margin-top: 8px;
+  font-size: 18px;
+  font-style: italic;
+}
+
+.story .stamp {
+  grid-column: 1;
+  margin-top: 8px;
+  font:
+    900 32px Orbitron,
+    sans-serif;
+  letter-spacing: 3px;
+  color: var(--danger);
+}
+
 .story .fate {
   grid-column: 1;
   color: var(--danger);
-  font-weight: 600;
   letter-spacing: 1px;
 }
 
 .story .dots {
   grid-column: 2;
-  grid-row: 1 / 3;
+  grid-row: 1 / span 4;
   align-self: end;
   display: flex;
   gap: 8px;

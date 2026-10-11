@@ -1,5 +1,6 @@
-export type StoryImage = { src: string; name?: string; fate?: string };
-export type StoryCard = { title: string; text: string; images: StoryImage[] };
+export type StoryImage = { src: string; name?: string; quote?: string; stamp?: string; fate?: string };
+/** `reveal`: images are stepped through with →/← instead of rotating. */
+export type StoryCard = { title: string; text: string; images: StoryImage[]; reveal?: boolean };
 export type Step = { cmd: string; caption: string };
 
 export type GitStep =

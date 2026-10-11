@@ -10,7 +10,7 @@ import { StoryCardView } from './story/StoryCardView';
 
 export function App() {
   const [scenes, setScenes] = useState<SceneView[]>([]);
-  const [pos, setPos] = useState<Position>({ scene: 0, card: 0 });
+  const [pos, setPos] = useState<Position>({ scene: 0, card: 0, image: 0 });
   const [graph, setGraph] = useState<GraphModel | null>(null);
   const [cueIndex, setCueIndex] = useState(0);
   const [input, setInput] = useState('');
@@ -106,7 +106,7 @@ export function App() {
           />
         </>
       ) : (
-        <StoryCardView key={`${scene.id}-${pos.card}`} card={scene.story[pos.card]} />
+        <StoryCardView key={`${scene.id}-${pos.card}`} card={scene.story[pos.card]} image={pos.image} />
       )}
     </>
   );
