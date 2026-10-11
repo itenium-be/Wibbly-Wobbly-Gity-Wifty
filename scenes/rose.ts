@@ -9,10 +9,16 @@ export const rose: Scene = {
       title: 'The Show',
       text: 'Doctor Who: BBC science fiction since 1963. Cancelled in 1989, revived in 2005 with "Rose". The longest-running sci-fi show in the world.',
       images: [{ src: '/assets/logo.jpg' }],
+      boxes: [{ title: 'Choose your timeline', boxes: ['SPOILERS', 'MINIMAL SPOILERS'] }],
     },
     {
       title: 'The Doctor',
-      text: 'This is the Doctor. He travels through time on fun adventures, where he lets his companions do the dirty work so he can keep his hands clean and his conscience clear.',
+      text: 'This is the Doctor. He travels through time and space.',
+      boxes: [
+        { boxes: ['Fun Adventures'] },
+        { boxes: ['Companions Do the Dirty Work'] },
+        { boxes: ['Hands Clean, Conscience Clear'] },
+      ],
       images: [
         {
           src: '/assets/doctors/01-hartnell.jpg',
@@ -53,13 +59,19 @@ export const rose: Scene = {
     },
     {
       title: 'The TARDIS',
-      text: 'Time And Relative Dimension In Space: his time machine. It goes anywhere in time and space, it is stuck looking like a 1960s police box, and it is bigger on the inside.',
+      text: 'Time And Relative Dimension In Space: his time machine.',
       reveal: true,
       images: [{ src: '/assets/tardis.jpg' }, { src: '/assets/tardis-console.jpg' }],
+      boxes: [{ boxes: ['Stuck as a 1960s Police Box'] }, { boxes: ["It's Bigger on the Inside"] }],
     },
     {
       title: 'The Companions',
-      text: 'These are the companions of the Doctor. They travel with him on his adventures, until they get themselves killed (or worse).',
+      text: 'These are the companions of the Doctor.',
+      boxes: [
+        { boxes: ['They Travel With Him'] },
+        { boxes: ['Until They Get Themselves Killed'] },
+        { boxes: ['(Or Worse)'] },
+      ],
       images: [
         {
           src: '/assets/companions/jack.jpg',
@@ -109,7 +121,7 @@ export const rose: Scene = {
     },
     {
       title: 'Rose',
-      text: 'Series 1, episode 1: Rose Tyler meets the Doctor. The first event in our timeline, so: the first commit.',
+      text: 'Series 1, episode 1: Rose Tyler meets the Doctor.',
       images: [{ src: '/assets/episodes/rose.jpg' }],
     },
   ],

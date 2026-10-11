@@ -68,11 +68,16 @@ describe('StoryCardView', () => {
         { src: '/inside.jpg', name: 'Inside' },
       ],
     };
-    const { rerender } = render(<StoryCardView card={tardis} image={0} intervalMs={20} />);
+    const { rerender } = render(<StoryCardView card={tardis} step={0} intervalMs={20} />);
     await new Promise((r) => setTimeout(r, 60));
     expect(screen.getByText('Outside')).toBeTruthy();
-    rerender(<StoryCardView card={tardis} image={1} intervalMs={20} />);
+    rerender(<StoryCardView card={tardis} step={1} intervalMs={20} />);
     expect(screen.getByText('Inside')).toBeTruthy();
+  });
+
+  test('a card without text leaves no empty paragraph', () => {
+    const { container } = render(<StoryCardView card={{ title: 'The End', text: '', images: [] }} />);
+    expect(container.querySelector('.story-text p')).toBeNull();
   });
 
   test('a single image shows no position dots', () => {
@@ -80,5 +85,51 @@ describe('StoryCardView', () => {
       <StoryCardView card={{ title: 'The TARDIS', text: 'His time machine.', images: [{ src: '/tardis.jpg' }] }} />,
     );
     expect(container.querySelector('.dots')).toBeNull();
+  });
+  describe('boxes', () => {
+    const show: StoryCard = {
+      title: 'The Show',
+      text: 'Since 1963.',
+      images: [{ src: '/logo.jpg' }],
+      boxes: [{ title: 'Choose your timeline', boxes: ['SPOILERS', 'MINIMAL SPOILERS'] }, { boxes: ['Upbeat'] }],
+    };
+
+    // Unrevealed groups are rendered but hidden, so they already hold their space and nothing shifts.
+    const revealed = (text: string) => !screen.getByText(text).closest('[aria-hidden="true"]');
+
+    test('the first group shows straight away', () => {
+      render(<StoryCardView card={show} />);
+      expect(revealed('SPOILERS')).toBe(true);
+      expect(revealed('MINIMAL SPOILERS')).toBe(true);
+      expect(revealed('Upbeat')).toBe(false);
+    });
+
+    test('a group shows its title', () => {
+      render(<StoryCardView card={show} />);
+      expect(revealed('Choose your timeline')).toBe(true);
+    });
+
+    test('each step shows the next group', () => {
+      render(<StoryCardView card={show} step={1} />);
+      expect(revealed('MINIMAL SPOILERS')).toBe(true);
+      expect(revealed('Upbeat')).toBe(true);
+    });
+
+    test('on a reveal card the groups follow its images', () => {
+      const tardis: StoryCard = {
+        ...show,
+        reveal: true,
+        images: [
+          { src: '/outside.jpg', name: 'Outside' },
+          { src: '/inside.jpg', name: 'Inside' },
+        ],
+      };
+      const { rerender } = render(<StoryCardView card={tardis} step={1} />);
+      expect(screen.getByText('Inside')).toBeTruthy();
+      expect(revealed('Upbeat')).toBe(false);
+      rerender(<StoryCardView card={tardis} step={2} />);
+      expect(screen.getByText('Inside')).toBeTruthy();
+      expect(revealed('Upbeat')).toBe(true);
+    });
   });
 });

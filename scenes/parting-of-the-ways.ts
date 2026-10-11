@@ -8,8 +8,12 @@ export const partingOfTheWaysScene: Scene = {
   story: [
     {
       title: 'Regeneration',
-      text: 'The Doctor takes the time vortex out of Rose and it is killing him. Every cell burns and rebuilds: a new face, a new voice, the same man. In git, that is commit --amend.',
-      images: [{ src: '/assets/episodes/parting-of-the-ways.jpg' }],
+      text: 'The Doctor takes the time vortex out of Rose and it is killing him.',
+      reveal: true,
+      images: [
+        { src: '/assets/episodes/parting-of-the-ways.jpg', stamp: 'DEAD', stampNote: '(Creative Differences)' },
+        { src: '/assets/episodes/parting-of-the-ways-tennant.jpg' },
+      ],
     },
   ],
   steps: [

@@ -7,8 +7,9 @@ export const riversDiary: Scene = {
   story: [
     {
       title: "River's Diary",
-      text: 'River Song meets the Doctor in the wrong order, and keeps every jump in her diary. Wipe a timeline and the diary still remembers. In git, that is the reflog.',
+      text: 'River Song meets the Doctor in the wrong order.',
       images: [{ src: '/assets/episodes/rivers-diary.jpg' }],
+      boxes: [{ boxes: ['His First, Her Last'] }, { boxes: ['Every Jump in The Diary'] }, { boxes: ['Spoilers!'] }],
     },
   ],
   steps: [

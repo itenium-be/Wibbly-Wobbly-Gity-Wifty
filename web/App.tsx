@@ -18,7 +18,7 @@ const ZOOM_STEP = 0.25;
 
 export function App() {
   const [scenes, setScenes] = useState<SceneView[]>([]);
-  const [pos, setPos] = useState<Position>({ scene: 0, card: 0, image: 0 });
+  const [pos, setPos] = useState<Position>({ scene: 0, card: 0, step: 0 });
   const [graph, setGraph] = useState<GraphModel | null>(null);
   const [workdir, setWorkdir] = useState<WorkDir | null>(null);
   const [cueState, setCueState] = useState<Cue>(start);
@@ -163,7 +163,7 @@ export function App() {
           <button
             type="button"
             className="skip-intro"
-            onClick={() => setPos({ scene: 0, card: scene.story.length, image: 0 })}
+            onClick={() => setPos({ scene: 0, card: scene.story.length, step: 0 })}
           >
             Skip Intro
           </button>
@@ -219,7 +219,7 @@ export function App() {
           )}
         </>
       ) : (
-        <StoryCardView key={`${scene.id}-${pos.card}`} card={scene.story[pos.card]} image={pos.image} />
+        <StoryCardView key={`${scene.id}-${pos.card}`} card={scene.story[pos.card]} step={pos.step} />
       )}
     </>
   );
