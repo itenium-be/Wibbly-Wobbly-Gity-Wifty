@@ -11,7 +11,6 @@ export const blinkScene: Scene = {
       images: [{ src: '/assets/episodes/blink.jpg' }],
       boxes: [
         { boxes: ["Don't blink"] },
-        { boxes: ["Don't turn your back"] },
         { boxes: ["Don't look away"] },
         { boxes: ['Which episode let it in?'] },
       ],
