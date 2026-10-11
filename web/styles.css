@@ -1067,3 +1067,70 @@ main {
   fill: var(--st-modified);
   stroke: none;
 }
+
+/* blame */
+.viewer button[aria-pressed="true"] {
+  color: var(--space);
+  background: var(--glow);
+}
+
+.blame {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.blame .hunk {
+  display: grid;
+  grid-template-columns: minmax(0, 13em) minmax(0, 1fr);
+  border-top: 1px solid var(--line);
+}
+
+.blame .hunk:first-child {
+  border-top: 0;
+}
+
+.blame .who {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 10px;
+  border-left: 4px solid rgb(255 204 77 / calc(0.15 + 0.85 * var(--age)));
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.blame .who:hover,
+.blame .hunk.open .who {
+  background: rgba(127, 212, 255, 0.12);
+}
+
+.blame .summary,
+.blame .meta {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blame .summary {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.blame .meta {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.viewer .blame pre {
+  overflow: visible;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}

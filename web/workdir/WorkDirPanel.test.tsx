@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from 'bun:test';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { GraphModel, WorkDir } from '../../shared/types';
+import type { BlameHunk, GraphModel, WorkDir } from '../../shared/types';
 import { WorkDirPanel } from './WorkDirPanel';
 
 const workdir: WorkDir = {
@@ -28,14 +28,20 @@ Pete
 >>>>>>> petes-world
 `;
 
+const HUNKS: BlameHunk[] = [
+  { hash: 'a1b2c3d4', author: 'The Doctor', date: '2005-03-26', summary: 'Rose', lines: ['# TARDIS', 'The Doctor'] },
+  { hash: 'e5f6a7b8', author: 'Steven Moffat', date: '2007-06-09', summary: 'Blink', lines: ["Don't blink"] },
+];
+
 function setup(content = CONFLICT) {
   const load = mock(async (_path: string) => content);
   const save = mock(async (_path: string, _content: string) => {});
   const onDone = mock(() => {});
   const show = mock(async (_hash: string) => '');
-  const props = { branch: 'prime-timeline', graph, load, show, save, onDone };
+  const blame = mock(async (_path: string) => HUNKS);
+  const props = { branch: 'prime-timeline', graph, load, show, blame, save, onDone };
   const view = render(<WorkDirPanel workdir={workdir} {...props} />);
-  return { load, save, onDone, props, ...view };
+  return { load, save, show, blame, onDone, props, ...view };
 }
 
 const open = async (path: string) => {
@@ -202,5 +208,46 @@ describe('WorkDirPanel', () => {
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Save' })));
     expect(screen.getByRole('textbox')).toBeTruthy();
     expect(screen.getByText('500 boom')).toBeTruthy();
+  });
+});
+
+describe('WorkDirPanel blame', () => {
+  const gutters = () => screen.getAllByRole('button', { name: /·/ }).map((b) => b.textContent);
+
+  test('Blame shows each group of lines beside the commit, author and date that last changed it', async () => {
+    const { blame } = setup();
+    await open('TARDIS.md');
+    fireEvent.click(screen.getByRole('button', { name: 'Blame' }));
+    await screen.findByText("Don't blink");
+    expect(blame).toHaveBeenCalledWith('TARDIS.md');
+    expect(gutters()).toEqual(['RoseThe Doctor · 2005-03-26', 'BlinkSteven Moffat · 2007-06-09']);
+    expect(screen.getByRole('button', { name: 'Blame' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
+  test('a blame request opens that file in blame mode, even from the log tab', async () => {
+    const { rerender, props, blame } = setup();
+    fireEvent.click(screen.getByRole('tab', { name: /^log/ }));
+    rerender(<WorkDirPanel workdir={workdir} {...props} blameRequest={{ path: 'clean.md', n: 1 }} />);
+    await screen.findByText("Don't blink");
+    expect(blame).toHaveBeenCalledWith('clean.md');
+    expect(screen.getByText('clean.md — clean')).toBeTruthy();
+  });
+
+  test('clicking a group shows the diff of its commit', async () => {
+    const { show } = setup();
+    await open('TARDIS.md');
+    fireEvent.click(screen.getByRole('button', { name: 'Blame' }));
+    fireEvent.click(await screen.findByRole('button', { name: /^Blink/ }));
+    await waitFor(() => expect(show).toHaveBeenCalledWith('e5f6a7b8'));
+  });
+
+  test('a file that cannot be blamed shows the error', async () => {
+    const { blame } = setup();
+    blame.mockImplementation(async () => {
+      throw new Error('404 not in history: new.md');
+    });
+    await open('new.md');
+    fireEvent.click(screen.getByRole('button', { name: 'Blame' }));
+    expect(await screen.findByText('404 not in history: new.md')).toBeTruthy();
   });
 });

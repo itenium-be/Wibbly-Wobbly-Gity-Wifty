@@ -1,6 +1,8 @@
 import { type KeyboardEvent, useEffect, useRef, useState } from 'react';
-import type { FileStatus, GraphModel, WorkDir } from '../../shared/types';
+import type { BlameHunk, FileStatus, GraphModel, WorkDir } from '../../shared/types';
 import { ResizeHandle } from '../ResizeHandle';
+import { BlameView } from './BlameView';
+import { CommitDiff } from './CommitView';
 import { HistoryView } from './HistoryView';
 
 type Props = {
@@ -9,6 +11,9 @@ type Props = {
   graph: GraphModel;
   load: (path: string) => Promise<string>;
   show: (hash: string) => Promise<string>;
+  blame: (path: string) => Promise<BlameHunk[]>;
+  /** Opens `path` in blame mode; `n` changes so the same file can be requested twice. */
+  blameRequest?: { path: string; n: number };
   save: (path: string, content: string) => Promise<void>;
   /** Called after a click or edit ends, so the keyboard returns to the console. */
   onDone: () => void;
@@ -40,7 +45,7 @@ function Highlighted({ text }: { text: string }) {
   return <pre>{lines}</pre>;
 }
 
-export function WorkDirPanel({ workdir, branch, graph, load, show, save, onDone }: Props) {
+export function WorkDirPanel({ workdir, branch, graph, load, show, blame, blameRequest, save, onDone }: Props) {
   const [tab, setTab] = useState<'files' | 'history'>('files');
   const [flashing, setFlashing] = useState<Set<string>>(new Set());
   const previous = useRef<Map<string, FileStatus>>(new Map());
@@ -48,6 +53,9 @@ export function WorkDirPanel({ workdir, branch, graph, load, show, save, onDone 
   const [content, setContent] = useState<string | null>(null);
   const [draft, setDraft] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [blaming, setBlaming] = useState(false);
+  const [hunks, setHunks] = useState<BlameHunk[] | null>(null);
+  const [blameHash, setBlameHash] = useState<string | null>(null);
   const editor = useRef<HTMLTextAreaElement>(null);
 
   const open = workdir.files.find((f) => f.path === openPath);
@@ -79,6 +87,41 @@ export function WorkDirPanel({ workdir, branch, graph, load, show, save, onDone 
     };
   }, [openFile, workdir, load]);
 
+  useEffect(() => {
+    if (!blameRequest) return;
+    setTab('files');
+    setOpenPath(blameRequest.path);
+    setContent(null);
+    setDraft(null);
+    setError('');
+    setBlaming(true);
+    setBlameHash(null);
+  }, [blameRequest]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a commit changes the blame, so every new workdir reloads it.
+  useEffect(() => {
+    if (!blaming || !openFile) return;
+    let current = true;
+    setHunks(null);
+    blame(openFile)
+      .then((loaded) => {
+        if (current) setHunks(loaded);
+      })
+      .catch((e) => {
+        if (current) setError(e instanceof Error ? e.message : String(e));
+      });
+    return () => {
+      current = false;
+    };
+  }, [blaming, openFile, workdir, blame]);
+
+  const toggleBlame = () => {
+    setBlaming((b) => !b);
+    setBlameHash(null);
+    setError('');
+    onDone();
+  };
+
   const editing = draft !== null;
   useEffect(() => {
     if (editing) editor.current?.focus();
@@ -98,6 +141,7 @@ export function WorkDirPanel({ workdir, branch, graph, load, show, save, onDone 
     setContent(null);
     setDraft(null);
     setError('');
+    setBlameHash(null);
     onDone();
   };
 
@@ -180,9 +224,21 @@ export function WorkDirPanel({ workdir, branch, graph, load, show, save, onDone 
                 Save
               </button>
             ) : (
-              <button type="button" disabled={content === null} onClick={() => setDraft(content)}>
-                Edit
-              </button>
+              <>
+                <button type="button" aria-pressed={blaming} onClick={toggleBlame}>
+                  Blame
+                </button>
+                <button
+                  type="button"
+                  disabled={content === null}
+                  onClick={() => {
+                    setBlaming(false);
+                    setDraft(content);
+                  }}
+                >
+                  Edit
+                </button>
+              </>
             )}
           </div>
           {editing ? (
@@ -194,9 +250,25 @@ export function WorkDirPanel({ workdir, branch, graph, load, show, save, onDone 
               spellCheck={false}
               aria-label={`edit ${open.path}`}
             />
+          ) : blaming ? (
+            hunks && (
+              <BlameView
+                hunks={hunks}
+                openHash={blameHash}
+                onOpen={(hash) => {
+                  setBlameHash(hash);
+                  onDone();
+                }}
+              />
+            )
           ) : (
             content !== null && <Highlighted text={content} />
           )}
+        </div>
+      )}
+      {tab === 'files' && blaming && blameHash && (
+        <div className="viewer commit-view">
+          <CommitDiff hash={blameHash} show={show} />
         </div>
       )}
     </aside>
