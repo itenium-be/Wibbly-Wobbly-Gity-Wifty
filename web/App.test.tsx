@@ -126,4 +126,16 @@ describe('App', () => {
     fireEvent.keyDown(window, { key: 'r' });
     await waitFor(() => expect(document.activeElement === input).toBe(true));
   });
+
+  test('a failed run shows the error in the output pane and allows retrying', async () => {
+    runCommand.mockImplementationOnce(async () => {
+      throw new Error('500 boom');
+    });
+    const input = await toGitPhase();
+    fireEvent.change(input, { target: { value: 'git log' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(await screen.findByText(/500 boom/)).toBeTruthy();
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(await screen.findByText(/a1 Episode one/)).toBeTruthy();
+  });
 });

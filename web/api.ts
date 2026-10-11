@@ -1,16 +1,21 @@
 import type { GraphModel, RunResult, SceneView } from '../shared/types';
 
+async function json<T>(res: Response): Promise<T> {
+  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+  return res.json();
+}
+
 async function post<T>(url: string, body?: unknown): Promise<T> {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  return res.json();
+  return json(res);
 }
 
 export async function fetchScenes(): Promise<SceneView[]> {
-  return (await fetch('/api/scenes')).json();
+  return json(await fetch('/api/scenes'));
 }
 
 export const enterScene = (id: string) => post<GraphModel>(`/api/scenes/${id}/enter`);

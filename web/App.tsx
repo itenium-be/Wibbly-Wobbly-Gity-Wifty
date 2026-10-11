@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { GraphModel, SceneView } from '../shared/types';
+import type { GraphModel, RunResult, SceneView } from '../shared/types';
 import { enterScene, fetchScenes, runCommand } from './api';
 import { Console } from './console/Console';
 import { advance } from './cue';
@@ -66,9 +66,15 @@ export function App() {
     if (running.current) return;
     running.current = true;
     const mine = epoch.current;
-    const result = await runCommand(cmd).finally(() => {
+    let result: RunResult;
+    try {
+      result = await runCommand(cmd);
+    } catch (e) {
+      if (mine === epoch.current) setOutput(`$ ${cmd}\n${e instanceof Error ? e.message : String(e)}`);
+      return;
+    } finally {
       running.current = false;
-    });
+    }
     if (mine !== epoch.current) return;
     setOutput(`$ ${cmd}\n${result.output}`);
     setGraph(result.graph);
