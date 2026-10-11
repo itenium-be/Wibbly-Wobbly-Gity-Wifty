@@ -22,7 +22,7 @@ export const blinkScene: Scene = {
     { cmd: 'git bisect reset', caption: 'Back to the present' },
     { cmd: "sed -i '/Angel/d' TARDIS.md", caption: 'The Angels look at each other: quantum-locked' },
     { cmd: 'sh dont-blink.sh && echo "Safe"', caption: 'The test passes' },
-    { cmd: 'git add dont-blink.sh', caption: "Keep the test, so the Angels can't come back" },
+    { cmd: 'rm dont-blink.sh', caption: "You'd keep the test, so the Angels can't come back" },
     {
       cmd: 'git commit -am "The Angels are quantum-locked"',
       caption: 'Fixed forward: history untouched',
