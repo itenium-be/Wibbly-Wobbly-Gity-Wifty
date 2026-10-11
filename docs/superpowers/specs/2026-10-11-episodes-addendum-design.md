@@ -60,7 +60,7 @@ type Step =
 
 - A fresh git install on stage: `GIT_CONFIG_GLOBAL` points to a per-snapshot copy of `server/tardis.gitconfig` (name, email, default branch only). The checked-in file is never written to.
 - `git config --global alias.st status` is a typed cue. The alias lives in the snapshot's config, so it carries into later scenes by continuity.
-- Lore aliases for later scenes: `tardis` = `log --oneline --graph --all`, `regenerate` = `commit --amend --no-edit`, `spoilers` = `reflog`, `exterminate` = `reset --hard`, `geronimo` = `push --force`.
+- Lore aliases for later scenes: `tardis` = `log --oneline --graph --all`, `regenerate` = `commit --amend --no-edit`, `spoilers` = a coloured `reflog`, `geronimo` = `push --force`.
 
 ## Timeline
 

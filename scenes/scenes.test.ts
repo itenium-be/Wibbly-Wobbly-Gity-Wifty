@@ -128,9 +128,10 @@ describe('scenes', () => {
     expect(await out('git status --short')).toBe('');
   });
 
-  test("river's diary brings back the exterminated episode", async () => {
+  test("river's diary brings back the branch where Rose saved Pete", async () => {
     await playScene(engine, sceneOf('rivers-diary'));
-    expect(await out('git log --format=%s -1')).toBe('The Angels are quantum-locked\n');
+    expect(await out('git log --format=%s -1 pete-lives')).toBe('Rose saves Pete\n');
+    expect(await out('git branch --show-current')).toBe('prime-timeline\n');
   });
 
   test('bad wolf finds every episode that wrote it', async () => {

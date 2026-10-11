@@ -12,10 +12,11 @@ export const riversDiary: Scene = {
     },
   ],
   steps: [
-    { cmd: 'git config --global alias.exterminate "reset --hard"', caption: 'The Daleks have one word for everything' },
-    { cmd: 'git exterminate HEAD~1', caption: 'EXTERMINATE! The fix is gone: the Angels are back' },
-    { cmd: 'git config --global alias.spoilers reflog', caption: "River's diary" },
-    { cmd: 'git spoilers', caption: 'Spoilers: the diary remembers every jump' },
-    { cmd: 'git exterminate HEAD@{1}', caption: 'Nothing is ever truly lost' },
+    {
+      cmd: 'git config --global alias.spoilers "reflog --date=relative --pretty=format:\'%C(magenta)%h%Creset -%C(yellow)%d%Creset %gs %Cgreen(%cd)%C(bold blue)<%an>%Creset\'"',
+      caption: "River's diary",
+    },
+    { cmd: 'git spoilers', caption: 'Spoilers: the diary remembers every jump, even the erased ones' },
+    { cmd: 'git branch pete-lives abfb21f', caption: 'The timeline where Rose saved Pete is back' },
   ],
 };
