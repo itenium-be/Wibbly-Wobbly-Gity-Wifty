@@ -37,6 +37,12 @@ describe('FlatTimeline', () => {
     expect(y).toBeGreaterThan(200);
   });
 
+  test('lifts branch pills off the lane line so outgoing edges do not cross them', () => {
+    const { container } = render(<FlatTimeline layout={pompeii} />);
+    const rect = container.querySelector('.pill rect');
+    expect(Number(rect?.getAttribute('y')) + Number(rect?.getAttribute('height'))).toBeLessThan(200);
+  });
+
   test('parks the TARDIS on the HEAD commit', () => {
     render(<FlatTimeline layout={pompeii} />);
     expect(screen.getByTestId('tardis').style.transform).toBe('translate(260px, 160px)');

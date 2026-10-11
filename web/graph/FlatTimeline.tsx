@@ -103,8 +103,8 @@ export function FlatTimeline({ layout, codes = {}, zoom = 1 }: Props) {
             ))}
             {n.branches.map((b, i) => (
               <g key={b} className={`pill lane-${b === 'prime-timeline' ? 'prime' : 'parallel'}`}>
-                <rect x={x + 24} y={y - 13 + i * 30} width={b.length * 9 + 16} height={26} rx={6} />
-                <text x={x + 32} y={y + 5 + i * 30}>
+                <rect x={x + 36} y={y - 46 - i * 30} width={b.length * 9 + 16} height={26} rx={6} />
+                <text x={x + 44} y={y - 28 - i * 30}>
                   {b}
                 </text>
               </g>
