@@ -1,8 +1,6 @@
 import { type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import type { FileStatus, WorkDir } from '../../shared/types';
 
-const LEGEND: FileStatus[] = ['untracked', 'modified', 'staged', 'conflicted'];
-
 type Props = {
   workdir: WorkDir;
   branch: string;
@@ -138,13 +136,6 @@ export function WorkDirPanel({ workdir, branch, load, save, onDone }: Props) {
             </li>
           ))}
         </ul>
-        <div className="legend">
-          {LEGEND.map((s) => (
-            <span key={s} className={s}>
-              {s}
-            </span>
-          ))}
-        </div>
       </div>
       {open && (
         <div className="viewer">

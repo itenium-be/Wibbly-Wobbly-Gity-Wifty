@@ -351,35 +351,6 @@ main {
   }
 }
 
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  color: var(--muted);
-  font-size: 16px;
-}
-
-.legend span::before {
-  content: "●";
-  margin-right: 6px;
-}
-
-.legend .untracked::before {
-  color: var(--st-untracked);
-}
-
-.legend .modified::before {
-  color: var(--st-modified);
-}
-
-.legend .staged::before {
-  color: var(--st-staged);
-}
-
-.legend .conflicted::before {
-  color: var(--st-conflicted);
-}
-
 .viewer {
   min-height: 0;
   display: grid;
