@@ -1,4 +1,4 @@
-import type { LaneKind, Layout } from './layout';
+import type { LaneKind, Layout, Node } from './layout';
 import { Tardis } from './Tardis';
 
 const X0 = 260;
@@ -30,11 +30,12 @@ function star(x: number, y: number, r: number) {
 type Props = {
   layout: Layout;
   codes?: Record<string, string>;
+  dark?: Set<string>;
   zoom?: number;
   onSelect?: (hash: string, at: { x: number; y: number }) => void;
 };
 
-export function FlatTimeline({ layout, codes = {}, zoom = 1, onSelect }: Props) {
+export function FlatTimeline({ layout, codes = {}, dark = new Set(), zoom = 1, onSelect }: Props) {
   const cols = Math.max(0, layout.pending?.col ?? 0, ...layout.nodes.map((n) => n.col));
   const labels = Array.from({ length: cols + 1 }, () => 0);
   for (const n of layout.nodes)
@@ -70,6 +71,7 @@ export function FlatTimeline({ layout, codes = {}, zoom = 1, onSelect }: Props) 
     return `M${a.x} ${a.y} ${curve(a, k)} L${b.x} ${b.y}`;
   };
   const kind = (lane: number) => layout.lanes[lane]?.kind ?? 'prime';
+  const tone = (n: Node) => (kind(n.lane) === 'prime' && dark.has(n.message) ? 'dark' : kind(n.lane));
   const tardis = at(layout.head ?? { col: 0, lane: 0 });
 
   return (
@@ -99,7 +101,7 @@ export function FlatTimeline({ layout, codes = {}, zoom = 1, onSelect }: Props) 
       )}
 
       {layout.edges.map(({ from, to, merge }) => (
-        <path key={`${from.hash}-${to.hash}`} d={link(from, to, merge)} className={`edge lane-${kind(to.lane)}`} />
+        <path key={`${from.hash}-${to.hash}`} d={link(from, to, merge)} className={`edge lane-${tone(to)}`} />
       ))}
 
       {layout.pending?.from && <path d={link(layout.pending.from, layout.pending, false)} className="edge pending" />}
@@ -114,7 +116,7 @@ export function FlatTimeline({ layout, codes = {}, zoom = 1, onSelect }: Props) 
               {n.tags.length > 0 ? (
                 <polygon points={star(x, y, 22)} className="fixed-point" />
               ) : (
-                <circle cx={x} cy={y} r={13} className={`node lane-${kind(n.lane)}`} />
+                <circle cx={x} cy={y} r={13} className={`node lane-${tone(n)}`} />
               )}
             </g>
             {codes[n.message] && (

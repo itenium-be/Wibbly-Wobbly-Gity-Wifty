@@ -9,3 +9,9 @@ export function episodeCodes(scenes: SceneView[]): Record<string, string> {
   }
   return codes;
 }
+
+export function darkEpisodes(scenes: SceneView[]): Set<string> {
+  return new Set(
+    scenes.flatMap((scene) => scene.steps.flatMap((s) => ('episode' in s && s.episode.dark ? [s.episode.title] : []))),
+  );
+}

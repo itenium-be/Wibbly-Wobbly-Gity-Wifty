@@ -186,6 +186,8 @@ main {
 
 .edge.lane-branch,
 .node.lane-branch,
+.edge.lane-dark,
+.node.lane-dark,
 .edge.lane-parallel,
 .node.lane-parallel {
   stroke: var(--danger);

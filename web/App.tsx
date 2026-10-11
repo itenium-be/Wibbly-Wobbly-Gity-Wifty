@@ -4,7 +4,7 @@ import { blameFile, enterScene, fetchScenes, playEpisode, readFile, runCommand, 
 import { blameTarget } from './blame';
 import { Console } from './console/Console';
 import { advance, type Cue, current, played, start } from './cue';
-import { episodeCodes } from './episodes';
+import { darkEpisodes, episodeCodes } from './episodes';
 import { CommitPopover } from './graph/CommitPopover';
 import { FlatTimeline } from './graph/FlatTimeline';
 import { layout } from './graph/layout';
@@ -47,6 +47,7 @@ export function App() {
   }, [pos, scenes]);
 
   const codes = useMemo(() => episodeCodes(scenes), [scenes]);
+  const dark = useMemo(() => darkEpisodes(scenes), [scenes]);
   const scene = scenes[pos.scene];
   const sceneId = scene?.id;
   const gitPhase = scene !== undefined && pos.card === scene.story.length;
@@ -188,6 +189,7 @@ export function App() {
             {graph && (
               <FlatTimeline
                 codes={codes}
+                dark={dark}
                 zoom={zoom}
                 layout={layout(graph, workdir?.files.some((f) => f.status !== 'clean') ?? false)}
                 onSelect={(hash, at) => setPopover({ hash, at })}

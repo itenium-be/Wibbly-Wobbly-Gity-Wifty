@@ -31,6 +31,32 @@ describe('FlatTimeline', () => {
     expect(y('The Fires of Pompeii')).toBeLessThan(y('a1'));
   });
 
+  test('a dark-world commit on prime is drawn red, edge included; elsewhere it keeps its lane colour', () => {
+    const { container } = render(
+      <FlatTimeline
+        dark={new Set(['Turn Right'])}
+        layout={layout({
+          initialized: true,
+          commits: [
+            { hash: 'a1', short: 'a1', message: 'The Runaway Bride', parents: [] },
+            { hash: 'b2', short: 'b2', message: 'Turn Right', parents: ['a1'] },
+            { hash: 'c3', short: 'c3', message: 'Turn Right', parents: ['a1'] },
+          ],
+          branches: [
+            { name: 'prime-timeline', hash: 'b2' },
+            { name: 'petes-world', hash: 'c3' },
+          ],
+          tags: [],
+          head: { hash: 'b2', branch: 'prime-timeline' },
+        })}
+      />,
+    );
+    const nodes = [...container.querySelectorAll('circle.node')].map((n) => n.getAttribute('class'));
+    expect(nodes).toEqual(['node lane-prime', 'node lane-dark', 'node lane-parallel']);
+    const edges = [...container.querySelectorAll('path.edge')].map((e) => e.getAttribute('class'));
+    expect(edges).toEqual(['edge lane-dark', 'edge lane-parallel']);
+  });
+
   test('an ordinary branch lane has a name but no universe kicker', () => {
     render(
       <FlatTimeline
