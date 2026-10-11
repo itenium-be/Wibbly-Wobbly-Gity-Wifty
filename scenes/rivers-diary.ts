@@ -9,11 +9,7 @@ export const riversDiary: Scene = {
       title: "River's Diary",
       text: 'River Song meets the Doctor in the wrong order.',
       images: [{ src: '/assets/episodes/rivers-diary.jpg' }],
-      boxes: [
-        { boxes: ['His first day is her last'] },
-        { boxes: ['Every jump goes in her diary'] },
-        { boxes: ['Spoilers!'] },
-      ],
+      boxes: [{ boxes: ['His First, Her Last'] }, { boxes: ['Every Jump in The Diary'] }, { boxes: ['Spoilers!'] }],
     },
   ],
   steps: [
