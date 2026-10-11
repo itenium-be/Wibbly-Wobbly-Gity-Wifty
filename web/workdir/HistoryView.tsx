@@ -62,20 +62,13 @@ function Diff({ files }: { files: DiffFile[] }) {
               {f.removed > 0 && <i>−{f.removed}</i>}
             </span>
           </div>
-          {f.lines.map((l, i) =>
-            l.kind === 'hunk' ? (
-              // biome-ignore lint/suspicious/noArrayIndexKey: diff lines repeat and never reorder.
-              <div key={i} className="hunk">
-                {l.text}
-              </div>
-            ) : (
-              // biome-ignore lint/suspicious/noArrayIndexKey: diff lines repeat and never reorder.
-              <div key={i} className={`ln ${l.kind}`}>
-                <span>{SIGN[l.kind]}</span>
-                <span>{l.text}</span>
-              </div>
-            ),
-          )}
+          {f.lines.map((l, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: diff lines repeat and never reorder.
+            <div key={i} className={`ln ${l.kind}`}>
+              <span>{SIGN[l.kind]}</span>
+              <span>{l.text}</span>
+            </div>
+          ))}
         </section>
       ))}
     </div>

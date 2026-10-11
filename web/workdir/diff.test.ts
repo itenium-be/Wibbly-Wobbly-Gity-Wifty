@@ -37,7 +37,7 @@ describe('parseDiff', () => {
     expect(parseDiff('')).toEqual([]);
   });
 
-  test('splits a file into hunk headers, added, removed and context lines', () => {
+  test('splits a file into added, removed and context lines, without hunk headers', () => {
     expect(parseDiff(MODIFIED)).toEqual([
       {
         path: 'TARDIS.md',
@@ -45,12 +45,10 @@ describe('parseDiff', () => {
         added: 2,
         removed: 1,
         lines: [
-          { kind: 'hunk', text: '@@ -1,3 +1,3 @@' },
           { kind: 'ctx', text: '# TARDIS log' },
           { kind: 'del', text: 'Doctor: The Ninth Doctor' },
           { kind: 'add', text: 'Doctor: The Tenth Doctor' },
           { kind: 'ctx', text: 'Companions:' },
-          { kind: 'hunk', text: '@@ -8,1 +8,2 @@ Events:' },
           { kind: 'ctx', text: 'Events:' },
           { kind: 'add', text: '- "I am the Bad Wolf. I create myself."' },
         ],
@@ -64,14 +62,14 @@ describe('parseDiff', () => {
       ['dalek.md', 'new', 1, 0],
       ['cyberman.md', 'deleted', 0, 1],
     ]);
-    expect(files[0].lines.map((l) => l.kind)).toEqual(['hunk', 'add']);
+    expect(files[0].lines.map((l) => l.kind)).toEqual(['add']);
   });
 
   test('a removed line that looks like a header is still a removed line', () => {
     const [file] = parseDiff(
       'diff --git a/x.md b/x.md\n--- a/x.md\n+++ b/x.md\n@@ -1,2 +1 @@\n--- a/notes\n+++ b/notes\n',
     );
-    expect(file.lines.slice(1)).toEqual([
+    expect(file.lines).toEqual([
       { kind: 'del', text: '-- a/notes' },
       { kind: 'add', text: '++ b/notes' },
     ]);

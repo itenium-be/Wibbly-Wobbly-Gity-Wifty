@@ -733,12 +733,6 @@ main {
   font-style: normal;
 }
 
-.diff .hunk {
-  padding: 2px 12px;
-  color: var(--muted);
-  background: rgba(127, 212, 255, 0.05);
-}
-
 .diff .ln {
   display: grid;
   grid-template-columns: 1.4em minmax(0, 1fr);

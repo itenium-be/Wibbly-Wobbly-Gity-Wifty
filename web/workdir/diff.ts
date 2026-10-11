@@ -1,4 +1,4 @@
-export type DiffLine = { kind: 'hunk' | 'add' | 'del' | 'ctx'; text: string };
+export type DiffLine = { kind: 'add' | 'del' | 'ctx'; text: string };
 export type DiffFile = {
   path: string;
   status: 'new' | 'deleted' | 'modified';
@@ -20,10 +20,8 @@ export function parseDiff(text: string): DiffFile[] {
       files.push(file);
       inHunk = false;
     } else if (!file) continue;
-    else if (line.startsWith('@@')) {
-      file.lines.push({ kind: 'hunk', text: line });
-      inHunk = true;
-    } else if (inHunk) {
+    else if (line.startsWith('@@')) inHunk = true;
+    else if (inHunk) {
       const kind = KINDS[line[0]];
       if (!kind) continue;
       file.lines.push({ kind, text: line.slice(1) });
