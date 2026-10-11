@@ -12,6 +12,7 @@ export const journeysEnd: Scene = {
     },
   ],
   steps: [
+    { cmd: 'git config --global rerere.enabled true', caption: 'Remember how this paradox gets resolved' },
     { cmd: 'git merge petes-world', caption: 'The universes collide', fails: true },
     {
       edit: {
@@ -33,6 +34,7 @@ export const journeysEnd: Scene = {
           '- I am the Bad Wolf. I create myself.',
           "- An Angel appeared. Don't blink!",
           '- Who is River Song? Spoilers?',
+          '- Rose built a dimension cannon to cross back.',
           '',
         ].join('\n'),
       },
@@ -43,6 +45,5 @@ export const journeysEnd: Scene = {
       caption: 'Two parents: the universes are one again',
       accepts: 'git commit',
     },
-    { cmd: 'git branch -d petes-world', caption: 'Close the void' },
   ],
 };

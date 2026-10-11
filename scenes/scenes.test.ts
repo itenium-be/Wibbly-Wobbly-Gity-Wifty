@@ -119,7 +119,8 @@ describe('scenes', () => {
     );
     await playScene(engine, scene);
     expect(await out('git log -1 --format=%p')).toMatch(/^\w+ \w+\n$/);
-    expect(await out("git branch --format='%(refname:short)'")).toBe('prime-timeline\n');
+    expect(await out("git branch --format='%(refname:short)'")).toBe('petes-world\nprime-timeline\n');
+    expect(await out('git config --global rerere.enabled')).toBe('true\n');
   });
 
   test('blink bisects to the episode that let the Angel in', async () => {
