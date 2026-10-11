@@ -59,7 +59,7 @@ export const turnLeft: Scene = {
       caption: 'Squashed: the whole dark world is one episode',
       accepts: 'git commit',
     },
-    { cmd: 'git show --stat --format=%s', caption: 'All that is left: the warning' },
+    { cmd: 'git show', caption: 'All that is left: the warning' },
     { cmd: 'git rebase --onto ebf7702 e09813f', caption: 'Turn Left, after Forest of the Dead' },
     {
       cmd: 'git rebase --rebase-merges --onto prime-timeline ebf7702 4e05f6c',
