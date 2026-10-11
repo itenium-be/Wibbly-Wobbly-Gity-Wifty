@@ -1,16 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Episode } from '../shared/types';
 
-type Props = { episode: Episode; onPlay: () => void; seconds?: number };
+type Props = { episode: Episode; onPlay: () => Promise<boolean>; seconds?: number };
 
 export function NextEpisode({ episode, onPlay, seconds = 8 }: Props) {
   const [left, setLeft] = useState(seconds);
   const played = useRef(false);
+  // Held in a ref so a parent re-render (typing in the console) cannot restart the countdown.
+  const onPlayRef = useRef(onPlay);
+  onPlayRef.current = onPlay;
   const playOnce = useCallback(() => {
     if (played.current) return;
     played.current = true;
-    onPlay();
-  }, [onPlay]);
+    onPlayRef.current().then(
+      (done) => {
+        if (!done) played.current = false;
+      },
+      () => {
+        played.current = false;
+      },
+    );
+  }, []);
 
   useEffect(() => {
     if (left === 0) {
@@ -23,7 +33,7 @@ export function NextEpisode({ episode, onPlay, seconds = 8 }: Props) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'n' || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key !== 'n' || e.ctrlKey || e.metaKey || e.altKey || e.target instanceof HTMLTextAreaElement) return;
       if (e.target instanceof HTMLInputElement && e.target.value !== '') return;
       e.preventDefault();
       playOnce();

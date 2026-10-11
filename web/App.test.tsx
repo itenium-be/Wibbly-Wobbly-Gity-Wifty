@@ -329,4 +329,16 @@ describe('App', () => {
     await screen.findByLabelText('git command');
     expect(screen.queryByLabelText('next episode')).toBeNull();
   });
+
+  test('a failed episode play can be retried', async () => {
+    playEpisode.mockImplementationOnce(async () => {
+      throw new Error('500 boom');
+    });
+    history.replaceState(null, '', '/?scene=episodes&card=1');
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /play/i }));
+    expect(await screen.findByText(/500 boom/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /play/i }));
+    expect(await screen.findByText('After')).toBeTruthy();
+  });
 });

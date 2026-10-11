@@ -16,6 +16,7 @@ export function App() {
   const [graph, setGraph] = useState<GraphModel | null>(null);
   const [workdir, setWorkdir] = useState<WorkDir | null>(null);
   const [cueIndex, setCueIndex] = useState(0);
+  const [resets, setResets] = useState(0);
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,6 +50,7 @@ export function App() {
     setGraph(entered.graph);
     setWorkdir(entered.workdir);
     setCueIndex(0);
+    setResets((n) => n + 1);
     setInput('');
     setOutput('');
     inputRef.current?.focus();
@@ -80,19 +82,21 @@ export function App() {
   const cue = step && 'cmd' in step ? step : undefined;
   const next = step && 'episode' in step && graph?.head.branch ? step.episode : undefined;
 
-  const playNext = async (episode: Episode) => {
-    if (running.current) return;
+  const playNext = async (episode: Episode): Promise<boolean> => {
+    if (running.current) return false;
     running.current = true;
     const mine = epoch.current;
     try {
       const result = await playEpisode(episode.code);
-      if (mine !== epoch.current) return;
+      if (mine !== epoch.current) return false;
       setOutput(`$ ${result.cmd}\n${result.output}`);
       setGraph(result.graph);
       setWorkdir(result.workdir);
       setCueIndex((i) => i + 1);
+      return true;
     } catch (e) {
       if (mine === epoch.current) setOutput(`${e instanceof Error ? e.message : String(e)}`);
+      return false;
     } finally {
       running.current = false;
     }
@@ -154,7 +158,9 @@ export function App() {
             />
           )}
           <Console cue={cue} value={input} onChange={setInput} onRun={run} output={output} inputRef={inputRef} />
-          {next && <NextEpisode key={`${scene.id}-${cueIndex}`} episode={next} onPlay={() => playNext(next)} />}
+          {next && (
+            <NextEpisode key={`${scene.id}-${cueIndex}-${resets}`} episode={next} onPlay={() => playNext(next)} />
+          )}
         </>
       ) : (
         <StoryCardView key={`${scene.id}-${pos.card}`} card={scene.story[pos.card]} image={pos.image} />
