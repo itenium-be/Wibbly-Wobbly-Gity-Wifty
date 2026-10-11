@@ -38,7 +38,7 @@ type Scene = {
   id: string;                                   // "fathers-day"
   episode: string;                              // "S01E08"
   title: string;                                // "Father's Day"
-  story: { images: string[]; recap: string[] }; // episode recap → how it maps to git
+  story: StoryCard[];                           // episode recap → how it maps to git
   build: GitStep[];                             // deterministic script → starting repo state
   steps: { cmd: string; caption: string }[];    // cues for the live part
 };
@@ -68,8 +68,47 @@ type Scene = {
 
 ### Scene flow
 
-Each scene: story cards (images + recap) → git phase (graph + command input).
-The cold open is the Rose scene's story cards: Rose, the Doctor, the TARDIS, what the series is.
+Each scene: story cards → git phase (graph + command input).
+The cold open is the Rose scene's story cards: the Doctor, the TARDIS, the companions.
+
+### Story cards
+
+```ts
+type StoryCard = {
+  title: string;                                            // "The Companions"
+  text: string;
+  images: { src: string; name?: string; fate?: string }[];  // rotates when > 1
+};
+```
+
+Full-screen slide: large image left, title + text right.
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                                              S01E01 · Rose │
+│  ┌──────────────────────────┐                              │
+│  │                          │   THE COMPANIONS             │
+│  │     [ Amy Pond still ]   │                              │
+│  │      crossfades every    │   They travel with him on    │
+│  │      ~3s to the next     │   his adventures, until      │
+│  │                          │   they get themselves        │
+│  │                          │   killed (or worse).         │
+│  └──────────────────────────┘                              │
+│   AMY POND                                                 │
+│   ZAPPED INTO 1938 BY A WEEPING ANGEL      ● ● ○ ● ●       │
+└────────────────────────────────────────────────────────────┘
+```
+
+- More than one image: crossfade every ~3s; `name` and `fate` captions swap with the image; dots show the position.
+- `→` advances the card, not the image.
+
+Cold open cards:
+
+| Card           | Images                           | Captions         |
+|----------------|----------------------------------|------------------|
+| The Doctor     | Each Doctor, rotating            | name             |
+| The TARDIS     | The TARDIS                       | —                |
+| The Companions | Each companion, rotating         | name + fate      |
 
 ### Layout
 
