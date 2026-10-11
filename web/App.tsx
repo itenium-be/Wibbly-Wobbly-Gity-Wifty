@@ -166,9 +166,11 @@ export function App() {
             <button type="button" disabled={back === pos} onClick={() => setPos(back)}>
               <kbd>←</kbd> Back
             </button>
-            <button type="button" className="primary" onClick={() => setPos(forward)}>
-              {forward.card === scene.story.length ? 'Into the TARDIS' : 'Next'} <kbd>→</kbd>
-            </button>
+            {forward !== pos && (
+              <button type="button" className="primary" onClick={() => setPos(forward)}>
+                {forward.card === scene.story.length ? 'Into the TARDIS' : 'Next'} <kbd>→</kbd>
+              </button>
+            )}
           </div>
         )}
         {!gitPhase && pos.scene === 0 && (

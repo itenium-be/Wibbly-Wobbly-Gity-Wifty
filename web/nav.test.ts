@@ -55,6 +55,18 @@ describe('move', () => {
     });
   });
 
+  describe('scene without steps', () => {
+    const closing = [
+      { story: [card], steps: [1] },
+      { story: [card, card], steps: [] },
+    ];
+
+    test('has no git phase: forward stops at its last card', () => {
+      expect(move({ scene: 1, card: 0, step: 0 }, 1, closing)).toEqual({ scene: 1, card: 1, step: 0 });
+      expect(move({ scene: 1, card: 1, step: 0 }, 1, closing)).toEqual({ scene: 1, card: 1, step: 0 });
+    });
+  });
+
   test('a rotating card is a single step', () => {
     const rotating = [{ story: [{ images: [1, 2, 3] }, card] }];
     expect(move({ scene: 0, card: 0, step: 0 }, 1, rotating)).toEqual({ scene: 0, card: 1, step: 0 });
@@ -80,6 +92,14 @@ describe('query string', () => {
     expect(fromQuery('?scene=rose&card=99', named)).toEqual({ scene: 0, card: 2, step: 0 });
     expect(fromQuery('?scene=rose&card=-3', named)).toEqual({ scene: 0, card: 0, step: 0 });
     expect(fromQuery('?scene=rose&card=two', named)).toEqual({ scene: 0, card: 0, step: 0 });
+  });
+
+  test('a scene without steps clamps to its last card', () => {
+    expect(fromQuery('?scene=outro&card=9', [{ id: 'outro', story: [card], steps: [] }])).toEqual({
+      scene: 0,
+      card: 0,
+      step: 0,
+    });
   });
 
   test('an unknown or missing scene starts at the beginning', () => {

@@ -25,7 +25,7 @@ const scenes: SceneView[] = [
     episode: 'S01E06',
     title: 'Dalek',
     story: [{ title: 'The Last Dalek', text: 'It survived.', images: [] }],
-    steps: [],
+    steps: [{ cmd: 'git status', caption: 'Exterminate' }],
   },
   {
     id: 'tardis',
@@ -42,7 +42,7 @@ const scenes: SceneView[] = [
         ],
       },
     ],
-    steps: [],
+    steps: [{ cmd: 'git status', caption: 'Exterminate' }],
   },
   {
     id: 'episodes',
@@ -60,6 +60,13 @@ const scenes: SceneView[] = [
       { edit: { 'episodes/rose.md': '# Everyone\n' }, caption: 'Resolve it in the editor' },
       { cmd: 'git log', caption: 'After' },
     ],
+  },
+  {
+    id: 'outro',
+    episode: 'S04E18',
+    title: 'The End of Time',
+    story: [{ title: 'Questions?', text: '', images: [] }],
+    steps: [],
   },
 ];
 
@@ -163,6 +170,14 @@ describe('App', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Into the TARDIS/ }));
     expect(await screen.findByText('Where is the TARDIS?')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Into the TARDIS|Next|Back/ })).toBeNull();
+  });
+
+  test('the closing card has no way forward', async () => {
+    history.replaceState(null, '', '?scene=outro&card=0');
+    render(<App />);
+    expect(await screen.findByText('Questions?')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Into the TARDIS|Next/ })).toBeNull();
+    expect(screen.getByRole('button', { name: /Back/ })).toBeTruthy();
   });
 
   test('Back is disabled on the very first card', async () => {

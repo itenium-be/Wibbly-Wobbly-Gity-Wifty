@@ -1,9 +1,12 @@
-/** `card === story.length` is the scene's git phase. `step` only moves on reveal cards. */
+/** `card === story.length` is the scene's git phase; a scene with empty `steps` has none. `step` only moves on reveal cards. */
 export type Position = { scene: number; card: number; step: number };
 type NavCard = { images: unknown[]; reveal?: boolean; boxes?: unknown[] };
+type NavScene = { story: unknown[]; steps?: unknown[] };
 
-export function move(pos: Position, dir: 1 | -1, scenes: { story: NavCard[] }[]): Position {
-  const last = (scene: number) => scenes[scene].story.length;
+const lastCard = (scene: NavScene) => (scene.steps?.length === 0 ? scene.story.length - 1 : scene.story.length);
+
+export function move(pos: Position, dir: 1 | -1, scenes: { story: NavCard[]; steps?: unknown[] }[]): Position {
+  const last = (scene: number) => lastCard(scenes[scene]);
   const steps = (scene: number, card: number) => {
     const c = scenes[scene].story[card];
     if (!c) return 1;
@@ -23,7 +26,7 @@ export function move(pos: Position, dir: 1 | -1, scenes: { story: NavCard[] }[])
   return pos;
 }
 
-type NamedScene = { id: string; story: unknown[] };
+type NamedScene = NavScene & { id: string };
 
 export function toQuery(pos: Position, scenes: NamedScene[]): string {
   return `?${new URLSearchParams({ scene: scenes[pos.scene].id, card: String(pos.card) })}`;
@@ -34,5 +37,5 @@ export function fromQuery(search: string, scenes: NamedScene[]): Position {
   const scene = scenes.findIndex((s) => s.id === params.get('scene'));
   if (scene < 0) return { scene: 0, card: 0, step: 0 };
   const card = Number.parseInt(params.get('card') ?? '', 10) || 0;
-  return { scene, card: Math.min(Math.max(card, 0), scenes[scene].story.length), step: 0 };
+  return { scene, card: Math.min(Math.max(card, 0), lastCard(scenes[scene])), step: 0 };
 }
