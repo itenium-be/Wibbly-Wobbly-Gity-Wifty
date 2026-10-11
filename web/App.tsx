@@ -16,6 +16,8 @@ export function App() {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  // Bumped on every reset so responses for a scene we already left are dropped.
+  const epoch = useRef(0);
 
   useEffect(() => {
     fetchScenes().then(setScenes);
@@ -27,7 +29,10 @@ export function App() {
 
   const reset = useCallback(async () => {
     if (!sceneId) return;
-    setGraph(await enterScene(sceneId));
+    const mine = ++epoch.current;
+    const entered = await enterScene(sceneId);
+    if (mine !== epoch.current) return;
+    setGraph(entered);
     setCueIndex(0);
     setInput('');
     setOutput('');
@@ -56,7 +61,9 @@ export function App() {
   if (!scene) return null;
 
   const run = async (cmd: string) => {
+    const mine = epoch.current;
     const result = await runCommand(cmd);
+    if (mine !== epoch.current) return;
     setOutput(`$ ${cmd}\n${result.output}`);
     setGraph(result.graph);
     setCueIndex((i) => advance(scene.steps, i, cmd, result.code));
