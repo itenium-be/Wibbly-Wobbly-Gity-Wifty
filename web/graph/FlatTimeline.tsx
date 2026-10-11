@@ -157,12 +157,7 @@ export function FlatTimeline({ layout, codes = {}, dark = new Set(), zoom = 1, o
         </g>
       )}
 
-      <Tardis x={tardis.x} y={tardis.y - 40} />
-      {layout.head && (
-        <text x={tardis.x} y={tardis.y - 140} className="head-label">
-          {layout.head.label}
-        </text>
-      )}
+      <Tardis x={tardis.x} y={tardis.y - 40} label={layout.head?.label} />
     </svg>
   );
 }
