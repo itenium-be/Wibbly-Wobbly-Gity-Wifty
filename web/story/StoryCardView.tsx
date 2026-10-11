@@ -44,7 +44,6 @@ export function StoryCardView({
         <figcaption>
           {shown?.name && <div className="name">{shown.name}</div>}
           {shown?.quote && <div className="quote">{shown.quote}</div>}
-          {shown?.fate && <div className="fate">{shown.fate}</div>}
           {count > 1 && (
             <div className="dots">
               {card.images.map((img, i) => (

@@ -4,6 +4,7 @@ export type StoryImage = {
   quote?: string;
   stamp?: string;
   stampNote?: string;
+  /** Presenter's reference only: not shown on the slide. */
   fate?: string;
 };
 /** `reveal`: images are stepped through with →/← instead of rotating. */

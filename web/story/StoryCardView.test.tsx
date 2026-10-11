@@ -18,7 +18,11 @@ describe('StoryCardView', () => {
     expect(screen.getByText('The Companions')).toBeTruthy();
     expect(screen.getByText('They travel with him.')).toBeTruthy();
     expect(screen.getByText('Clara Oswald')).toBeTruthy();
-    expect(screen.getByText('Faced the raven')).toBeTruthy();
+  });
+
+  test('the fate stays off the slide', () => {
+    render(<StoryCardView card={companions} />);
+    expect(screen.queryByText('Faced the raven')).toBeNull();
   });
 
   test('rotates to the next image and its captions', async () => {

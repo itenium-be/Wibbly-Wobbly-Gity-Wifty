@@ -96,15 +96,13 @@ Full-screen slide: large image left, title + text right.
 │  │                          │   they get themselves        │
 │  │                          │   killed (or worse).         │
 │  └──────────────────────────┘                              │
-│   AMY POND                                                 │
-│   DIED                                                     │
-│   Zapped to 1938 by a Weeping Angel        ● ● ○ ● ●       │
+│   THE GIRL WHO WAITED · AMY POND           ● ● ○ ● ●       │
 └────────────────────────────────────────────────────────────┘
 ```
 
 - More than one image: crossfade every ~3s; captions swap with the image; dots show the position.
 - `→` advances the card, not the image, except on a `reveal` card: there `→` / `←` step through the images first, and nothing auto-rotates.
-- Captions: `name`, then `quote` (italic), `stamp` (large, red) and `fate` (small, under the stamp).
+- Captions: `name`, then `quote` (italic). `stamp` (+ `stampNote`) is stamped onto the image. `fate` is the presenter's reference and is not shown.
 
 Cold open cards:
 
@@ -113,7 +111,7 @@ Cold open cards:
 | The Show       | single | The First Doctor                        | —                    |
 | The Doctor     | auto   | 9, 10, 11, 12, 13, 15                   | name + quote         |
 | The TARDIS     | reveal | Police box → console room               | —                    |
-| The Companions | auto   | Those who died first, then Donna        | name + stamp + fate  |
+| The Companions | auto   | Those who died first, then Donna        | nickname · name      |
 
 The Doctor card skips War (one special) and 14 (Tennant again).
 
@@ -128,15 +126,15 @@ The Doctor card skips War (one special) and 14 (Tennant again).
 
 Rose is not among the companions: she is the next card.
 
-| Companion     | Stamp        | Fate                                                    |
-|---------------|--------------|---------------------------------------------------------|
-| Captain Jack  | DIED         | Exterminated by a Dalek. Got better.                    |
-| River Song    | DIED         | Uploaded to the Library's computer                       |
-| Amy Pond      | DIED         | Zapped to 1938 by a Weeping Angel, lived through WWII    |
-| Rory Williams | DIED         | Several times. Once erased from existence                |
-| Clara Oswald  | DIED         | Faced the raven                                          |
-| Bill Potts    | DIED         | Converted into a Cyberman                                |
-| Donna Noble   | MEMORY WIPED | Her mind would burn if she ever remembered him           |
+| Companion     | Nickname               | Stamp                | Fate (not shown)                                      |
+|---------------|------------------------|----------------------|-------------------------------------------------------|
+| Captain Jack  | The Face of Boe        | DEAD (Got better)    | Exterminated by a Dalek                               |
+| River Song    | The Wife of the Doctor | DEAD                 | Uploaded to the Library's computer                    |
+| Amy Pond      | The Girl Who Waited    | DEAD                 | Zapped to 1938 by a Weeping Angel, lived through WWII |
+| Rory Williams | The Last Centurion     | DEAD (Several times) | Once erased from existence                            |
+| Clara Oswald  | The Impossible Girl    | DEAD                 | Faced the raven                                       |
+| Bill Potts    | The Doctor's Student   | DEAD                 | Converted into a Cyberman                             |
+| Donna Noble   | The DoctorDonna        | MEMORY WIPED         | Her mind would burn if she ever remembered him        |
 
 ### Layout
 

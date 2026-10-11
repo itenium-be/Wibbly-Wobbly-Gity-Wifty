@@ -639,12 +639,6 @@ main {
   }
 }
 
-.story .fate {
-  grid-column: 1;
-  color: var(--danger);
-  letter-spacing: 1px;
-}
-
 .story .dots {
   grid-column: 2;
   grid-row: 1 / span 4;
