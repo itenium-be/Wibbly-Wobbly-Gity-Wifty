@@ -1,4 +1,4 @@
-import type { LiveState, RunResult, SceneView, WorkDir } from '../shared/types';
+import type { EpisodeResult, LiveState, RunResult, SceneView, WorkDir } from '../shared/types';
 
 async function ok(res: Response): Promise<Response> {
   if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
@@ -24,6 +24,7 @@ export async function fetchScenes(): Promise<SceneView[]> {
 
 export const enterScene = (id: string) => send<LiveState>('POST', `/api/scenes/${id}/enter`);
 export const runCommand = (input: string) => send<RunResult>('POST', '/api/run', { input });
+export const playEpisode = (code: string) => send<EpisodeResult>('POST', '/api/episode', { code });
 
 export async function readFile(path: string): Promise<string> {
   return (await ok(await fetch(`/api/file?path=${encodeURIComponent(path)}`))).text();

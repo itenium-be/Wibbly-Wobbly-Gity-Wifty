@@ -20,6 +20,18 @@ describe('api', () => {
     await expect(runCommand('git log')).rejects.toThrow('500 Internal Server Error');
   });
 
+  test('playEpisode posts the episode code', async () => {
+    let seen: { url: string; init?: RequestInit } | undefined;
+    globalThis.fetch = (async (url: string, init?: RequestInit) => {
+      seen = { url, init };
+      return new Response('{}');
+    }) as unknown as typeof fetch;
+    const { playEpisode } = await real();
+    await playEpisode('S01E02');
+    expect(seen?.url).toBe('/api/episode');
+    expect(seen?.init).toMatchObject({ method: 'POST', body: '{"code":"S01E02"}' });
+  });
+
   test('fetchScenes throws on a non-OK response', async () => {
     respond('nope', 404);
     const { fetchScenes } = await real();
