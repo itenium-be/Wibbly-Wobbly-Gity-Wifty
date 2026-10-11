@@ -62,7 +62,7 @@ export const rose: Scene = {
       text: 'Time And Relative Dimension In Space: his time machine.',
       reveal: true,
       images: [{ src: '/assets/tardis.jpg' }, { src: '/assets/tardis-console.jpg' }],
-      boxes: [{ boxes: ['Stuck as a 1960s Police Box'] }, { boxes: ['Bigger on the Inside'] }],
+      boxes: [{ boxes: ['Stuck as a 1960s Police Box'] }, { boxes: ["It's Bigger on the Inside"] }],
     },
     {
       title: 'The Companions',
