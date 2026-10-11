@@ -48,7 +48,7 @@ export const blink: Episode = {
   aired: '2007-06-09',
   title: 'Blink',
   set: { Companions: ['Martha Jones'], Location: 'Wester Drumlins, 2007' },
-  event: "A Weeping Angel appeared. Don't blink.",
+  event: "An Angel appeared. Don't blink!",
 };
 
 export const forestOfTheDead: Episode = {

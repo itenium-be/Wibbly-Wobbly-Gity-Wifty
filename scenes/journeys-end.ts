@@ -31,7 +31,7 @@ export const journeysEnd: Scene = {
           'Events:',
           '- Game Station run by Bad Wolf Corp',
           '- I am the Bad Wolf. I create myself.',
-          "- A Weeping Angel appeared. Don't blink.",
+          "- An Angel appeared. Don't blink!",
           '- Who is River Song? Spoilers?',
           '',
         ].join('\n'),
