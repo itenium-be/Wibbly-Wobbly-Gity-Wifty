@@ -122,14 +122,18 @@ export const rose: Scene = {
     },
   ],
   steps: [
-    { cmd: 'git status', caption: 'No timeline yet', fails: true },
     { cmd: 'git init', caption: 'Every timeline has to start somewhere' },
-    { cmd: 'git status', caption: 'The TARDIS log exists, but nobody tracks it' },
-    { cmd: 'git config --global alias.st status', caption: "We'll be asking this a lot" },
-    { cmd: 'git add TARDIS.md', caption: 'Stage the log' },
-    { cmd: 'git st', caption: 'Ready to become history' },
-    { cmd: 'git commit -m "Rose"', caption: 'S01E01: the first event in the timeline' },
-    { cmd: 'git log', caption: 'HEAD: where the TARDIS is right now' },
+    {
+      cmd: 'git config --global alias.st status',
+      caption: "We'll be asking this a lot",
+      after: 'git status',
+    },
+    { cmd: 'git add TARDIS.md', caption: 'Stage the log', accepts: 'git add' },
+    {
+      cmd: 'git commit -m "Rose"',
+      caption: 'S01E01: the first event in the timeline',
+      accepts: 'git commit',
+    },
     { episode: endOfTheWorld },
   ],
 };

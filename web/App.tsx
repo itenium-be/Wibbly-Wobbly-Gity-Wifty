@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Episode, GraphModel, RunResult, SceneView, WorkDir } from '../shared/types';
 import { enterScene, fetchScenes, playEpisode, readFile, runCommand, writeFile } from './api';
 import { Console } from './console/Console';
-import { advance } from './cue';
+import { advance, type Cue, current, played, start } from './cue';
 import { FlatTimeline } from './graph/FlatTimeline';
 import { layout } from './graph/layout';
 import { NextEpisode } from './NextEpisode';
@@ -15,7 +15,7 @@ export function App() {
   const [pos, setPos] = useState<Position>({ scene: 0, card: 0, image: 0 });
   const [graph, setGraph] = useState<GraphModel | null>(null);
   const [workdir, setWorkdir] = useState<WorkDir | null>(null);
-  const [cueIndex, setCueIndex] = useState(0);
+  const [cueState, setCueState] = useState<Cue>(start);
   const [resets, setResets] = useState(0);
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
@@ -49,7 +49,7 @@ export function App() {
     if (mine !== epoch.current) return;
     setGraph(entered.graph);
     setWorkdir(entered.workdir);
-    setCueIndex(0);
+    setCueState(start);
     setResets((n) => n + 1);
     setInput('');
     setOutput('');
@@ -78,6 +78,7 @@ export function App() {
   }, [scenes, reset]);
 
   if (!scene) return null;
+  const cueIndex = current(scene.steps, cueState);
   const step = scene.steps[cueIndex];
   const cue = step && 'cmd' in step ? step : step && 'edit' in step ? { cmd: '', caption: step.caption } : undefined;
   const next = step && 'episode' in step && graph?.head.branch ? step.episode : undefined;
@@ -93,7 +94,7 @@ export function App() {
       setGraph(result.graph);
       setWorkdir(result.workdir);
       if (result.code !== 0) return false;
-      setCueIndex((i) => i + 1);
+      setCueState((c) => played(scene.steps, c));
       return true;
     } catch (e) {
       if (mine === epoch.current) setOutput(`${e instanceof Error ? e.message : String(e)}`);
@@ -120,7 +121,7 @@ export function App() {
     setOutput(`$ ${cmd}\n${result.output}`);
     setGraph(result.graph);
     setWorkdir(result.workdir);
-    setCueIndex((i) => advance(scene.steps, i, cmd, result.code));
+    setCueState((c) => advance(scene.steps, c, cmd, result.code));
     setInput('');
   };
 
@@ -129,9 +130,9 @@ export function App() {
     const updated = await writeFile(path, content);
     if (mine !== epoch.current) return;
     setWorkdir(updated);
-    setCueIndex((i) => {
-      const at = scene.steps[i];
-      return at && 'edit' in at && path in at.edit ? i + 1 : i;
+    setCueState((c) => {
+      const at = scene.steps[current(scene.steps, c)];
+      return at && 'edit' in at && path in at.edit ? played(scene.steps, c) : c;
     });
   };
 

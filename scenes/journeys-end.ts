@@ -32,7 +32,11 @@ export const journeysEnd: Scene = {
       },
       caption: 'Resolve TARDIS.md: everyone is on board',
     },
-    { cmd: 'git commit -am "Journey\'s End"', caption: 'Two parents: the universes are one again' },
+    {
+      cmd: 'git commit -am "Journey\'s End"',
+      caption: 'Two parents: the universes are one again',
+      accepts: 'git commit',
+    },
     { cmd: 'git tardis', caption: 'Both timelines lead here' },
     { cmd: 'git branch -d petes-world', caption: 'Close the void' },
   ],

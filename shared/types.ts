@@ -11,8 +11,12 @@ export type StoryImage = {
 export type StoryCard = { title: string; text: string; images: StoryImage[]; reveal?: boolean };
 /** `set`: `Key: value` lines in TARDIS.md. `note`: a line appended to it. */
 export type Episode = { code: string; title: string; set?: Record<string, string>; note?: string };
-/** `fails`: the cue is expected to exit non-zero and still counts as done. */
-export type CmdStep = { cmd: string; caption: string; fails?: true };
+/**
+ * `fails`: the cue is expected to exit non-zero and still counts as done.
+ * `accepts`: any command starting with this also counts as done (`git add` for `git add .`).
+ * `after`: only cued right after the presenter ran this command; replays always play it.
+ */
+export type CmdStep = { cmd: string; caption: string; fails?: true; accepts?: string; after?: string };
 export type EpisodeStep = { episode: Episode };
 /** The presenter makes this edit in the working directory panel; replays write it directly. */
 export type EditStep = { edit: Record<string, string>; caption: string };
