@@ -11,6 +11,7 @@ const LABEL_GAP = 24;
 const R = 13;
 const PILL_X = 24;
 const pillWidth = (name: string) => name.length * 9 + 16;
+const isFixedPoint = (tag: string) => tag.startsWith('fixed-point/');
 
 const KICKER: Record<LaneKind, string> = {
   prime: 'UNIVERSE · PRIME',
@@ -114,7 +115,7 @@ export function FlatTimeline({ layout, codes = {}, dark = new Set(), zoom = 1, o
             {/* biome-ignore lint/a11y/noStaticElementInteractions: a mouse shortcut; the History tab shows the same diff. */}
             <g className="dot" onClick={(e) => onSelect?.(n.hash, { x: e.clientX, y: e.clientY })}>
               {n.tags.length > 0 ? (
-                <polygon points={star(x, y, 22)} className="fixed-point" />
+                <polygon points={star(x, y, 22)} className={n.tags.some(isFixedPoint) ? 'fixed-point' : 'dark-star'} />
               ) : (
                 <circle cx={x} cy={y} r={13} className={`node lane-${tone(n)}`} />
               )}
@@ -131,7 +132,7 @@ export function FlatTimeline({ layout, codes = {}, dark = new Set(), zoom = 1, o
               {n.short}
             </text>
             {n.tags.map((t, i) => (
-              <text key={t} x={x} y={y + 96 + i * 18} className="tag">
+              <text key={t} x={x} y={y + 96 + i * 18} className={isFixedPoint(t) ? 'tag' : 'tag dark'}>
                 ⚑ {t}
               </text>
             ))}

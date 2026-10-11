@@ -24,6 +24,26 @@ describe('FlatTimeline', () => {
     expect(screen.getByText('HEAD (detached)')).toBeTruthy();
   });
 
+  test('only fixed-point tags get the gold star; any other tag is a dark star', () => {
+    const beetle = layout({
+      initialized: true,
+      commits: [
+        { hash: 'a1', short: 'a1', message: 'The Fires of Pompeii', parents: [] },
+        { hash: 'b2', short: 'b2', message: 'The Runaway Bride', parents: ['a1'] },
+      ],
+      branches: [{ name: 'prime-timeline', hash: 'b2' }],
+      tags: [
+        { name: 'fixed-point/pompeii', hash: 'a1' },
+        { name: 'time-beetle', hash: 'b2' },
+      ],
+      head: { hash: 'b2', branch: 'prime-timeline' },
+    });
+    const { container } = render(<FlatTimeline layout={beetle} />);
+    expect(container.querySelectorAll('polygon.fixed-point')).toHaveLength(1);
+    expect(container.querySelectorAll('polygon.dark-star')).toHaveLength(1);
+    expect(screen.getByText('⚑ time-beetle').getAttribute('class')).toBe('tag dark');
+  });
+
   test('labels a commit with its episode code, title and hash, in that order', () => {
     render(<FlatTimeline layout={pompeii} codes={{ 'The Fires of Pompeii': 'S04E02' }} />);
     const y = (text: string) => Number(screen.getByText(text).getAttribute('y'));

@@ -232,6 +232,13 @@ main {
   filter: drop-shadow(0 0 8px var(--gold));
 }
 
+.dark-star {
+  fill: var(--space);
+  stroke: var(--danger);
+  stroke-width: 3;
+  filter: drop-shadow(0 0 8px var(--danger));
+}
+
 .message {
   fill: var(--text);
   font-size: 14px;
@@ -255,6 +262,10 @@ main {
   font-size: 13px;
   font-weight: 600;
   text-anchor: middle;
+}
+
+.tag.dark {
+  fill: var(--danger);
 }
 
 .pill rect {
