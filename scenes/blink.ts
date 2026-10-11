@@ -1,5 +1,4 @@
 import type { Scene } from '../shared/types';
-import { blink, boomTown, emptyChild, longGame, soundOfDrums, utopia } from './episodes';
 
 export const blinkScene: Scene = {
   id: 'blink',
@@ -13,16 +12,10 @@ export const blinkScene: Scene = {
     },
   ],
   steps: [
-    { episode: longGame },
-    { episode: emptyChild },
-    { episode: blink },
-    { episode: boomTown },
-    { episode: utopia },
-    { episode: soundOfDrums },
     { cmd: 'cat TARDIS.md', caption: "There's an Angel in the log. Don't blink." },
     { cmd: 'git bisect start', caption: 'Search the timeline' },
     { cmd: 'git bisect bad', caption: 'The Angel is here now' },
-    { cmd: 'git bisect good fixed-point/pompeii', caption: 'No Angels in Pompeii' },
+    { cmd: 'git bisect good fixed-point/pete', caption: 'No Angels in 1987' },
     { cmd: 'grep Angel TARDIS.md', caption: 'The TARDIS jumped halfway. Any Angels?', fails: true },
     { cmd: 'git bisect good', caption: 'Clean: the Angel came later' },
     {

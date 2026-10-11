@@ -1,5 +1,4 @@
 import type { Scene } from '../shared/types';
-import { badWolf, partingOfTheWays } from './episodes';
 
 export const badWolfScene: Scene = {
   id: 'bad-wolf',
@@ -13,10 +12,8 @@ export const badWolfScene: Scene = {
     },
   ],
   steps: [
-    { episode: badWolf },
     { cmd: 'git log --grep "Wolf" --oneline', caption: 'Which episode is called Bad Wolf?' },
     { cmd: 'git log -S "Bad Wolf" --oneline', caption: 'Every episode that left the message' },
     { cmd: 'git blame TARDIS.md', caption: 'Who wrote each line, and when' },
-    { episode: partingOfTheWays },
   ],
 };

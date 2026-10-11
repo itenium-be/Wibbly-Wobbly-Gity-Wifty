@@ -1,5 +1,5 @@
 import type { Scene } from '../shared/types';
-import { doomsday, riseOfTheCybermen, turnLeft } from './episodes';
+import { badWolf, doomsday, partingOfTheWays, riseOfTheCybermen } from './episodes';
 
 export const petesWorld: Scene = {
   id: 'petes-world',
@@ -8,22 +8,16 @@ export const petesWorld: Scene = {
   story: [
     {
       title: "Pete's World",
-      text: "The TARDIS falls into a parallel universe: zeppelins over London, Cybermen in the streets, and Rose's dad Pete is still alive. Same past, different future. In git, that is a branch.",
+      text: "The TARDIS falls into a parallel universe: zeppelins over London, Cybermen in the streets, and Rose's dad Pete is alive. Same past, different future.",
       images: [],
     },
   ],
   steps: [
-    { cmd: 'git branch petes-world', caption: 'A parallel universe: same past, different future' },
-    { cmd: 'git branch', caption: 'Two universes. The * is where the TARDIS is' },
-    { cmd: 'git switch petes-world', caption: 'Cross the void' },
+    { episode: badWolf },
+    { episode: partingOfTheWays },
+    { cmd: 'git switch -c petes-world', caption: 'A parallel universe: same past, different future' },
     { episode: riseOfTheCybermen },
     { episode: doomsday },
-    { cmd: 'git switch prime-timeline', caption: 'Back to our universe: no Rose here' },
-    { episode: turnLeft },
-    {
-      cmd: 'git config --global alias.tardis "log --oneline --graph --all"',
-      caption: "It's bigger on the inside",
-    },
-    { cmd: 'git tardis', caption: 'Two universes, one shared past' },
+    { cmd: 'git switch prime-timeline', caption: 'Back to our universe: Rose stays behind' },
   ],
 };

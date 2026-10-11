@@ -1,5 +1,5 @@
 import type { Scene } from '../shared/types';
-import { stolenEarth } from './episodes';
+import { blink, forestOfTheDead } from './episodes';
 
 export const journeysEnd: Scene = {
   id: 'journeys-end',
@@ -13,7 +13,8 @@ export const journeysEnd: Scene = {
     },
   ],
   steps: [
-    { episode: stolenEarth },
+    { episode: blink },
+    { episode: forestOfTheDead },
     { cmd: 'git merge petes-world', caption: 'The universes collide', fails: true },
     { cmd: 'git st', caption: 'Both universes changed the same lines' },
     {
@@ -22,11 +23,12 @@ export const journeysEnd: Scene = {
           '# TARDIS log',
           'Doctor: The Tenth Doctor',
           'Companion: Rose Tyler, Donna Noble, Martha Jones, Sarah Jane Smith, Captain Jack, Mickey Smith',
-          'Location: The Medusa Cascade',
-          '- The Moxx of Balhoon calls it "the Bad Wolf scenario"',
-          '- Someone sprayed Bad Wolf on the TARDIS',
-          "- Van Statten's helicopter is called Bad Wolf One",
-          "- Rose is stranded in Pete's World, on Bad Wolf Bay",
+          'Location: Bad Wolf Bay, Norway',
+          "Pete Tyler: alive, in Pete's World",
+          '- The Game Station is run by the Bad Wolf Corporation',
+          '- "I am the Bad Wolf. I create myself."',
+          "- A Weeping Angel got into the log. Don't blink.",
+          '- River Song knows my name. Spoilers.',
           '',
         ].join('\n'),
       },
@@ -37,7 +39,6 @@ export const journeysEnd: Scene = {
       caption: 'Two parents: the universes are one again',
       accepts: 'git commit',
     },
-    { cmd: 'git tardis', caption: 'Both timelines lead here' },
     { cmd: 'git branch -d petes-world', caption: 'Close the void' },
   ],
 };

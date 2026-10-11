@@ -1,5 +1,4 @@
 import type { Scene } from '../shared/types';
-import { endOfTheWorld } from './episodes';
 
 export const rose: Scene = {
   id: 'rose',
@@ -134,6 +133,5 @@ export const rose: Scene = {
       caption: 'S01E01: the first event in the timeline',
       accepts: 'git commit',
     },
-    { episode: endOfTheWorld },
   ],
 };
