@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { scenes } from '../scenes';
-import { blink, doomsday, forestOfTheDead } from '../scenes/episodes';
+import { blink, doomsday } from '../scenes/episodes';
 import { Engine } from '../server/engine';
 import { readGraph } from '../server/graph';
 import { play } from '../server/play';
@@ -21,7 +21,7 @@ import { layout } from '../web/graph/layout';
 type Step =
   | { cmd: string | ((live: string) => Promise<string>); caption: string }
   | { episode: Episode; caption: string; date: string }
-  | { edit: (live: string) => Promise<string>; caption: string };
+  | { edit: (live: string) => Promise<string>; caption: string; ifConflict?: true };
 type Scenario = {
   id: string;
   title: string;
@@ -37,7 +37,12 @@ const runawayBride: Episode = {
   aired: '2006-12-25',
   title: 'The Runaway Bride',
   set: { Companions: ['Donna Noble'], Location: 'London, Christmas 2006' },
-  event: 'The Doctor stopped the Racnoss. Donna saved him.',
+};
+const partnersInCrime: Episode = {
+  code: 'S04E01',
+  aired: '2008-04-05',
+  title: 'Partners in Crime',
+  event: 'Rose crossed over, for a moment.',
 };
 const turnRight: Episode = {
   code: 'Chiswick',
@@ -49,56 +54,37 @@ const turnRight: Episode = {
 const doctorDies: Episode = {
   code: 'Christmas 2006',
   title: 'The Doctor dies',
-  set: { Doctor: 'dead, under the Thames', Location: 'London, Christmas 2006' },
+  set: { Doctor: 'dead, under the Thames' },
   event: 'The Doctor drowned the Racnoss, and himself. Nobody stopped him.',
   fastForward: true,
 };
-const titanic: Episode = {
-  code: 'Christmas 2007',
-  title: 'The Titanic falls on London',
-  set: { Location: 'Leeds, refugee housing' },
-  event: 'The Titanic fell on London',
-  fastForward: true,
-};
-const starsGoingOut: Episode = {
-  code: '2008',
-  title: 'The stars are going out',
-  event: 'The stars are going out',
-  fastForward: true,
-};
-const dimensionCannon: Episode = {
-  code: "Torchwood, Pete's World",
-  title: 'The dimension cannon',
-  event: 'Rose built a dimension cannon. The stars are going out, in every universe.',
-  fastForward: true,
-};
-const turnLeft: Episode = {
-  code: 'S04E11',
-  aired: '2008-06-21',
-  title: 'Turn Left',
-  event: 'Bad Wolf. The darkness is coming.',
-};
+/** Commits on prime drawn red: the dark world. The original Partners in Crime stays in Rose's universe. */
+const DARK = new Set([turnRight.title, doctorDies.title, partnersInCrime.title]);
+// Outside the Journey's End conflict, so rerere's recorded resolution still matches when the merge is replayed.
+const warn = (md: string) => md.replace('# TARDIS log\n', '# TARDIS log\nWarning: Bad Wolf. The darkness is coming.\n');
 const inBroadcastOrder: Scene[] = scenes.map((scene) => {
   if (scene.id === 'parting-of-the-ways')
     return {
       ...scene,
-      steps: scene.steps.flatMap((s) => {
-        if ('episode' in s && s.episode === blink) return [{ episode: runawayBride }, s];
-        if ('episode' in s && s.episode === forestOfTheDead) return [s, { episode: turnLeft }];
-        return [s];
-      }),
+      steps: scene.steps.flatMap((s) => ('episode' in s && s.episode === blink ? [{ episode: runawayBride }, s] : [s])),
     };
   if (scene.id === 'petes-world')
     return {
       ...scene,
       steps: scene.steps.flatMap((s) => {
-        if ('cmd' in s) return [{ ...s, cmd: s.cmd.replace('HEAD~2', 'HEAD~4') }];
-        if (s.episode === doomsday) return [s, { episode: dimensionCannon }];
+        if ('cmd' in s) return [{ ...s, cmd: s.cmd.replace('HEAD~2', 'HEAD~3') }];
+        if (s.episode === doomsday) return [s, { episode: partnersInCrime }];
         return [s];
       }),
     };
+  if (scene.id === 'journeys-end')
+    return {
+      ...scene,
+      steps: [{ cmd: 'git config --global rerere.enabled true', caption: 'Remember how we resolve this' }, ...scene.steps],
+    };
   return scene;
 });
+const hashes: Record<string, string> = {};
 const git = async (live: string, args: string[]) =>
   (await Bun.$`git ${args}`.cwd(live).env({ ...process.env, GIT_CONFIG_GLOBAL: `${live}.gitconfig` }).text()).trim();
 const metacrisis: Episode = {
@@ -114,39 +100,50 @@ const show = async (live: string, rev: string) =>
 const scenarios: Scenario[] = [
   {
     id: 'turn-left',
-    title: 'Turn Left · branch from the past, cherry-pick across universes',
-    lore: "After Bad Wolf: the whole history is there, in broadcast order (… The Runaway Bride → Blink → Forest of the Dead → Turn Left → The Stolen Earth → Journey's End → Angels quantum-locked). Pete's World ends with Rose building the dimension cannon, merged in at Journey's End. The TARDIS goes back to Turn Left; Donna's dark world branches off The Runaway Bride; Rose's commit crosses into it from the parallel universe.",
+    title: 'Turn Left · reset, cherry-pick, squash, rebase, rerere',
+    lore: "After Bad Wolf: the whole history is there (The Runaway Bride now sits between The Parting of the Ways and Blink; Pete's World ends with Partners in Crime, Rose's first jump; Journey's End turns on rerere before its merge). A time beetle rewrites prime from The Runaway Bride; the dark world is committed on prime itself (red). Rose crosses over from her universe; Donna turns left; the red is squashed into one Turn Left commit and the real world is replayed on top, with Turn Left in broadcast order. Rerere resolves Journey's End again.",
     scenes: inBroadcastOrder,
     start: 'outro',
     steps: [
+      { cmd: 'git log --oneline --grep Bride', caption: 'Christmas 2006: Donna meets the Doctor' },
       {
-        cmd: async (live) => `git switch --detach ${await git(live, ['log', '--format=%h', '-1', '--grep', 'Turn Left'])}`,
-        caption: 'The TARDIS lands on Turn Left',
-      },
-      { cmd: 'git log --oneline -4', caption: 'Donna met the Doctor at Christmas' },
-      {
-        cmd: async (live) =>
-          `git switch -c turn-right ${await git(live, ['log', '--format=%h', '-1', '--grep', 'Runaway Bride'])}`,
-        caption: "A time beetle: Donna's world splits at The Runaway Bride",
+        cmd: async (live) => {
+          for (const [k, g] of [['old', ''], ['rb', 'Runaway Bride'], ['forest', 'Forest of the Dead'], ['pic', 'Partners in Crime']])
+            hashes[k] = await git(live, ['log', '--format=%h', '-1', ...(g ? ['--grep', g] : [])]);
+          return `git reset --hard ${hashes.rb}`;
+        },
+        caption: 'A time beetle: everything after The Runaway Bride is gone',
       },
       { episode: turnRight, caption: 'Donna turns right', date: '2006-12-26 19:00:00 +0000' },
       { episode: doctorDies, caption: 'Nobody stops him: the Doctor dies fighting the Racnoss', date: '2006-12-27 20:00:00 +0000' },
-      { episode: titanic, caption: 'No Doctor to save London', date: '2007-12-25 20:00:00 +0000' },
-      { cmd: 'git log --oneline --grep cannon prime-timeline', caption: "Rose, in her universe: merged in at Journey's End" },
+      { cmd: 'git spoilers -4', caption: "River's diary: the world before the beetle" },
+      { cmd: async () => `git log --oneline -1 --grep Partners ${hashes.old}`, caption: 'Rose, still in her universe' },
+      { cmd: async () => `git cherry-pick ${hashes.pic}`, caption: 'Rose crosses over' },
       {
-        cmd: async (live) =>
-          `git cherry-pick ${await git(live, ['log', '--format=%h', '-1', '--grep', 'cannon', 'prime-timeline'])}`,
-        caption: 'Rose crosses over from her universe',
-      },
-      {
-        edit: async (live) => applyEpisode(await show(live, 'turn-right:TARDIS.md'), dimensionCannon),
+        edit: async (live) => applyEpisode(await show(live, 'HEAD:TARDIS.md'), partnersInCrime),
         caption: 'Resolve TARDIS.md: Rose, in the dark world',
+        ifConflict: true,
       },
       { cmd: 'git add TARDIS.md && git cherry-pick --continue', caption: 'Rose finds Donna' },
-      { episode: starsGoingOut, caption: 'The stars are going out', date: '2008-06-14 19:00:00 +0000' },
-      { cmd: 'git switch prime-timeline', caption: 'Rose sends Donna back: she turns left' },
-      { cmd: 'git branch -d turn-right', caption: 'Git refuses: that world has commits nowhere else' },
-      { cmd: 'git branch -D turn-right', caption: 'That world never happened' },
+      {
+        edit: async (live) => warn(await show(live, `${hashes.rb}:TARDIS.md`)),
+        caption: 'Donna turns left: the Doctor lives, the warning stays',
+      },
+      { cmd: 'git commit -am "Turn Left"', caption: 'Turn Left' },
+      {
+        cmd: async () => `git reset --soft ${hashes.rb} && git commit -m "Turn Left"`,
+        caption: 'Squash: the whole dark world becomes one episode',
+      },
+      { cmd: 'git show --stat --format=%s', caption: 'All that is left: the warning' },
+      { cmd: async () => `git rebase --onto ${hashes.forest} ${hashes.rb}`, caption: 'Turn Left, after Forest of the Dead: broadcast order' },
+      {
+        cmd: async () => `git rebase --rebase-merges --onto prime-timeline ${hashes.forest} ${hashes.old}`,
+        caption: 'The real world, replayed on top',
+      },
+      { cmd: 'git diff', caption: "Journey's End again: rerere remembers" },
+      { cmd: 'git add TARDIS.md && git rebase --continue', caption: 'Merged, without touching the editor' },
+      { cmd: 'git switch -C prime-timeline', caption: 'Back on the prime timeline' },
+      { cmd: 'git log --oneline --graph -13', caption: 'Every episode in broadcast order' },
     ],
   },
   {
@@ -217,6 +214,7 @@ for (const scenario of scenarios.filter((x) => !only || x.id === only)) {
       const r = await engine.run(cmd);
       frames.push({ cmd, caption: step.caption, output: r.output, code: r.code, ...(await state()) });
     } else if ('edit' in step) {
+      if (step.ifConflict && !(await state()).workdir.files.some((f) => f.status === 'conflicted')) continue;
       await engine.writeFile('TARDIS.md', await step.edit(live));
       frames.push({ cmd: '(edit TARDIS.md in the editor)', caption: step.caption, output: '', code: 0, ...(await state()) });
     } else {
@@ -230,15 +228,24 @@ for (const scenario of scenarios.filter((x) => !only || x.id === only)) {
 const codes = {
   ...episodeCodes(scenes),
   ...Object.fromEntries(
-    [runawayBride, turnRight, doctorDies, titanic, starsGoingOut, dimensionCannon, turnLeft].map((e) => [e.title, e.code]),
+    [runawayBride, partnersInCrime, turnRight, doctorDies].map((e) => [e.title, e.code]),
   ),
   [metacrisis.title]: metacrisis.code,
 };
 const SCALE = 0.62;
 const svg = (f: Frame) => {
-  const html = renderToStaticMarkup(
-    <FlatTimeline layout={layout(f.graph, f.workdir.files.some((x) => x.status !== 'clean'))} codes={codes} />,
-  );
+  const l = layout(f.graph, f.workdir.files.some((x) => x.status !== 'clean'));
+  const dark = (n: { message: string; lane: number }) => DARK.has(n.message) && l.lanes[n.lane]?.kind === 'prime';
+  let edge = 0;
+  let node = 0;
+  const circles = l.nodes.filter((n) => n.tags.length === 0);
+  const html = renderToStaticMarkup(<FlatTimeline layout={l} codes={codes} />)
+    .replace(/class="edge lane-(\w+)"/g, (m, kind) =>
+      l.edges[edge++] && kind === 'prime' && dark(l.edges[edge - 1].to) ? 'class="edge lane-branch"' : m,
+    )
+    .replace(/class="node lane-(\w+)"/g, (m, kind) =>
+      circles[node++] && kind === 'prime' && dark(circles[node - 1]) ? 'class="node lane-branch"' : m,
+    );
   const [, , w, h] = (html.match(/viewBox="([^"]+)"/)?.[1] ?? '0 0 1 1').split(' ').map(Number);
   return html.replace(/style="[^"]*"/, `style="width:${Math.round(w * SCALE)}px;height:${Math.round(h * SCALE)}px"`);
 };
