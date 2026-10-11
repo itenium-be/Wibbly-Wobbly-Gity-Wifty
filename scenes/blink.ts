@@ -24,7 +24,7 @@ export const blinkScene: Scene = {
     { cmd: 'sh dont-blink.sh && echo "Safe"', caption: 'The test passes' },
     { cmd: 'rm dont-blink.sh', caption: "You'd keep the test, so the Angels can't come back" },
     {
-      cmd: 'git commit -am "The Angels are quantum-locked"',
+      cmd: 'git commit -am "Angels quantum-locked"',
       caption: 'Fixed forward: history untouched',
       accepts: 'git commit',
     },

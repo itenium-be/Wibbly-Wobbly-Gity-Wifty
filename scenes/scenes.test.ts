@@ -122,7 +122,7 @@ describe('scenes', () => {
 
   test('blink fixes forward: a new commit drops the Angel', async () => {
     await playScene(engine, sceneOf('blink'));
-    expect(await out('git log --format=%s -1')).toBe('The Angels are quantum-locked\n');
+    expect(await out('git log --format=%s -1')).toBe('Angels quantum-locked\n');
     expect(await out('git show HEAD:TARDIS.md')).not.toContain('Angel');
     expect(await out('git show HEAD~1:TARDIS.md')).toContain('Angel');
     expect(await out('git status --short')).toBe('');
