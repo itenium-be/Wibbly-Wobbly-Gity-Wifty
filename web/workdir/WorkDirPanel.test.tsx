@@ -67,20 +67,20 @@ describe('WorkDirPanel', () => {
   test('switches between the working directory and the history', () => {
     setup();
     const tab = (name: RegExp) => screen.getByRole('tab', { name });
-    expect(tab(/WORKING DIR/).getAttribute('aria-selected')).toBe('true');
-    fireEvent.click(tab(/HISTORY/));
-    expect(tab(/HISTORY/).getAttribute('aria-selected')).toBe('true');
+    expect(tab(/^dir/).getAttribute('aria-selected')).toBe('true');
+    fireEvent.click(tab(/^log/));
+    expect(tab(/^log/).getAttribute('aria-selected')).toBe('true');
     expect(screen.queryByText('TARDIS.md')).toBeNull();
     expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['a1b2c3dHEAD → prime-timelineRose']);
-    fireEvent.click(tab(/WORKING DIR/));
+    fireEvent.click(tab(/^dir/));
     expect(screen.getByText('TARDIS.md')).toBeTruthy();
   });
 
   test('counts the changed files on the working directory tab', () => {
     const { rerender, props } = setup();
-    expect(screen.getByRole('tab', { name: /WORKING DIR/ }).textContent).toBe('WORKING DIR2');
+    expect(screen.getByRole('tab', { name: /^dir/ }).textContent).toBe('dir2');
     rerender(<WorkDirPanel workdir={{ ...workdir, files: [workdir.files[0]] }} {...props} />);
-    expect(screen.getByRole('tab', { name: /WORKING DIR/ }).textContent).toBe('WORKING DIR');
+    expect(screen.getByRole('tab', { name: /^dir/ }).textContent).toBe('dir');
   });
 
   test('flashes a file whose status changed', () => {

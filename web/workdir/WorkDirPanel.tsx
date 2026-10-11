@@ -128,7 +128,7 @@ export function WorkDirPanel({ workdir, branch, graph, load, save, onDone }: Pro
             aria-selected={tab === 'files'}
             onClick={() => setTab('files')}
           >
-            WORKING DIR
+            dir
             {changed > 0 && <span className="count">{changed}</span>}
           </button>
           <button
@@ -138,7 +138,7 @@ export function WorkDirPanel({ workdir, branch, graph, load, save, onDone }: Pro
             aria-selected={tab === 'history'}
             onClick={() => setTab('history')}
           >
-            HISTORY
+            log
           </button>
         </span>
         <span className={workdir.merging ? 'branch merging' : 'branch'}>
