@@ -10,6 +10,7 @@ export type Node = {
   lane: number;
   tags: string[];
   branches: string[];
+  lost?: true;
 };
 export type Edge = { from: Node; to: Node; merge: boolean };
 export type Head = { col: number; lane: number; label: string };
@@ -96,6 +97,7 @@ export function layout(graph: GraphModel, dirty = false): Layout {
     lane: laneNames.indexOf(owner.get(c.hash) ?? DETACHED),
     tags: graph.tags.filter((t) => t.hash === c.hash).map((t) => t.name),
     branches: graph.branches.filter((b) => b.hash === c.hash).map((b) => b.name),
+    ...(c.lost && { lost: true as const }),
   }));
 
   const byHash = new Map(nodes.map((n) => [n.hash, n]));

@@ -72,7 +72,8 @@ export function FlatTimeline({ layout, codes = {}, dark = new Set(), zoom = 1, o
     return `M${a.x} ${a.y} ${curve(a, k)} L${b.x} ${b.y}`;
   };
   const kind = (lane: number) => layout.lanes[lane]?.kind ?? 'prime';
-  const tone = (n: Node) => (kind(n.lane) === 'prime' && dark.has(n.message) ? 'dark' : kind(n.lane));
+  const tone = (n: Node) => ((kind(n.lane) === 'prime' || n.lost) && dark.has(n.message) ? 'dark' : kind(n.lane));
+  const lane = (n: Node) => `lane-${tone(n)}${n.lost ? ' lost' : ''}`;
   const tardis = at(layout.head ?? { col: 0, lane: 0 });
 
   return (
@@ -102,7 +103,7 @@ export function FlatTimeline({ layout, codes = {}, dark = new Set(), zoom = 1, o
       )}
 
       {layout.edges.map(({ from, to, merge }) => (
-        <path key={`${from.hash}-${to.hash}`} d={link(from, to, merge)} className={`edge lane-${tone(to)}`} />
+        <path key={`${from.hash}-${to.hash}`} d={link(from, to, merge)} className={`edge ${lane(to)}`} />
       ))}
 
       {layout.pending?.from && <path d={link(layout.pending.from, layout.pending, false)} className="edge pending" />}
@@ -117,7 +118,7 @@ export function FlatTimeline({ layout, codes = {}, dark = new Set(), zoom = 1, o
               {n.tags.length > 0 ? (
                 <polygon points={star(x, y, 22)} className={n.tags.some(isFixedPoint) ? 'fixed-point' : 'dark-star'} />
               ) : (
-                <circle cx={x} cy={y} r={13} className={`node lane-${tone(n)}`} />
+                <circle cx={x} cy={y} r={13} className={`node ${lane(n)}`} />
               )}
             </g>
             {codes[n.message] && (

@@ -77,6 +77,29 @@ describe('FlatTimeline', () => {
     expect(edges).toEqual(['edge lane-dark', 'edge lane-parallel']);
   });
 
+  test('a lost dark-world commit stays red, dashed; other lost commits are grey', () => {
+    const { container } = render(
+      <FlatTimeline
+        dark={new Set(['Turn Right'])}
+        layout={layout({
+          initialized: true,
+          commits: [
+            { hash: 'a1', short: 'a1', message: 'The Runaway Bride', parents: [] },
+            { hash: 'b2', short: 'b2', message: 'Turn Right', parents: ['a1'], lost: true },
+            { hash: 'c3', short: 'c3', message: 'Turn Left', parents: ['b2'], lost: true },
+          ],
+          branches: [{ name: 'prime-timeline', hash: 'a1' }],
+          tags: [],
+          head: { hash: 'a1', branch: 'prime-timeline' },
+        })}
+      />,
+    );
+    const nodes = [...container.querySelectorAll('circle.node')].map((n) => n.getAttribute('class'));
+    expect(nodes).toEqual(['node lane-prime', 'node lane-dark lost', 'node lane-detached lost']);
+    const edges = [...container.querySelectorAll('path.edge')].map((e) => e.getAttribute('class'));
+    expect(edges).toEqual(['edge lane-dark lost', 'edge lane-detached lost']);
+  });
+
   test('an ordinary branch lane has a name but no universe kicker', () => {
     render(
       <FlatTimeline
