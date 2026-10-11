@@ -13,7 +13,12 @@ export const rose: Scene = {
     },
     {
       title: 'The Doctor',
-      text: 'This is the Doctor. He travels through time on fun adventures, where he lets his companions do the dirty work so he can keep his hands clean and his conscience clear.',
+      text: 'This is the Doctor. He travels through time and space.',
+      boxes: [
+        { boxes: ['Fun Adventures'] },
+        { boxes: ['Companions Do the Dirty Work'] },
+        { boxes: ['Hands Clean, Conscience Clear'] },
+      ],
       images: [
         {
           src: '/assets/doctors/01-hartnell.jpg',
