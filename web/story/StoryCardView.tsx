@@ -59,12 +59,15 @@ export function StoryCardView({
         <h2>{card.title}</h2>
         <p>{card.text}</p>
         {groups.map((group) => (
-          <div key={group.join('|')} className="boxes">
-            {group.map((box) => (
-              <div key={box} className="box">
-                {box}
-              </div>
-            ))}
+          <div key={group.boxes.join('|')}>
+            {group.title && <h3 className="boxes-title">{group.title}</h3>}
+            <div className="boxes">
+              {group.boxes.map((box) => (
+                <div key={box} className="box">
+                  {box}
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>

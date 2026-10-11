@@ -9,9 +9,10 @@ export type StoryImage = {
 };
 /**
  * `reveal`: images are stepped through with →/← instead of rotating.
- * `boxes`: groups of boxes under the text; the first shows at once, each next group takes a →, after any reveal images.
+ * `boxes`: titled groups of boxes under the text; the first shows at once, each next group takes a →, after any reveal images.
  */
-export type StoryCard = { title: string; text: string; images: StoryImage[]; reveal?: boolean; boxes?: string[][] };
+export type BoxGroup = { title?: string; boxes: string[] };
+export type StoryCard = { title: string; text: string; images: StoryImage[]; reveal?: boolean; boxes?: BoxGroup[] };
 /** `set`: `Key: value` lines in TARDIS.md, or `Key:` and a `- item` per entry. `event`: a line appended under `Events:`. */
 /**
  * `aired`: broadcast date (YYYY-MM-DD); the commit carries it so the timeline sorts in broadcast order.

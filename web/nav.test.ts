@@ -39,7 +39,7 @@ describe('move', () => {
   });
 
   describe('boxes', () => {
-    const boxed = { images: [1], boxes: [['a', 'b'], ['c'], ['d']] };
+    const boxed = { images: [1], boxes: [{ boxes: ['a', 'b'] }, { boxes: ['c'] }, { boxes: ['d'] }] };
     const withBoxes = [{ story: [boxed, card] }];
 
     test('forward reveals each group after the first before the next card', () => {

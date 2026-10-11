@@ -1030,6 +1030,17 @@ main {
   color: var(--text);
 }
 
+.story-text .boxes-title {
+  margin: 24px 0 0;
+  color: var(--glow);
+  font:
+    700 18px Orbitron,
+    sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: box-in 0.4s ease-out;
+}
+
 .story-text .boxes {
   display: flex;
   flex-wrap: wrap;

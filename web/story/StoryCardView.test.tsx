@@ -86,7 +86,7 @@ describe('StoryCardView', () => {
       title: 'The Show',
       text: 'Since 1963.',
       images: [{ src: '/logo.jpg' }],
-      boxes: [['SPOILERS', 'MINIMAL SPOILERS'], ['Upbeat']],
+      boxes: [{ title: 'Choose your timeline', boxes: ['SPOILERS', 'MINIMAL SPOILERS'] }, { boxes: ['Upbeat'] }],
     };
 
     test('the first group shows straight away', () => {
@@ -94,6 +94,11 @@ describe('StoryCardView', () => {
       expect(screen.getByText('SPOILERS')).toBeTruthy();
       expect(screen.getByText('MINIMAL SPOILERS')).toBeTruthy();
       expect(screen.queryByText('Upbeat')).toBeNull();
+    });
+
+    test('a group shows its title', () => {
+      render(<StoryCardView card={show} />);
+      expect(screen.getByText('Choose your timeline')).toBeTruthy();
     });
 
     test('each step shows the next group', () => {
