@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmp } from '../test/tmp';
 import { buildSnapshot } from './build';
@@ -62,6 +62,24 @@ describe('readWorkDir', () => {
     await buildSnapshot(dir, [{ git: ['init', '-q'] }, { commit: 'Rose', files: { 'old.md': 'x' } }]);
     await git(dir, ['mv', 'old.md', 'new.md']);
     expect((await readWorkDir(dir)).files).toEqual([{ path: 'new.md', status: 'staged', code: 'R ' }]);
+  });
+
+  test('a worktree rename (intent-to-add) does not swallow the next entry', async () => {
+    const dir = await tmp();
+    await buildSnapshot(dir, [
+      { git: ['init', '-q'] },
+      { commit: 'Rose', files: { 'Rose.md': 'Rose Tyler\n', 'z.md': 'z\n' } },
+      { write: { 'z.md': 'zz\n' } },
+    ]);
+    await rename(join(dir, 'Rose.md'), join(dir, 'a.md'));
+    await git(dir, ['add', '-N', 'a.md']);
+    expect(await readWorkDir(dir)).toEqual({
+      merging: false,
+      files: [
+        { path: 'a.md', status: 'modified', code: ' R' },
+        { path: 'z.md', status: 'modified', code: ' M' },
+      ],
+    });
   });
 
   test('a failed merge marks the file conflicted and the repo merging', async () => {

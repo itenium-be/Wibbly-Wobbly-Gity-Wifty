@@ -45,7 +45,7 @@ async function statusCodes(dir: string): Promise<Map<string, string> | null> {
     const xy = entry.slice(0, 2);
     codes.set(entry.slice(3), xy);
     // A rename or copy is followed by its source path as a separate entry.
-    if (xy[0] === 'R' || xy[0] === 'C') i++;
+    if (/[RC]/.test(xy)) i++;
   }
   return codes;
 }
