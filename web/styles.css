@@ -83,10 +83,29 @@ header .ep small {
   margin-right: 12px;
 }
 
+header .zoom {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.zoom button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--panel);
+  font: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
 main {
   grid-column: 1;
   grid-row: 2;
   min-height: 0;
+  overflow: auto;
 }
 
 /* timeline */

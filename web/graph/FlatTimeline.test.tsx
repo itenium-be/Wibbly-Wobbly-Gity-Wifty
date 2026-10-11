@@ -60,6 +60,15 @@ describe('FlatTimeline', () => {
     expect(container.querySelector('.empty')).toBeNull();
   });
 
+  test('fills its container at zoom 1 and scales with the zoom factor', () => {
+    const { rerender } = render(<FlatTimeline layout={pompeii} />);
+    const svg = screen.getByRole('img', { name: 'timeline' });
+    expect(svg.style.width).toBe('100%');
+    rerender(<FlatTimeline layout={pompeii} zoom={2} />);
+    expect(svg.style.width).toBe('200%');
+    expect(svg.style.height).toBe('200%');
+  });
+
   test('draws the pending node as uncommitted', () => {
     render(<FlatTimeline layout={{ ...pompeii, pending: { col: 2, lane: 0, from: { col: 1, lane: 0 } } }} />);
     expect(screen.getByText('uncommitted')).toBeTruthy();

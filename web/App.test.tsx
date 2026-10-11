@@ -300,6 +300,16 @@ describe('App', () => {
     expect(await screen.findByText('After')).toBeTruthy();
   });
 
+  test('+ and − zoom only the timeline', async () => {
+    await toGitPhase();
+    const svg = await screen.findByRole('img', { name: 'timeline' });
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom in' }));
+    expect(svg.style.width).toBe('125%');
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom out' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom out' }));
+    expect(svg.style.width).toBe('75%');
+  });
+
   test('starts at the story card in the URL', async () => {
     history.replaceState(null, '', '/?scene=dalek&card=0');
     render(<App />);

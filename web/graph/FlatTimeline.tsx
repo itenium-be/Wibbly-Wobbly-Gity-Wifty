@@ -22,7 +22,9 @@ function star(x: number, y: number, r: number) {
   }).join(' ');
 }
 
-export function FlatTimeline({ layout, codes = {} }: { layout: Layout; codes?: Record<string, string> }) {
+type Props = { layout: Layout; codes?: Record<string, string>; zoom?: number };
+
+export function FlatTimeline({ layout, codes = {}, zoom = 1 }: Props) {
   const cols = Math.max(0, layout.pending?.col ?? 0, ...layout.nodes.map((n) => n.col));
   const width = X0 + cols * DX + 260;
   const height = Y0 + Math.max(1, layout.lanes.length) * DY;
@@ -30,7 +32,13 @@ export function FlatTimeline({ layout, codes = {} }: { layout: Layout; codes?: R
   const tardis = at(layout.head ?? { col: 0, lane: 0 });
 
   return (
-    <svg className="timeline" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="timeline">
+    <svg
+      className="timeline"
+      viewBox={`0 0 ${width} ${height}`}
+      style={{ width: `${zoom * 100}%`, height: `${zoom * 100}%` }}
+      role="img"
+      aria-label="timeline"
+    >
       {layout.lanes.map((lane, i) => (
         <g key={lane.name}>
           <line x1={40} x2={width - 40} y1={Y0 + i * DY} y2={Y0 + i * DY} className="lane-line" />

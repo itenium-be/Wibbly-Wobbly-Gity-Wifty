@@ -11,6 +11,8 @@ import { fromQuery, move, type Position, toQuery } from './nav';
 import { StoryCardView } from './story/StoryCardView';
 import { WorkDirPanel } from './workdir/WorkDirPanel';
 
+const ZOOM_STEP = 0.25;
+
 export function App() {
   const [scenes, setScenes] = useState<SceneView[]>([]);
   const [pos, setPos] = useState<Position>({ scene: 0, card: 0, image: 0 });
@@ -18,6 +20,7 @@ export function App() {
   const [workdir, setWorkdir] = useState<WorkDir | null>(null);
   const [cueState, setCueState] = useState<Cue>(start);
   const [resets, setResets] = useState(0);
+  const [zoom, setZoom] = useState(1);
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -145,6 +148,20 @@ export function App() {
           <small>{scene.episode}</small>
           {scene.title}
         </div>
+        {gitPhase && (
+          <div className="zoom">
+            <button
+              type="button"
+              aria-label="Zoom out"
+              onClick={() => setZoom((z) => Math.max(ZOOM_STEP, z - ZOOM_STEP))}
+            >
+              −
+            </button>
+            <button type="button" aria-label="Zoom in" onClick={() => setZoom((z) => z + ZOOM_STEP)}>
+              +
+            </button>
+          </div>
+        )}
       </header>
       {gitPhase ? (
         <>
@@ -152,6 +169,7 @@ export function App() {
             {graph && (
               <FlatTimeline
                 codes={codes}
+                zoom={zoom}
                 layout={layout(graph, workdir?.files.some((f) => f.status !== 'clean') ?? false)}
               />
             )}
