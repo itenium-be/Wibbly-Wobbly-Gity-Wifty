@@ -8,5 +8,7 @@
 [core]
 	autocrlf = false
 	pager = cat
+	excludesFile = /dev/null
+	attributesFile = /dev/null
 [color]
 	ui = false

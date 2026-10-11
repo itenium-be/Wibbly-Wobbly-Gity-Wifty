@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmp } from '../test/tmp';
+import { buildSnapshot } from './build';
 import { git } from './git';
 
 describe('git', () => {
@@ -41,5 +42,21 @@ describe('git', () => {
     const { code, output } = await git(dir, ['log']);
     expect(code).not.toBe(0);
     expect(output).toContain('not a git repository');
+  });
+
+  test('ignores the presenter global ignore file', async () => {
+    const home = await tmp();
+    await mkdir(join(home, '.config/git'), { recursive: true });
+    await writeFile(join(home, '.config/git/ignore'), '*.md\n');
+    const realHome = process.env.HOME;
+    process.env.HOME = home;
+    try {
+      const dir = await tmp();
+      await buildSnapshot(dir, [{ git: ['init', '-q'] }, { commit: 'Rose' }]);
+      const { output } = await git(dir, ['ls-files']);
+      expect(output.trim()).toBe('episodes/rose.md');
+    } finally {
+      process.env.HOME = realHome;
+    }
   });
 });
