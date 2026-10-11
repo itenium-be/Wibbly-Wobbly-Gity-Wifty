@@ -42,8 +42,9 @@ export type Episode = {
  * `fails`: the cue is expected to exit non-zero and still counts as done.
  * `accepts`: any command starting with this also counts as done (`git add` for `git add .`).
  * `after`: only cued right after the presenter ran this command; replays always play it.
+ * `hint`: shows the command as ghost text even when guided mode is off.
  */
-export type CmdStep = { cmd: string; caption: string; fails?: true; accepts?: string; after?: string };
+export type CmdStep = { cmd: string; caption: string; fails?: true; accepts?: string; after?: string; hint?: true };
 export type EpisodeStep = { episode: Episode };
 /** The presenter makes this edit in the working directory panel; replays write it directly. */
 export type EditStep = { edit: Record<string, string>; caption: string };

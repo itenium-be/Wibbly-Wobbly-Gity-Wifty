@@ -5,12 +5,13 @@ import { Console } from './Console';
 
 const cue = { cmd: 'git rebase prime-timeline', caption: 'Rose drags her universe onto the prime timeline' };
 
-function setup(value: string) {
+function setup(value: string, hint = true) {
   const onChange = mock((_: string) => {});
   const onRun = mock((_: string) => {});
   render(
     <Console
       cue={cue}
+      hint={hint}
       value={value}
       onChange={onChange}
       onRun={onRun}
@@ -26,6 +27,7 @@ describe('Console', () => {
     const { container } = render(
       <Console
         cue={cue}
+        hint
         value="git rebase prime-t"
         onChange={() => {}}
         onRun={() => {}}
@@ -43,6 +45,7 @@ describe('Console', () => {
     const { container } = render(
       <Console
         cue={cue}
+        hint
         value=""
         onChange={() => {}}
         onRun={() => {}}
@@ -62,6 +65,13 @@ describe('Console', () => {
 
   test('Tab with no ghost text left does nothing', () => {
     const { onChange, input } = setup('git lag');
+    fireEvent.keyDown(input, { key: 'Tab' });
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  test('without a hint there is no ghost text and Tab does not complete', () => {
+    const { onChange, input } = setup('git reb', false);
+    expect(document.querySelector('.ghost')?.textContent).toBe('git reb');
     fireEvent.keyDown(input, { key: 'Tab' });
     expect(onChange).not.toHaveBeenCalled();
   });

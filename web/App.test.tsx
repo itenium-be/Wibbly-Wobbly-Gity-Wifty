@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { GraphModel, LiveState, RunResult, SceneView, WorkDir } from '../shared/types';
 
 const graphOf = (message: string): GraphModel => ({
@@ -110,6 +110,7 @@ mock.module('./api', () => ({
   blameFile,
 }));
 const { App } = await import('./App');
+const { saveGuided } = await import('./guided');
 
 async function toGitPhase() {
   render(<App />);
@@ -127,7 +128,10 @@ beforeEach(() => {
   writeFile.mockClear();
   blameFile.mockClear();
   history.replaceState(null, '', '/');
+  localStorage.clear();
 });
+
+const ghostText = () => document.querySelector('.ghost')?.textContent;
 
 async function editRose() {
   await toGitPhase();
@@ -300,6 +304,28 @@ describe('App', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
     await act(async () => slow.resolve(ran('done')));
     expect(runCommand).toHaveBeenCalledTimes(1);
+  });
+
+  test('F2 turns guided mode off, hiding the ghost text, and is remembered', async () => {
+    const input = await toGitPhase();
+    expect(ghostText()).toBe('git log');
+    expect(fireEvent.keyDown(input, { key: 'F2' })).toBe(false);
+    expect(ghostText()).toBe('');
+    cleanup();
+    history.replaceState(null, '', '/');
+    await toGitPhase();
+    expect(ghostText()).toBe('');
+    fireEvent.keyDown(window, { key: 'F2' });
+    expect(ghostText()).toBe('git log');
+  });
+
+  test('F1 reveals the ghost text for the current step only', async () => {
+    saveGuided(false);
+    const input = await toGitPhase();
+    expect(fireEvent.keyDown(input, { key: 'F1' })).toBe(false);
+    expect(ghostText()).toBe('git log');
+    fireEvent.keyDown(window, { key: 'r' });
+    await waitFor(() => expect(ghostText()).toBe(''));
   });
 
   test('Esc then r resets and returns focus to the input', async () => {

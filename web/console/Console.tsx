@@ -6,6 +6,7 @@ import { parseAnsi } from './ansi';
 
 type Props = {
   cue: CmdStep | undefined;
+  hint: boolean;
   value: string;
   onChange: (value: string) => void;
   onRun: (cmd: string) => void;
@@ -13,8 +14,8 @@ type Props = {
   inputRef: RefObject<HTMLInputElement | null>;
 };
 
-export function Console({ cue, value, onChange, onRun, output, inputRef }: Props) {
-  const rest = ghost(value, cue?.cmd);
+export function Console({ cue, hint, value, onChange, onRun, output, inputRef }: Props) {
+  const rest = hint ? ghost(value, cue?.cmd) : '';
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && value.trim()) onRun(value);

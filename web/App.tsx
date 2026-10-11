@@ -9,6 +9,7 @@ import { CommitPopover } from './graph/CommitPopover';
 import { FlatTimeline } from './graph/FlatTimeline';
 import { layout } from './graph/layout';
 import { Pan } from './graph/Pan';
+import { hinted, loadGuided, saveGuided } from './guided';
 import { NextEpisode } from './NextEpisode';
 import { fromQuery, move, type Position, toQuery } from './nav';
 import { StoryCardView } from './story/StoryCardView';
@@ -27,6 +28,8 @@ export function App() {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [blameRequest, setBlameRequest] = useState<{ path: string; n: number }>();
+  const [guided, setGuided] = useState(loadGuided);
+  const [revealed, setRevealed] = useState<string>();
   const [popover, setPopover] = useState<{ hash: string; at: { x: number; y: number } } | null>(null);
   const closePopover = useCallback(() => setPopover(null), []);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -51,6 +54,8 @@ export function App() {
   const scene = scenes[pos.scene];
   const sceneId = scene?.id;
   const gitPhase = scene !== undefined && pos.card === scene.story.length;
+  const cueIndex = scene ? current(scene.steps, cueState) : 0;
+  const stepKey = `${sceneId}-${cueIndex}-${resets}`;
 
   const reset = useCallback(async () => {
     if (!sceneId) return;
@@ -81,6 +86,16 @@ export function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === 'F1' || e.key === 'F2') {
+        e.preventDefault();
+        if (e.key === 'F1') setRevealed(stepKey);
+        else
+          setGuided((g) => {
+            saveGuided(!g);
+            return !g;
+          });
+        return;
+      }
       const typing = e.target instanceof HTMLInputElement;
       if (typing && (e.target as HTMLInputElement).value !== '') return;
       if (e.key === 'ArrowRight') setPos((p) => move(p, 1, scenes));
@@ -89,12 +104,11 @@ export function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [scenes, reset]);
+  }, [scenes, reset, stepKey]);
 
   if (!scene) return null;
   const forward = move(pos, 1, scenes);
   const back = move(pos, -1, scenes);
-  const cueIndex = current(scene.steps, cueState);
   const step = scene.steps[cueIndex];
   const cue = step && 'cmd' in step ? step : step && 'edit' in step ? { cmd: '', caption: step.caption } : undefined;
   const next = step && 'episode' in step && graph?.head.branch ? step.episode : undefined;
@@ -227,10 +241,16 @@ export function App() {
               onDone={() => inputRef.current?.focus()}
             />
           )}
-          <Console cue={cue} value={input} onChange={setInput} onRun={run} output={output} inputRef={inputRef} />
-          {next && (
-            <NextEpisode key={`${scene.id}-${cueIndex}-${resets}`} episode={next} onPlay={() => playNext(next)} />
-          )}
+          <Console
+            cue={cue}
+            hint={hinted(guided, step, revealed === stepKey)}
+            value={input}
+            onChange={setInput}
+            onRun={run}
+            output={output}
+            inputRef={inputRef}
+          />
+          {next && <NextEpisode key={stepKey} episode={next} onPlay={() => playNext(next)} />}
         </>
       ) : (
         <StoryCardView key={`${scene.id}-${pos.card}`} card={scene.story[pos.card]} step={pos.step} />
