@@ -1,9 +1,11 @@
 import { type KeyboardEvent, useEffect, useRef, useState } from 'react';
-import type { FileStatus, WorkDir } from '../../shared/types';
+import type { FileStatus, GraphModel, WorkDir } from '../../shared/types';
+import { HistoryView } from './HistoryView';
 
 type Props = {
   workdir: WorkDir;
   branch: string;
+  graph: GraphModel;
   load: (path: string) => Promise<string>;
   save: (path: string, content: string) => Promise<void>;
   /** Called after a click or edit ends, so the keyboard returns to the console. */
@@ -36,7 +38,8 @@ function Highlighted({ text }: { text: string }) {
   return <pre>{lines}</pre>;
 }
 
-export function WorkDirPanel({ workdir, branch, load, save, onDone }: Props) {
+export function WorkDirPanel({ workdir, branch, graph, load, save, onDone }: Props) {
+  const [tab, setTab] = useState<'files' | 'history'>('files');
   const [flashing, setFlashing] = useState<Set<string>>(new Set());
   const previous = useRef<Map<string, FileStatus>>(new Map());
   const [openPath, setOpenPath] = useState<string | null>(null);
@@ -112,32 +115,57 @@ export function WorkDirPanel({ workdir, branch, load, save, onDone }: Props) {
     onDone();
   };
 
+  const changed = workdir.files.filter((f) => f.status !== 'clean').length;
+
   return (
     <aside className="workdir">
       <h3>
-        <span>WORKING DIRECTORY</span>
+        <span className="tabs" role="tablist">
+          <button
+            type="button"
+            className="tab"
+            role="tab"
+            aria-selected={tab === 'files'}
+            onClick={() => setTab('files')}
+          >
+            WORKING DIR
+            {changed > 0 && <span className="count">{changed}</span>}
+          </button>
+          <button
+            type="button"
+            className="tab"
+            role="tab"
+            aria-selected={tab === 'history'}
+            onClick={() => setTab('history')}
+          >
+            HISTORY
+          </button>
+        </span>
         <span className={workdir.merging ? 'branch merging' : 'branch'}>
           {workdir.merging ? `${branch}|MERGING` : branch}
         </span>
       </h3>
-      <div>
-        <ul className="files">
-          {workdir.files.map((f) => (
-            <li
-              key={f.path}
-              className={`${f.status}${f === open ? ' open' : ''}${flashing.has(f.path) ? ' flash' : ''}`}
-              onAnimationEnd={() => unflash(f.path)}
-            >
-              <button type="button" onClick={() => select(f.path)}>
-                <span className="code">{f.code}</span>
-                <span className="name">{f.path}</span>
-                <span className="badge">{f.status}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-      {open && (
+      {tab === 'history' && <HistoryView graph={graph} onDone={onDone} />}
+      {tab === 'files' && (
+        <div>
+          <ul className="files">
+            {workdir.files.map((f) => (
+              <li
+                key={f.path}
+                className={`${f.status}${f === open ? ' open' : ''}${flashing.has(f.path) ? ' flash' : ''}`}
+                onAnimationEnd={() => unflash(f.path)}
+              >
+                <button type="button" onClick={() => select(f.path)}>
+                  <span className="code">{f.code}</span>
+                  <span className="name">{f.path}</span>
+                  <span className="badge">{f.status}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {tab === 'files' && open && (
         <div className="viewer">
           <div className="bar">
             <span>{`${open.path} — ${open.status}`}</span>

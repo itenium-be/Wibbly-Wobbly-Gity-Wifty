@@ -175,10 +175,11 @@ export function App() {
               />
             )}
           </Pan>
-          {workdir && (
+          {workdir && graph && (
             <WorkDirPanel
               key={scene.id}
               workdir={workdir}
+              graph={graph}
               branch={graph?.initialized ? (graph.head.branch ?? 'HEAD (detached)') : ''}
               load={readFile}
               save={save}
