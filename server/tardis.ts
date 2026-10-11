@@ -1,15 +1,26 @@
 import type { Episode } from '../shared/types';
 
-const FIELD = /^[A-Z][A-Za-z ]*: /;
-
-export function applyEpisode(md: string, { set = {}, note }: Pick<Episode, 'set' | 'note'>): string {
+export function applyEpisode(md: string, { set = {}, event }: Pick<Episode, 'set' | 'event'>): string {
   const lines = md.replace(/\n$/, '').split('\n');
+  const blank = lines.indexOf('');
+  const fields = blank < 0 ? lines : lines.slice(0, blank);
+  const events = blank < 0 ? [] : lines.slice(blank + 1);
+
   for (const [key, value] of Object.entries(set)) {
-    const line = `${key}: ${value}`;
-    const at = lines.findIndex((l) => l.startsWith(`${key}: `));
-    if (at >= 0) lines[at] = line;
-    else lines.splice(lines.findLastIndex((l) => FIELD.test(l)) + 1, 0, line);
+    const block = typeof value === 'string' ? [`${key}: ${value}`] : [`${key}:`, ...value.map((v) => `- ${v}`)];
+    const at = fields.findIndex((l) => l === `${key}:` || l.startsWith(`${key}: `));
+    if (at < 0) {
+      fields.push(...block);
+      continue;
+    }
+    let end = at + 1;
+    if (fields[at] === `${key}:`) while (fields[end]?.startsWith('- ')) end++;
+    fields.splice(at, end - at, ...block);
   }
-  if (note) lines.push(note);
-  return `${lines.join('\n')}\n`;
+
+  if (event) {
+    if (events.length === 0) events.push('Events:');
+    events.push(`- ${event}`);
+  }
+  return `${[...fields, ...(events.length ? ['', ...events] : [])].join('\n')}\n`;
 }

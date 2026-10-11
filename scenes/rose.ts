@@ -116,7 +116,7 @@ export const rose: Scene = {
   build: [
     {
       write: {
-        'TARDIS.md': '# TARDIS log\nDoctor: The Ninth Doctor\nCompanion: Rose Tyler\nLocation: London, 2005\n',
+        'TARDIS.md': '# TARDIS log\nDoctor: The Ninth Doctor\nCompanions:\n- Rose Tyler\nLocation: London, 2005\n',
       },
     },
   ],

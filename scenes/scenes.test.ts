@@ -36,7 +36,7 @@ describe('scenes', () => {
   test('rose starts with an untracked TARDIS log and no repo', async () => {
     const { graph, workdir } = await engine.enter('rose');
     expect(graph.initialized).toBe(false);
-    expect(await engine.readFile('TARDIS.md')).toContain('Companion: Rose Tyler');
+    expect(await engine.readFile('TARDIS.md')).toContain('Companions:\n- Rose Tyler\n');
     expect(workdir.files.map((f) => f.path)).toEqual(['TARDIS.md']);
   });
 
@@ -76,7 +76,7 @@ describe('scenes', () => {
     await engine.episode('S03E10');
     await engine.episode('S04E09');
     expect((await engine.run('git merge petes-world')).code).not.toBe(0);
-    expect(await engine.readFile('TARDIS.md')).toContain('<<<<<<< HEAD\nCompanion: Donna Noble');
+    expect(await engine.readFile('TARDIS.md')).toContain('Companions:\n<<<<<<< HEAD\n- Donna Noble\n');
     await playScene(engine, scene);
     expect(await out('git log -1 --format=%p')).toMatch(/^\w+ \w+\n$/);
     expect(await out("git branch --format='%(refname:short)'")).toBe('prime-timeline\n');

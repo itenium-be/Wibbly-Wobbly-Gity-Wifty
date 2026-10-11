@@ -17,21 +17,25 @@ One running file, edited by every episode. It exists before `git init` (the Doct
 ```md
 # TARDIS log
 Doctor: The Ninth Doctor
-Companion: Rose Tyler
+Companions:
+- Rose Tyler
 Location: London, 2005
+
+Events:
+- The Game Station is run by the Bad Wolf Corporation
 ```
 
-An episode sets fields (`Key: value` lines, replaced in place or appended after the last field) and can append a free line.
+An episode sets fields (`Key: value` lines, or `Key:` with a `- item` line per entry; replaced in place or appended after the last field) and can append an event under `Events:`.
 
 ### The Bad Wolf thread
 
-Automatic episodes append a Bad Wolf line, one per episode, as the show does in Series 1.
+Automatic episodes append a Bad Wolf event, one per episode, as the show does in Series 1.
 Each sighting is its own line, so `git log -S "Bad Wolf"` lists every episode and `git blame TARDIS.md` attributes each line to its episode.
 
 ## Steps
 
 ```ts
-type Episode = { code: string; title: string; set?: Record<string, string>; note?: string };
+type Episode = { code: string; title: string; set?: Record<string, string | string[]>; event?: string };
 type Step =
   | { cmd: string; caption: string; fails?: true }   // presenter types it
   | { episode: Episode };                             // Next Episode: automatic edit + commit

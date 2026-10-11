@@ -9,8 +9,8 @@ export type StoryImage = {
 };
 /** `reveal`: images are stepped through with →/← instead of rotating. */
 export type StoryCard = { title: string; text: string; images: StoryImage[]; reveal?: boolean };
-/** `set`: `Key: value` lines in TARDIS.md. `note`: a line appended to it. */
-export type Episode = { code: string; title: string; set?: Record<string, string>; note?: string };
+/** `set`: `Key: value` lines in TARDIS.md, or `Key:` and a `- item` per entry. `event`: a line appended under `Events:`. */
+export type Episode = { code: string; title: string; set?: Record<string, string | string[]>; event?: string };
 /**
  * `fails`: the cue is expected to exit non-zero and still counts as done.
  * `accepts`: any command starting with this also counts as done (`git add` for `git add .`).

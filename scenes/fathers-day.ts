@@ -21,7 +21,8 @@ export const fathersDayScene: Scene = {
         'TARDIS.md': [
           '# TARDIS log',
           'Doctor: The Ninth Doctor',
-          'Companion: Rose Tyler',
+          'Companions:',
+          '- Rose Tyler',
           'Location: London, 7 November 1987',
           'Pete Tyler: alive',
           '',
