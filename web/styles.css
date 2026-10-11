@@ -253,6 +253,7 @@ main {
 
 .output {
   color: var(--muted);
+  font-family: inherit;
   font-size: 13px;
   max-height: 180px;
   overflow: auto;
