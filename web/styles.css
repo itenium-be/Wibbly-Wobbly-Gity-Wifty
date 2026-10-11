@@ -108,6 +108,11 @@ main {
   overflow: hidden;
 }
 
+.pan {
+  width: 100%;
+  height: 100%;
+}
+
 /* timeline */
 .timeline {
   display: block;
