@@ -38,11 +38,11 @@ const runawayBride: Episode = {
   title: 'The Runaway Bride',
   set: { Companions: ['Donna Noble'], Location: 'London, Christmas 2006' },
 };
-const partnersInCrime: Episode = {
-  code: 'S04E01',
-  aired: '2008-04-05',
-  title: 'Partners in Crime',
-  event: 'Rose crossed over, for a moment.',
+const dimensionCannon: Episode = {
+  code: 'Torchwood',
+  title: 'The dimension cannon',
+  event: 'Rose built a dimension cannon to cross back.',
+  fastForward: true,
 };
 const turnRight: Episode = {
   code: 'Chiswick',
@@ -58,8 +58,8 @@ const doctorDies: Episode = {
   event: 'The Doctor drowned the Racnoss, and himself. Nobody stopped him.',
   fastForward: true,
 };
-/** Commits on prime drawn red: the dark world. The original Partners in Crime stays in Rose's universe. */
-const DARK = new Set([turnRight.title, doctorDies.title, partnersInCrime.title]);
+/** Commits on prime drawn red: the dark world. The original dimension cannon stays in Rose's universe. */
+const DARK = new Set([turnRight.title, doctorDies.title, dimensionCannon.title]);
 // Outside the Journey's End conflict, so rerere's recorded resolution still matches when the merge is replayed.
 const warn = (md: string) => md.replace('# TARDIS log\n', '# TARDIS log\nWarning: Bad Wolf. The darkness is coming.\n');
 const inBroadcastOrder: Scene[] = scenes.map((scene) => {
@@ -73,7 +73,7 @@ const inBroadcastOrder: Scene[] = scenes.map((scene) => {
       ...scene,
       steps: scene.steps.flatMap((s) => {
         if ('cmd' in s) return [{ ...s, cmd: s.cmd.replace('HEAD~2', 'HEAD~3') }];
-        if (s.episode === doomsday) return [s, { episode: partnersInCrime }];
+        if (s.episode === doomsday) return [s, { episode: dimensionCannon }];
         return [s];
       }),
     };
@@ -101,14 +101,14 @@ const scenarios: Scenario[] = [
   {
     id: 'turn-left',
     title: 'Turn Left · reset, cherry-pick, squash, rebase, rerere',
-    lore: "After Bad Wolf: the whole history is there (The Runaway Bride now sits between The Parting of the Ways and Blink; Pete's World ends with Partners in Crime, Rose's first jump; Journey's End turns on rerere before its merge). A time beetle rewrites prime from The Runaway Bride; the dark world is committed on prime itself (red). Rose crosses over from her universe; Donna turns left; the red is squashed into one Turn Left commit and the real world is replayed on top, with Turn Left in broadcast order. Rerere resolves Journey's End again.",
+    lore: "After Bad Wolf: the whole history is there (The Runaway Bride now sits between The Parting of the Ways and Blink; Pete's World ends with Torchwood building the dimension cannon; Journey's End turns on rerere before its merge). A time beetle rewrites prime from The Runaway Bride; the dark world is committed on prime itself (red). Rose crosses over from her universe; Donna turns left; the red is squashed into one Turn Left commit and the real world is replayed on top, with Turn Left in broadcast order. Rerere resolves Journey's End again.",
     scenes: inBroadcastOrder,
     start: 'outro',
     steps: [
       { cmd: 'git log --oneline --grep Bride', caption: 'Christmas 2006: Donna meets the Doctor' },
       {
         cmd: async (live) => {
-          for (const [k, g] of [['old', ''], ['rb', 'Runaway Bride'], ['forest', 'Forest of the Dead'], ['pic', 'Partners in Crime']])
+          for (const [k, g] of [['old', ''], ['rb', 'Runaway Bride'], ['forest', 'Forest of the Dead'], ['cannon', 'dimension cannon']])
             hashes[k] = await git(live, ['log', '--format=%h', '-1', ...(g ? ['--grep', g] : [])]);
           return `git reset --hard ${hashes.rb}`;
         },
@@ -117,10 +117,10 @@ const scenarios: Scenario[] = [
       { episode: turnRight, caption: 'Donna turns right', date: '2006-12-26 19:00:00 +0000' },
       { episode: doctorDies, caption: 'Nobody stops him: the Doctor dies fighting the Racnoss', date: '2006-12-27 20:00:00 +0000' },
       { cmd: 'git spoilers -4', caption: "River's diary: the world before the beetle" },
-      { cmd: async () => `git log --oneline -1 --grep Partners ${hashes.old}`, caption: 'Rose, still in her universe' },
-      { cmd: async () => `git cherry-pick ${hashes.pic}`, caption: 'Rose crosses over' },
+      { cmd: async () => `git log --oneline -1 --grep cannon ${hashes.old}`, caption: 'Rose, still in her universe' },
+      { cmd: async () => `git cherry-pick ${hashes.cannon}`, caption: 'Rose crosses over' },
       {
-        edit: async (live) => applyEpisode(await show(live, 'HEAD:TARDIS.md'), partnersInCrime),
+        edit: async (live) => applyEpisode(await show(live, 'HEAD:TARDIS.md'), dimensionCannon),
         caption: 'Resolve TARDIS.md: Rose, in the dark world',
         ifConflict: true,
       },
@@ -228,7 +228,7 @@ for (const scenario of scenarios.filter((x) => !only || x.id === only)) {
 const codes = {
   ...episodeCodes(scenes),
   ...Object.fromEntries(
-    [runawayBride, partnersInCrime, turnRight, doctorDies].map((e) => [e.title, e.code]),
+    [runawayBride, dimensionCannon, turnRight, doctorDies].map((e) => [e.title, e.code]),
   ),
   [metacrisis.title]: metacrisis.code,
 };
