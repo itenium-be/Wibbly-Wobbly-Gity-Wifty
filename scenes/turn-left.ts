@@ -25,7 +25,7 @@ export const turnLeft: Scene = {
     {
       title: 'Turn Left',
       text: 'A time beetle makes Donna turn right. She never meets the Doctor, and he dies under the Thames. Rose crosses over from her universe and sends Donna back to turn left. In git: reset, cherry-pick, squash, rebase and rerere.',
-      images: [],
+      images: [{ src: '/assets/episodes/turn-left.jpg' }],
     },
   ],
   steps: [
