@@ -23,7 +23,7 @@ function star(x: number, y: number, r: number) {
 }
 
 export function FlatTimeline({ layout }: { layout: Layout }) {
-  const cols = Math.max(0, ...layout.nodes.map((n) => n.col));
+  const cols = Math.max(0, layout.pending?.col ?? 0, ...layout.nodes.map((n) => n.col));
   const width = X0 + cols * DX + 260;
   const height = Y0 + Math.max(1, layout.lanes.length) * DY;
   const kind = (lane: number) => layout.lanes[lane]?.kind ?? 'prime';
@@ -43,7 +43,7 @@ export function FlatTimeline({ layout }: { layout: Layout }) {
         </g>
       ))}
 
-      {layout.nodes.length === 0 && (
+      {layout.nodes.length === 0 && !layout.pending && (
         <text x={width / 2} y={Y0} className="empty">
           {layout.initialized ? 'An empty timeline' : 'Not a git repository'}
         </text>
@@ -90,6 +90,21 @@ export function FlatTimeline({ layout }: { layout: Layout }) {
           </g>
         );
       })}
+
+      {layout.pending && (
+        <g className="pending">
+          {layout.pending.from && (
+            <path
+              d={`M${at(layout.pending.from).x} ${at(layout.pending.from).y} L${at(layout.pending).x} ${at(layout.pending).y}`}
+              className="edge pending"
+            />
+          )}
+          <circle cx={at(layout.pending).x} cy={at(layout.pending).y} r={13} className="node pending" />
+          <text x={at(layout.pending).x} y={at(layout.pending).y + 42} className="message">
+            uncommitted
+          </text>
+        </g>
+      )}
 
       <Tardis x={tardis.x} y={tardis.y - 40} />
       {layout.head && (

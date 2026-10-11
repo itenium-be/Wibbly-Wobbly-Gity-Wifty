@@ -14,7 +14,14 @@ const graph = (g: Partial<GraphModel>): GraphModel => ({
 
 describe('layout', () => {
   test('an empty timeline has no lanes and no HEAD position', () => {
-    expect(layout(graph({}))).toEqual({ initialized: true, lanes: [], nodes: [], edges: [], head: null });
+    expect(layout(graph({}))).toEqual({
+      initialized: true,
+      lanes: [],
+      nodes: [],
+      edges: [],
+      head: null,
+      pending: null,
+    });
   });
 
   test('a straight timeline is one prime lane, one column per commit', () => {
@@ -86,5 +93,30 @@ describe('layout', () => {
   test('tags are attached to their commit', () => {
     const l = layout(graph({ commits: [c('a', 'Pompeii')], tags: [{ name: 'fixed-point/pompeii', hash: 'a' }] }));
     expect(l.nodes[0].tags).toEqual(['fixed-point/pompeii']);
+  });
+});
+
+describe('pending', () => {
+  const one = graph({
+    commits: [c('a1', 'Rose')],
+    branches: [{ name: 'prime-timeline', hash: 'a1' }],
+    head: { hash: 'a1', branch: 'prime-timeline' },
+  });
+
+  test('a dirty working dir puts a pending node after HEAD, in its lane', () => {
+    expect(layout(one, true).pending).toEqual({ col: 1, lane: 0, from: { col: 0, lane: 0 } });
+  });
+
+  test('a clean working dir has no pending node', () => {
+    expect(layout(one, false).pending).toBeNull();
+  });
+
+  test('before the first commit the pending node starts the timeline', () => {
+    const empty = graph({ head: { hash: null, branch: 'prime-timeline' } });
+    expect(layout(empty, true).pending).toEqual({ col: 0, lane: 0, from: null });
+  });
+
+  test('no repo, no pending node', () => {
+    expect(layout(graph({ initialized: false }), true).pending).toBeNull();
   });
 });

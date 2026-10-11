@@ -1,9 +1,9 @@
 import type { KeyboardEvent, RefObject } from 'react';
-import type { Step } from '../../shared/types';
+import type { CmdStep } from '../../shared/types';
 import { ghost } from '../cue';
 
 type Props = {
-  cue: Step | undefined;
+  cue: CmdStep | undefined;
   value: string;
   onChange: (value: string) => void;
   onRun: (cmd: string) => void;

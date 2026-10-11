@@ -672,3 +672,71 @@ main {
   line-height: 1.6;
   color: var(--text);
 }
+
+/* next episode */
+.next-episode {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: end;
+  justify-self: end;
+  margin: 0 24px 12px 0;
+  z-index: 10;
+  display: grid;
+  gap: 6px;
+  min-width: 340px;
+  padding: 20px 24px;
+  background: var(--panel);
+  border: 1px solid var(--glow);
+  border-radius: 10px;
+  box-shadow: 0 0 40px rgba(127, 212, 255, 0.25);
+  animation: slide-in 0.4s ease-out;
+}
+
+.next-episode .kicker {
+  color: var(--muted);
+  letter-spacing: 0.2em;
+}
+
+.next-episode .code {
+  color: var(--gold);
+  font-size: 18px;
+}
+
+.next-episode .title {
+  font-size: 28px;
+}
+
+.next-episode button {
+  justify-self: start;
+  margin-top: 8px;
+  padding: 8px 18px;
+  font: inherit;
+  font-size: 20px;
+  color: var(--space);
+  background: var(--text);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.next-episode .countdown {
+  margin-left: 8px;
+  color: var(--muted);
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(120%);
+  }
+}
+
+.timeline .pending {
+  stroke: var(--st-modified);
+  stroke-dasharray: 6 6;
+  fill: none;
+}
+
+.timeline .pending text {
+  fill: var(--st-modified);
+  stroke: none;
+}

@@ -3,8 +3,8 @@ import { dirname, join } from 'node:path';
 import type { GitStep } from '../shared/types';
 import { git } from './git';
 
-const ROSE_AIRED = 1111863600; // 2005-03-26 19:00 GMT
-const DAY = 86400;
+export const ROSE_AIRED = 1111863600; // 2005-03-26 19:00 GMT
+export const DAY = 86400;
 
 const slug = (s: string) =>
   s

@@ -12,8 +12,14 @@ const scenes: Scene[] = [
     episode: 'S01E01',
     title: 'Rose',
     story: [],
-    build: [{ git: ['init', '-q'] }, { commit: 'Rose' }],
-    steps: [{ cmd: 'git log', caption: 'Where is the TARDIS?' }],
+    build: [
+      { git: ['init', '-q'] },
+      { commit: 'Rose', files: { 'episodes/rose.md': '# Rose\n', 'TARDIS.md': 'Location: London, 2005\n' } },
+    ],
+    steps: [
+      { cmd: 'git log', caption: 'Where is the TARDIS?' },
+      { episode: { code: 'S01E02', title: 'The End of the World', set: { Location: 'Platform One' } } },
+    ],
   },
 ];
 
@@ -51,7 +57,7 @@ describe('api', () => {
         episode: 'S01E01',
         title: 'Rose',
         story: [],
-        steps: [{ cmd: 'git log', caption: 'Where is the TARDIS?' }],
+        steps: scenes[0]?.steps,
       },
     ]);
   });
@@ -60,7 +66,19 @@ describe('api', () => {
     const res = await routes['/api/scenes/:id/enter'].POST(post('/api/scenes/rose/enter', undefined, { id: 'rose' }));
     const body = (await res.json()) as LiveState;
     expect(body.graph.commits.map((c) => c.message)).toEqual(['Rose']);
-    expect(body.workdir.files.map((f) => f.path)).toEqual(['episodes/rose.md']);
+    expect(body.workdir.files.map((f) => f.path)).toEqual(['TARDIS.md', 'episodes/rose.md']);
+  });
+
+  test('plays an episode', async () => {
+    await routes['/api/scenes/:id/enter'].POST(post('/api/scenes/rose/enter', undefined, { id: 'rose' }));
+    const res = await routes['/api/episode'].POST(post('/api/episode', { code: 'S01E02' }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ cmd: 'git commit -am "The End of the World"', code: 0 });
+  });
+
+  test('rejects an unknown episode with 404 and a malformed body with 400', async () => {
+    expect((await routes['/api/episode'].POST(post('/api/episode', { code: 'S99E99' }))).status).toBe(404);
+    expect((await routes['/api/episode'].POST(post('/api/episode', { nope: 1 }))).status).toBe(400);
   });
 
   test('entering an unknown scene is a 404', async () => {
@@ -144,6 +162,7 @@ describe('api', () => {
       const res = await routes['/api/file'].PUT(put({ path: 'episodes/rose.md', content: '# Bad Wolf\n' }));
       expect(res.status).toBe(200);
       expect(((await res.json()) as WorkDir).files).toEqual([
+        { path: 'TARDIS.md', status: 'clean', code: '' },
         { path: 'episodes/rose.md', status: 'modified', code: ' M' },
       ]);
     });

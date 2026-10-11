@@ -9,7 +9,12 @@ export type StoryImage = {
 };
 /** `reveal`: images are stepped through with →/← instead of rotating. */
 export type StoryCard = { title: string; text: string; images: StoryImage[]; reveal?: boolean };
-export type Step = { cmd: string; caption: string };
+/** `set`: `Key: value` lines in TARDIS.md. `note`: a line appended to it. */
+export type Episode = { code: string; title: string; set?: Record<string, string>; note?: string };
+/** `fails`: the cue is expected to exit non-zero and still counts as done. */
+export type CmdStep = { cmd: string; caption: string; fails?: true };
+export type EpisodeStep = { episode: Episode };
+export type Step = CmdStep | EpisodeStep;
 
 export type GitStep =
   | { write: Record<string, string> }
@@ -21,7 +26,7 @@ export type Scene = {
   episode: string;
   title: string;
   story: StoryCard[];
-  build: GitStep[];
+  build?: GitStep[];
   steps: Step[];
 };
 export type SceneView = Omit<Scene, 'build'>;
@@ -43,3 +48,4 @@ export type WorkDir = { files: WorkFile[]; merging: boolean };
 
 export type LiveState = { graph: GraphModel; workdir: WorkDir };
 export type RunResult = LiveState & { output: string; code: number };
+export type EpisodeResult = RunResult & { cmd: string };

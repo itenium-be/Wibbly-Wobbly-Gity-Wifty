@@ -1,5 +1,5 @@
 import type { Scene, SceneView } from '../shared/types';
-import type { Engine } from './engine';
+import { type Engine, UnknownEpisodeError } from './engine';
 import { InvalidPathError } from './workdir';
 
 type RouteRequest = Request & { params: Record<string, string> };
@@ -40,6 +40,18 @@ export function createRoutes(engine: Engine, scenes: Scene[]) {
         const body = (await req.json().catch(() => null)) as { input?: unknown } | null;
         if (typeof body?.input !== 'string') return new Response('bad request', { status: 400 });
         return Response.json(await engine.run(body.input));
+      },
+    },
+    '/api/episode': {
+      POST: async (req: Request) => {
+        const body = (await req.json().catch(() => null)) as { code?: unknown } | null;
+        if (typeof body?.code !== 'string') return new Response('bad request', { status: 400 });
+        try {
+          return Response.json(await engine.episode(body.code));
+        } catch (e) {
+          if (e instanceof UnknownEpisodeError) return new Response(e.message, { status: 404 });
+          throw e;
+        }
       },
     },
     '/api/file': {

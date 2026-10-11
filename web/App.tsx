@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { GraphModel, RunResult, SceneView, WorkDir } from '../shared/types';
-import { enterScene, fetchScenes, readFile, runCommand, writeFile } from './api';
+import type { Episode, GraphModel, RunResult, SceneView, WorkDir } from '../shared/types';
+import { enterScene, fetchScenes, playEpisode, readFile, runCommand, writeFile } from './api';
 import { Console } from './console/Console';
 import { advance } from './cue';
 import { FlatTimeline } from './graph/FlatTimeline';
 import { layout } from './graph/layout';
+import { NextEpisode } from './NextEpisode';
 import { fromQuery, move, type Position, toQuery } from './nav';
 import { StoryCardView } from './story/StoryCardView';
 import { WorkDirPanel } from './workdir/WorkDirPanel';
@@ -15,6 +16,7 @@ export function App() {
   const [graph, setGraph] = useState<GraphModel | null>(null);
   const [workdir, setWorkdir] = useState<WorkDir | null>(null);
   const [cueIndex, setCueIndex] = useState(0);
+  const [resets, setResets] = useState(0);
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,6 +50,7 @@ export function App() {
     setGraph(entered.graph);
     setWorkdir(entered.workdir);
     setCueIndex(0);
+    setResets((n) => n + 1);
     setInput('');
     setOutput('');
     inputRef.current?.focus();
@@ -75,6 +78,30 @@ export function App() {
   }, [scenes, reset]);
 
   if (!scene) return null;
+  const step = scene.steps[cueIndex];
+  const cue = step && 'cmd' in step ? step : undefined;
+  const next = step && 'episode' in step && graph?.head.branch ? step.episode : undefined;
+
+  const playNext = async (episode: Episode): Promise<boolean> => {
+    if (running.current) return false;
+    running.current = true;
+    const mine = epoch.current;
+    try {
+      const result = await playEpisode(episode.code);
+      if (mine !== epoch.current) return false;
+      setOutput(`$ ${result.cmd}\n${result.output}`);
+      setGraph(result.graph);
+      setWorkdir(result.workdir);
+      if (result.code !== 0) return false;
+      setCueIndex((i) => i + 1);
+      return true;
+    } catch (e) {
+      if (mine === epoch.current) setOutput(`${e instanceof Error ? e.message : String(e)}`);
+      return false;
+    } finally {
+      running.current = false;
+    }
+  };
 
   const run = async (cmd: string) => {
     if (running.current) return;
@@ -116,7 +143,11 @@ export function App() {
       </header>
       {gitPhase ? (
         <>
-          <main>{graph && <FlatTimeline layout={layout(graph)} />}</main>
+          <main>
+            {graph && (
+              <FlatTimeline layout={layout(graph, workdir?.files.some((f) => f.status !== 'clean') ?? false)} />
+            )}
+          </main>
           {workdir && (
             <WorkDirPanel
               key={scene.id}
@@ -127,14 +158,10 @@ export function App() {
               onDone={() => inputRef.current?.focus()}
             />
           )}
-          <Console
-            cue={scene.steps[cueIndex]}
-            value={input}
-            onChange={setInput}
-            onRun={run}
-            output={output}
-            inputRef={inputRef}
-          />
+          <Console cue={cue} value={input} onChange={setInput} onRun={run} output={output} inputRef={inputRef} />
+          {next && (
+            <NextEpisode key={`${scene.id}-${cueIndex}-${resets}`} episode={next} onPlay={() => playNext(next)} />
+          )}
         </>
       ) : (
         <StoryCardView key={`${scene.id}-${pos.card}`} card={scene.story[pos.card]} image={pos.image} />

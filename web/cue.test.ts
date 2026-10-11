@@ -37,3 +37,16 @@ describe('advance', () => {
     expect(advance(steps, 2, 'git init', 0)).toBe(2);
   });
 });
+
+describe('advance with fails and episodes', () => {
+  test('a cue expected to fail moves on when it fails, not when it succeeds', () => {
+    const steps = [{ cmd: 'git status', caption: '', fails: true as const }];
+    expect(advance(steps, 0, 'git status', 128)).toBe(1);
+    expect(advance(steps, 0, 'git status', 0)).toBe(0);
+  });
+
+  test('typing never moves past an episode step', () => {
+    const steps = [{ episode: { code: 'S01E02', title: 'The End of the World' } }];
+    expect(advance(steps, 0, 'git log', 0)).toBe(0);
+  });
+});
