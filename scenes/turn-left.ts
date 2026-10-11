@@ -19,6 +19,7 @@ export const turnLeft: Scene = {
   ],
   steps: [
     { cmd: 'git reset --hard e09813f', caption: 'A time beetle: everything after The Runaway Bride is gone' },
+    { cmd: 'git tag time-beetle', caption: 'Mark where the time beetle latched on' },
     { episode: turnRight },
     { cmd: 'git switch petes-world', caption: "Meanwhile, in Pete's World: the stars are going out" },
     { episode: dimensionCannon },
@@ -46,21 +47,21 @@ export const turnLeft: Scene = {
     },
     { cmd: 'git add TARDIS.md', caption: 'Rose made it', accepts: 'git add' },
     { cmd: 'git cherry-pick --continue', caption: 'Rose finds Donna' },
-    { cmd: 'git restore --source e09813f TARDIS.md', caption: 'Donna turns left: back to how it was at Christmas' },
+    { cmd: 'git restore --source time-beetle TARDIS.md', caption: 'Donna turns left: back to how it was at Christmas' },
     // Under the title, outside Journey's End's conflict, so rerere's recorded resolution still matches.
     {
       cmd: "sed -i '1a Warning: Bad Wolf. The darkness is coming.' TARDIS.md",
       caption: 'Rose\'s last words: "Bad Wolf"',
     },
     { cmd: 'git commit -am "Turn Left"', caption: 'Turn Left', accepts: 'git commit' },
-    { cmd: 'git reset --soft e09813f', caption: 'Fold the dark world up' },
+    { cmd: 'git reset --soft time-beetle', caption: 'Fold the dark world up' },
     {
       cmd: 'git commit -m "Turn Left"',
       caption: 'Squashed: the whole dark world is one episode',
       accepts: 'git commit',
     },
     { cmd: 'git show', caption: 'All that is left: the warning' },
-    { cmd: 'git rebase --onto ebf7702 e09813f', caption: 'Turn Left, after Forest of the Dead (ebf7702)' },
+    { cmd: 'git rebase --onto ebf7702 time-beetle', caption: 'Turn Left, after Forest of the Dead (ebf7702)' },
     {
       cmd: 'git rebase --rebase-merges --onto prime-timeline ebf7702 4e05f6c',
       caption: 'The real world, replayed on top',

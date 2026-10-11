@@ -168,6 +168,7 @@ describe('scenes', () => {
       "Angels quantum-locked\nJourney's End\nThe Stolen Earth\nTurn Left\nForest of the Dead\nBlink\n",
     );
     expect(await out('git show HEAD:TARDIS.md')).toContain('Warning: Bad Wolf. The darkness is coming.\n');
+    expect(await out('git rev-parse --short time-beetle')).toBe('e09813f\n');
     expect(await out('git log --format=%s -3 petes-world')).toBe(
       'The dimension cannon\nDoomsday\nRise of the Cybermen\n',
     );
