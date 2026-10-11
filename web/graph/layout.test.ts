@@ -109,7 +109,7 @@ describe('layout', () => {
     expect(l.nodes[0].branches).toEqual(['prime-timeline', 'petes-world']);
   });
 
-  test('a commit on no branch goes to the detached lane', () => {
+  test('a commit on no branch goes to the detached lane, above prime where branches fork off', () => {
     const l = layout(
       graph({
         commits: [c('a', 'Rose'), c('x', 'Save Caecilius', 'a')],
@@ -117,8 +117,8 @@ describe('layout', () => {
         head: { hash: 'x', branch: null },
       }),
     );
-    expect(l.lanes[1]).toEqual({ name: 'detached', kind: 'detached' });
-    expect(l.head).toEqual({ col: 1, lane: 1, label: 'HEAD (detached)' });
+    expect(l.lanes.map((x) => x.kind)).toEqual(['detached', 'prime']);
+    expect(l.head).toEqual({ col: 1, lane: 0, label: 'HEAD (detached)' });
   });
 
   test('tags are attached to their commit', () => {

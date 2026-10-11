@@ -34,8 +34,8 @@ const kindOf = (name: string): LaneKind => {
   return UNIVERSES.has(name) ? 'parallel' : 'branch';
 };
 
-// Top to bottom: ordinary branches above prime, parallel universes and detached commits below.
-const ORDER: LaneKind[] = ['branch', 'prime', 'parallel', 'detached'];
+// Top to bottom: branches and detached commits above prime (a checked-out erased branch stays where it was), parallel universes below.
+const ORDER: LaneKind[] = ['branch', 'detached', 'prime', 'parallel'];
 
 export function layout(graph: GraphModel, dirty = false): Layout {
   const firstParent = new Map(graph.commits.map((c) => [c.hash, c.parents[0] ?? null]));
