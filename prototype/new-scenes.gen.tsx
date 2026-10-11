@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { scenes } from '../scenes';
+import { stolenEarth } from '../scenes/episodes';
 import { Engine } from '../server/engine';
 import { readGraph } from '../server/graph';
 import { play } from '../server/play';
@@ -49,6 +50,26 @@ const show = async (live: string, rev: string) =>
 
 const scenarios: Scenario[] = [
   {
+    id: 'turn-left',
+    title: 'Turn Left · rebase --onto',
+    lore: "Between Pete's World and Journey's End, so S04E11 lands before S04E12. The Stolen Earth moves from the end of Pete's World into this scene. One wrong turn: rebase it out of existence. Every later commit is replayed and gets a new hash; only the reflog remembers.",
+    start: 'petes-world',
+    setup: 4,
+    steps: [
+      { episode: donnaTurnsRight, caption: 'A beetle on her back', date: '2008-06-20 19:00:00 +0000' },
+      { episode: turnLeft, caption: 'Life goes on, the world gets darker', date: '' },
+      { cmd: 'git log --oneline -3', caption: 'Where did it go wrong?' },
+      { cmd: 'git rebase --onto HEAD~2 HEAD~1', caption: 'Turn left: the wrong turn never happened' },
+      {
+        edit: async (live) => applyEpisode(await show(live, 'HEAD:TARDIS.md'), turnLeft),
+        caption: 'Resolve TARDIS.md: the Doctor is alive, Rose still came',
+      },
+      { cmd: 'git add TARDIS.md && git rebase --continue', caption: 'Replayed: Turn Left gets a new hash' },
+      { cmd: 'git reflog -6', caption: 'The other world is only in the reflog' },
+      { episode: stolenEarth, caption: 'The darkness Rose warned about', date: '' },
+    ],
+  },
+  {
     id: 'metacrisis',
     title: 'The Metacrisis Doctor · cherry-pick',
     lore: "At the end of Journey's End, after the merge and before closing the void. The same change, copied into Pete's World with a new hash.",
@@ -70,24 +91,6 @@ const scenarios: Scenario[] = [
       },
       { cmd: 'git switch prime-timeline', caption: 'Back to our universe' },
       { cmd: 'git branch -d petes-world', caption: "The void won't close: someone's still on the other side" },
-    ],
-  },
-  {
-    id: 'turn-left',
-    title: 'Turn Left · rebase --onto',
-    lore: "After River's Diary. One wrong turn, far back. Rebase it out of existence: every later commit is replayed and gets a new hash; only the reflog remembers.",
-    start: 'bad-wolf',
-    steps: [
-      { episode: donnaTurnsRight, caption: 'A beetle on her back', date: '2008-06-20 19:00:00 +0000' },
-      { episode: turnLeft, caption: 'Life goes on, the world gets darker', date: '' },
-      { cmd: 'git log --oneline -3', caption: 'Where did it go wrong?' },
-      { cmd: 'git rebase --onto HEAD~2 HEAD~1', caption: 'Turn left: the wrong turn never happened' },
-      {
-        edit: async (live) => applyEpisode(await show(live, 'HEAD:TARDIS.md'), turnLeft),
-        caption: 'Resolve TARDIS.md: the Doctor is alive, Rose still came',
-      },
-      { cmd: 'git add TARDIS.md && git rebase --continue', caption: 'Replayed: Turn Left gets a new hash' },
-      { cmd: 'git spoilers -6', caption: 'Only River remembers the other world' },
     ],
   },
   {
