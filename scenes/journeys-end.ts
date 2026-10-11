@@ -7,8 +7,13 @@ export const journeysEnd: Scene = {
   story: [
     {
       title: 'Universes Collide',
-      text: 'Davros steals the Earth. Every companion comes back, Rose crosses over from her universe, and two timelines have to become one. In git, that is a merge.',
+      text: 'Davros steals the Earth.',
       images: [{ src: '/assets/episodes/journeys-end.jpg' }],
+      boxes: [
+        { boxes: ['Every companion comes back'] },
+        { boxes: ["Rose crosses over from Pete's World"] },
+        { boxes: ['Two timelines, one TARDIS'] },
+      ],
     },
   ],
   steps: [
