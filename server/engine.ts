@@ -1,17 +1,29 @@
-import { cp, rm } from 'node:fs/promises';
+import { copyFile, cp, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { LiveState, RunResult, Scene, WorkDir } from '../shared/types';
-import { buildSnapshot } from './build';
-import { tokenize } from './command';
-import { git } from './git';
+import type { EpisodeResult, LiveState, RunResult, Scene, WorkDir } from '../shared/types';
+import { buildSnapshot, DAY, ROSE_AIRED } from './build';
 import { readGraph } from './graph';
 import { collapseCarriageReturns } from './output';
+import { meetsExpectation, play } from './play';
+import { GITCONFIG, sh } from './shell';
 import { livePath, readWorkDir } from './workdir';
+
+export class UnknownEpisodeError extends Error {}
+
+/** Every repo dir carries its own global git config next to it, so aliases travel with snapshots. */
+const configOf = (dir: string) => `${dir}.gitconfig`;
+
+async function copyRepo(from: string, to: string) {
+  await rm(to, { recursive: true, force: true });
+  await cp(from, to, { recursive: true });
+  await copyFile(configOf(from), configOf(to));
+}
 
 export class Engine {
   private readonly home: string;
   private readonly scenes: Scene[];
   private readonly live: string;
+  private current: Scene | undefined;
   // enter and run share one live dir; interleaved rm/cp corrupts it.
   private queue: Promise<unknown> = Promise.resolve();
 
@@ -26,7 +38,26 @@ export class Engine {
   }
 
   async prepare() {
-    for (const scene of this.scenes) await buildSnapshot(this.snapshot(scene.id), scene.build ?? []);
+    const later = this.scenes.slice(1).find((s) => s.build);
+    if (later) throw new Error(`only the first scene has a build: ${later.id}`);
+
+    const work = join(this.home, 'work');
+    const build = this.scenes[0]?.build ?? [];
+    await buildSnapshot(work, build);
+    await copyFile(GITCONFIG, configOf(work));
+    await mkdir(join(this.home, 'snapshots'), { recursive: true });
+
+    // Replays continue the build's fixed clock, so snapshot hashes are stable.
+    let tick = build.length;
+    for (const scene of this.scenes) {
+      await copyRepo(work, this.snapshot(scene.id));
+      for (const [i, step] of scene.steps.entries()) {
+        const date = `@${ROSE_AIRED + tick++ * DAY} +0000`;
+        const played = await play(work, step, { config: configOf(work), date });
+        if (!meetsExpectation(step, played.code))
+          throw new Error(`${scene.id} step ${i + 1} (${played.cmd}) exited ${played.code}: ${played.output}`);
+      }
+    }
   }
 
   private serialise<T>(task: () => Promise<T>): Promise<T> {
@@ -40,7 +71,16 @@ export class Engine {
   }
 
   run(input: string): Promise<RunResult> {
-    return this.serialise(() => this.doRun(input));
+    return this.serialise(async () => this.withLive(await sh(this.live, input, { config: configOf(this.live) })));
+  }
+
+  episode(code: string): Promise<EpisodeResult> {
+    return this.serialise(async () => {
+      const step = this.current?.steps.find((s) => 'episode' in s && s.episode.code === code);
+      if (!step) throw new UnknownEpisodeError(`unknown episode: ${code}`);
+      const { cmd, ...result } = await play(this.live, step, { config: configOf(this.live) });
+      return { cmd, ...(await this.withLive(result)) };
+    });
   }
 
   readFile(path: string): Promise<string> {
@@ -54,20 +94,20 @@ export class Engine {
     });
   }
 
-  private async readLive(): Promise<LiveState> {
-    return { graph: await readGraph(this.live), workdir: await readWorkDir(this.live) };
+  private async withLive(result: { output: string; code: number }): Promise<RunResult> {
+    return {
+      ...result,
+      output: collapseCarriageReturns(result.output),
+      graph: await readGraph(this.live),
+      workdir: await readWorkDir(this.live),
+    };
   }
 
   private async doEnter(id: string): Promise<LiveState> {
-    if (!this.scenes.some((s) => s.id === id)) throw new Error(`unknown scene: ${id}`);
-    await rm(this.live, { recursive: true, force: true });
-    await cp(this.snapshot(id), this.live, { recursive: true });
-    return this.readLive();
-  }
-
-  private async doRun(input: string): Promise<RunResult> {
-    const parsed = tokenize(input);
-    const result = parsed.ok ? await git(this.live, parsed.args) : { output: parsed.error, code: 1 };
-    return { ...result, output: collapseCarriageReturns(result.output), ...(await this.readLive()) };
+    const scene = this.scenes.find((s) => s.id === id);
+    if (!scene) throw new Error(`unknown scene: ${id}`);
+    await copyRepo(this.snapshot(id), this.live);
+    this.current = scene;
+    return { graph: await readGraph(this.live), workdir: await readWorkDir(this.live) };
   }
 }
