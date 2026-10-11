@@ -9,6 +9,8 @@ async function playScene(engine: Engine, scene: Scene) {
   await engine.enter(scene.id);
   for (const step of scene.steps) {
     if ('cmd' in step) await engine.run(step.cmd);
+    else if ('edit' in step)
+      for (const [path, content] of Object.entries(step.edit)) await engine.writeFile(path, content);
     else await engine.episode(step.episode.code);
   }
 }
@@ -56,6 +58,50 @@ describe('scenes', () => {
     await playScene(engine, scene);
     expect((await engine.run('git log -S "Bad Wolf" --format=%s')).output).toBe(
       'Dalek\nAliens of London\nThe End of the World\n',
+    );
+  });
+
+  const sceneOf = (id: string) => scenes.find((s) => s.id === id) as Scene;
+  const out = async (cmd: string) => (await engine.run(cmd)).output;
+
+  test("pete's world branches off where Pompeii ended and diverges on both sides", async () => {
+    await playScene(engine, sceneOf('petes-world'));
+    expect(await out('git log --format=%s -2 petes-world')).toBe('Doomsday\nRise of the Cybermen\n');
+    expect(await out('git log --format=%s -1')).toBe('Turn Left\n');
+    expect(await out('git log -1 --format=%s $(git merge-base petes-world prime-timeline)')).toBe(
+      'The Sontaran Stratagem\n',
+    );
+  });
+
+  test("journey's end conflicts on the companion and resolves into a merge commit", async () => {
+    const scene = sceneOf('journeys-end');
+    await engine.enter(scene.id);
+    await engine.episode('S04E12');
+    expect((await engine.run('git merge petes-world')).code).not.toBe(0);
+    expect(await engine.readFile('TARDIS.md')).toContain('<<<<<<< HEAD\nCompanion: Donna Noble');
+    await playScene(engine, scene);
+    expect(await out('git log -1 --format=%p')).toMatch(/^\w+ \w+\n$/);
+    expect(await out("git branch --format='%(refname:short)'")).toBe('prime-timeline\n');
+  });
+
+  test('blink bisects to the episode that let the Angel in', async () => {
+    const scene = sceneOf('blink');
+    const run = scene.steps.findIndex((s) => 'cmd' in s && s.cmd.startsWith('git bisect run'));
+    await playScene(engine, { ...scene, steps: scene.steps.slice(0, run) });
+    const step = scene.steps[run] as { cmd: string };
+    expect((await engine.run(step.cmd)).output).toMatch(/is the first bad commit[\s\S]*\n {4}Blink\n/);
+  });
+
+  test("river's diary brings back the exterminated episodes", async () => {
+    await playScene(engine, sceneOf('rivers-diary'));
+    expect(await out('git log --format=%s -1')).toBe('Forest of the Dead\n');
+  });
+
+  test('bad wolf finds every episode that wrote it', async () => {
+    const scene = sceneOf('bad-wolf');
+    await playScene(engine, { ...scene, steps: scene.steps.slice(0, 1) });
+    expect(await out('git log -S "Bad Wolf" --format=%s')).toBe(
+      'Bad Wolf\nBoom Town\nThe Long Game\nDoomsday\nDalek\nAliens of London\nThe End of the World\n',
     );
   });
 

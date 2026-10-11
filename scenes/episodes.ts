@@ -50,3 +50,93 @@ export const sontaranStratagem: Episode = {
   title: 'The Sontaran Stratagem',
   set: { Location: 'London, 2009' },
 };
+
+export const riseOfTheCybermen: Episode = {
+  code: 'S02E05',
+  title: 'Rise of the Cybermen',
+  set: { Companion: 'Rose Tyler', Location: "London, Pete's World" },
+};
+
+export const doomsday: Episode = {
+  code: 'S02E13',
+  title: 'Doomsday',
+  note: "- Rose is stranded in Pete's World, on Bad Wolf Bay",
+};
+
+export const turnLeft: Episode = {
+  code: 'S04E11',
+  title: 'Turn Left',
+  set: { Location: 'Shan Shen' },
+};
+
+export const stolenEarth: Episode = {
+  code: 'S04E12',
+  title: 'The Stolen Earth',
+  set: { Location: 'The Medusa Cascade' },
+};
+
+export const longGame: Episode = {
+  code: 'S01E07',
+  title: 'The Long Game',
+  set: { Location: 'Satellite Five, the year 200,000' },
+  note: '- Bad Wolf TV is on every channel',
+};
+
+export const emptyChild: Episode = {
+  code: 'S01E09',
+  title: 'The Empty Child',
+  set: { Location: 'London, 1941' },
+  note: '- "Schlechter Wolf" is painted on the bomb',
+};
+
+export const blink: Episode = {
+  code: 'S03E10',
+  title: 'Blink',
+  set: { Location: 'Wester Drumlins, 2007' },
+  note: "- A Weeping Angel got into the log. Don't blink.",
+};
+
+export const boomTown: Episode = {
+  code: 'S01E11',
+  title: 'Boom Town',
+  set: { Location: 'Cardiff, 2006' },
+  note: '- Blaidd Drwg: Welsh for Bad Wolf',
+};
+
+export const utopia: Episode = {
+  code: 'S03E11',
+  title: 'Utopia',
+  set: { Location: 'Malcassairo, the year 100 trillion' },
+};
+
+export const soundOfDrums: Episode = {
+  code: 'S03E12',
+  title: 'The Sound of Drums',
+  set: { Location: 'London, 2008' },
+};
+
+export const silenceInTheLibrary: Episode = {
+  code: 'S04E08',
+  title: 'Silence in the Library',
+  set: { Location: 'The Library, 51st century' },
+  note: '- River Song knows my name. Spoilers.',
+};
+
+export const forestOfTheDead: Episode = {
+  code: 'S04E09',
+  title: 'Forest of the Dead',
+  note: '- River is saved to the hard drive',
+};
+
+export const badWolf: Episode = {
+  code: 'S01E12',
+  title: 'Bad Wolf',
+  set: { Location: 'The Game Station, the year 200,100' },
+  note: '- The Game Station is run by the Bad Wolf Corporation',
+};
+
+export const partingOfTheWays: Episode = {
+  code: 'S01E13',
+  title: 'The Parting of the Ways',
+  note: '- "I am the Bad Wolf. I create myself."',
+};
