@@ -1,0 +1,94 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { GraphModel, SceneView } from '../shared/types';
+import { enterScene, fetchScenes, runCommand } from './api';
+import { Console } from './console/Console';
+import { advance } from './cue';
+import { FlatTimeline } from './graph/FlatTimeline';
+import { layout } from './graph/layout';
+import { move, type Position } from './nav';
+import { StoryCardView } from './story/StoryCardView';
+
+export function App() {
+  const [scenes, setScenes] = useState<SceneView[]>([]);
+  const [pos, setPos] = useState<Position>({ scene: 0, card: 0 });
+  const [graph, setGraph] = useState<GraphModel | null>(null);
+  const [cueIndex, setCueIndex] = useState(0);
+  const [input, setInput] = useState('');
+  const [output, setOutput] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetchScenes().then(setScenes);
+  }, []);
+
+  const scene = scenes[pos.scene];
+  const sceneId = scene?.id;
+  const gitPhase = scene !== undefined && pos.card === scene.story.length;
+
+  const reset = useCallback(async () => {
+    if (!sceneId) return;
+    setGraph(await enterScene(sceneId));
+    setCueIndex(0);
+    setInput('');
+    setOutput('');
+  }, [sceneId]);
+
+  useEffect(() => {
+    reset();
+  }, [reset]);
+
+  useEffect(() => {
+    if (gitPhase) inputRef.current?.focus();
+  }, [gitPhase]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const typing = e.target instanceof HTMLInputElement;
+      if (typing && (e.target as HTMLInputElement).value !== '') return;
+      if (e.key === 'ArrowRight') setPos((p) => move(p, 1, scenes));
+      else if (e.key === 'ArrowLeft') setPos((p) => move(p, -1, scenes));
+      else if (e.key === 'r' && !typing) reset();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [scenes, reset]);
+
+  if (!scene) return null;
+
+  const run = async (cmd: string) => {
+    const result = await runCommand(cmd);
+    setOutput(`$ ${cmd}\n${result.output}`);
+    setGraph(result.graph);
+    setCueIndex((i) => advance(scene.steps, i, cmd, result.code));
+    setInput('');
+  };
+
+  return (
+    <>
+      <header>
+        <div className="ep">
+          <small>{scene.episode}</small>
+          {scene.title}
+        </div>
+        <div className="progress">
+          scene {pos.scene + 1} / {scenes.length}
+        </div>
+      </header>
+      {gitPhase ? (
+        <>
+          <main>{graph && <FlatTimeline layout={layout(graph)} />}</main>
+          <Console
+            cue={scene.steps[cueIndex]}
+            value={input}
+            onChange={setInput}
+            onRun={run}
+            output={output}
+            inputRef={inputRef}
+          />
+        </>
+      ) : (
+        <StoryCardView key={`${scene.id}-${pos.card}`} card={scene.story[pos.card]} />
+      )}
+    </>
+  );
+}
