@@ -39,7 +39,6 @@ export const journeysEnd: Scene = {
           '- I am the Bad Wolf. I create myself.',
           "- An Angel appeared. Don't blink!",
           '- Who is River Song? Spoilers?',
-          '- Rose built a dimension cannon to cross back.',
           '',
         ].join('\n'),
       },

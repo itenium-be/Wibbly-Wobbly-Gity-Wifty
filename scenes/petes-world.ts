@@ -1,5 +1,5 @@
 import type { Scene } from '../shared/types';
-import { dimensionCannon, doomsday, riseOfTheCybermen, stolenEarth } from './episodes';
+import { doomsday, riseOfTheCybermen, stolenEarth } from './episodes';
 
 export const petesWorld: Scene = {
   id: 'petes-world',
@@ -24,7 +24,6 @@ export const petesWorld: Scene = {
     },
     { episode: riseOfTheCybermen },
     { episode: doomsday },
-    { episode: dimensionCannon },
     { cmd: 'git switch prime-timeline', caption: 'Back to our universe: Rose stays behind' },
     { episode: stolenEarth },
   ],

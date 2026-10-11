@@ -85,9 +85,7 @@ describe('scenes', () => {
 
   test("pete's world branches off after Series 1 and diverges on both sides", async () => {
     await playScene(engine, sceneOf('petes-world'));
-    expect(await out('git log --format=%s -3 petes-world')).toBe(
-      'The dimension cannon\nDoomsday\nRise of the Cybermen\n',
-    );
+    expect(await out('git log --format=%s -2 petes-world')).toBe('Doomsday\nRise of the Cybermen\n');
     expect(await out('git log -1 --format=%s $(git merge-base petes-world prime-timeline)')).toBe(
       'The Parting of the Ways\n',
     );
@@ -105,7 +103,6 @@ describe('scenes', () => {
       'The Runaway Bride',
       'Blink',
       'Forest of the Dead',
-      'The dimension cannon',
       'The Stolen Earth',
     ]);
   });
@@ -150,7 +147,7 @@ describe('scenes', () => {
 
   test('turn left starts after bad wolf, and its cues name the right commits', async () => {
     await engine.enter('turn-left');
-    expect(await out('git rev-parse --short HEAD')).toBe('8d4bf96\n');
+    expect(await out('git rev-parse --short HEAD')).toBe('4e05f6c\n');
     expect(await out('git log -1 --format=%s e09813f')).toBe('The Runaway Bride\n');
     expect(await out('git log -1 --format=%s ebf7702')).toBe('Forest of the Dead\n');
   });
@@ -168,7 +165,9 @@ describe('scenes', () => {
       "Angels quantum-locked\nJourney's End\nThe Stolen Earth\nTurn Left\nForest of the Dead\nBlink\n",
     );
     expect(await out('git show HEAD:TARDIS.md')).toContain('Warning: Bad Wolf. The darkness is coming.\n');
-    expect(await out('git log -1 --format=%s petes-world')).toBe('The dimension cannon\n');
+    expect(await out('git log --format=%s -3 petes-world')).toBe(
+      'The dimension cannon\nDoomsday\nRise of the Cybermen\n',
+    );
     expect(await out('git branch --show-current')).toBe('prime-timeline\n');
     expect(await out('git status --short')).toBe('');
   });

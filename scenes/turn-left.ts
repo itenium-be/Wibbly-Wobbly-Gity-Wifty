@@ -1,5 +1,5 @@
 import type { Scene } from '../shared/types';
-import { turnRight } from './episodes';
+import { dimensionCannon, turnRight } from './episodes';
 
 export const turnLeft: Scene = {
   id: 'turn-left',
@@ -20,6 +20,9 @@ export const turnLeft: Scene = {
   steps: [
     { cmd: 'git reset --hard e09813f', caption: 'A time beetle: everything after The Runaway Bride is gone' },
     { episode: turnRight },
+    { cmd: 'git switch petes-world', caption: "Meanwhile, in Pete's World: the stars are going out" },
+    { episode: dimensionCannon },
+    { cmd: 'git switch prime-timeline', caption: 'Back to the dark world' },
     { cmd: 'git cherry-pick petes-world', caption: 'Rose crosses over from her universe', fails: true },
     {
       edit: {
@@ -59,7 +62,7 @@ export const turnLeft: Scene = {
     { cmd: 'git show --stat --format=%s', caption: 'All that is left: the warning' },
     { cmd: 'git rebase --onto ebf7702 e09813f', caption: 'Turn Left, after Forest of the Dead' },
     {
-      cmd: 'git rebase --rebase-merges --onto prime-timeline ebf7702 8d4bf96',
+      cmd: 'git rebase --rebase-merges --onto prime-timeline ebf7702 4e05f6c',
       caption: 'The real world, replayed on top',
       fails: true,
     },
