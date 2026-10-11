@@ -117,4 +117,13 @@ describe('App', () => {
     await act(async () => slow.resolve({ output: 'done', code: 0, graph }));
     expect(runCommand).toHaveBeenCalledTimes(1);
   });
+
+  test('Esc then r resets and returns focus to the input', async () => {
+    const input = await toGitPhase();
+    await waitFor(() => expect(document.activeElement === input).toBe(true));
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(document.activeElement === input).toBe(false);
+    fireEvent.keyDown(window, { key: 'r' });
+    await waitFor(() => expect(document.activeElement === input).toBe(true));
+  });
 });

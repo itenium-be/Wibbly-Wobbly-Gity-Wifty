@@ -37,6 +37,7 @@ export function App() {
     setCueIndex(0);
     setInput('');
     setOutput('');
+    inputRef.current?.focus();
   }, [sceneId]);
 
   useEffect(() => {
