@@ -9,6 +9,10 @@ export type Played = ShellResult & { cmd: string };
 
 export async function play(dir: string, step: Step, options: StageOptions): Promise<Played> {
   if ('cmd' in step) return { cmd: step.cmd, ...(await sh(dir, step.cmd, options)) };
+  if ('edit' in step) {
+    for (const [file, content] of Object.entries(step.edit)) await Bun.write(join(dir, file), content);
+    return { cmd: `edit ${Object.keys(step.edit).join(' ')}`, output: '', code: 0 };
+  }
   const path = join(dir, TARDIS_MD);
   await Bun.write(path, applyEpisode(await Bun.file(path).text(), step.episode));
   const cmd = `git commit -am "${step.episode.title}"`;

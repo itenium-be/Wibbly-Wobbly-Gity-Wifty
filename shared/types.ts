@@ -14,7 +14,9 @@ export type Episode = { code: string; title: string; set?: Record<string, string
 /** `fails`: the cue is expected to exit non-zero and still counts as done. */
 export type CmdStep = { cmd: string; caption: string; fails?: true };
 export type EpisodeStep = { episode: Episode };
-export type Step = CmdStep | EpisodeStep;
+/** The presenter makes this edit in the working directory panel; replays write it directly. */
+export type EditStep = { edit: Record<string, string>; caption: string };
+export type Step = CmdStep | EpisodeStep | EditStep;
 
 export type GitStep =
   | { write: Record<string, string> }
