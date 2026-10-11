@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Episode, GraphModel, RunResult, SceneView, WorkDir } from '../shared/types';
 import { enterScene, fetchScenes, playEpisode, readFile, runCommand, writeFile } from './api';
 import { Console } from './console/Console';
 import { advance, type Cue, current, played, start } from './cue';
+import { episodeCodes } from './episodes';
 import { FlatTimeline } from './graph/FlatTimeline';
 import { layout } from './graph/layout';
 import { NextEpisode } from './NextEpisode';
@@ -36,6 +37,7 @@ export function App() {
     if (scenes.length) history.replaceState(null, '', toQuery(pos, scenes));
   }, [pos, scenes]);
 
+  const codes = useMemo(() => episodeCodes(scenes), [scenes]);
   const scene = scenes[pos.scene];
   const sceneId = scene?.id;
   const gitPhase = scene !== undefined && pos.card === scene.story.length;
@@ -148,7 +150,10 @@ export function App() {
         <>
           <main>
             {graph && (
-              <FlatTimeline layout={layout(graph, workdir?.files.some((f) => f.status !== 'clean') ?? false)} />
+              <FlatTimeline
+                codes={codes}
+                layout={layout(graph, workdir?.files.some((f) => f.status !== 'clean') ?? false)}
+              />
             )}
           </main>
           {workdir && (

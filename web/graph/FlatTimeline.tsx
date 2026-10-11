@@ -22,7 +22,7 @@ function star(x: number, y: number, r: number) {
   }).join(' ');
 }
 
-export function FlatTimeline({ layout }: { layout: Layout }) {
+export function FlatTimeline({ layout, codes = {} }: { layout: Layout; codes?: Record<string, string> }) {
   const cols = Math.max(0, layout.pending?.col ?? 0, ...layout.nodes.map((n) => n.col));
   const width = X0 + cols * DX + 260;
   const height = Y0 + Math.max(1, layout.lanes.length) * DY;
@@ -68,14 +68,19 @@ export function FlatTimeline({ layout }: { layout: Layout }) {
             ) : (
               <circle cx={x} cy={y} r={13} className={`node lane-${kind(n.lane)}`} />
             )}
-            <text x={x} y={y + 42} className="message">
+            {codes[n.message] && (
+              <text x={x} y={y + 42} className="episode-code">
+                {codes[n.message]}
+              </text>
+            )}
+            <text x={x} y={y + 60} className="message">
               {n.message}
             </text>
-            <text x={x} y={y + 60} className="hash">
+            <text x={x} y={y + 78} className="hash">
               {n.short}
             </text>
             {n.tags.map((t, i) => (
-              <text key={t} x={x} y={y + 78 + i * 18} className="tag">
+              <text key={t} x={x} y={y + 96 + i * 18} className="tag">
                 ⚑ {t}
               </text>
             ))}

@@ -24,6 +24,13 @@ describe('FlatTimeline', () => {
     expect(screen.getByText('HEAD (detached)')).toBeTruthy();
   });
 
+  test('labels a commit with its episode code, title and hash, in that order', () => {
+    render(<FlatTimeline layout={pompeii} codes={{ 'The Fires of Pompeii': 'S04E02' }} />);
+    const y = (text: string) => Number(screen.getByText(text).getAttribute('y'));
+    expect(y('S04E02')).toBeLessThan(y('The Fires of Pompeii'));
+    expect(y('The Fires of Pompeii')).toBeLessThan(y('a1'));
+  });
+
   test('draws tag labels below the commit so the TARDIS cannot hide them', () => {
     render(<FlatTimeline layout={pompeii} />);
     const y = Number(screen.getByText('⚑ fixed-point/pompeii').getAttribute('y'));

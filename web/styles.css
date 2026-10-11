@@ -162,6 +162,12 @@ main {
   text-anchor: middle;
 }
 
+.episode-code {
+  fill: var(--muted);
+  font-size: 12px;
+  text-anchor: middle;
+}
+
 .hash {
   fill: var(--muted);
   font-size: 11px;
