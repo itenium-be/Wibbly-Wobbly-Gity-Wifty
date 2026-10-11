@@ -32,13 +32,24 @@ export async function spawn(
   timeoutMs: number,
   label: string,
 ): Promise<ShellResult> {
-  const proc = Bun.spawn(cmd, { cwd, env: stageEnv(cwd, options), stdout: 'pipe', stderr: 'pipe', timeout: timeoutMs });
+  // Own process group, so a timeout reaches pipeline members that would otherwise hold stdout open.
+  const proc = Bun.spawn(['setsid', ...cmd], { cwd, env: stageEnv(cwd, options), stdout: 'pipe', stderr: 'pipe' });
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    try {
+      process.kill(-proc.pid, 'SIGKILL');
+    } catch {
+      // group already gone
+    }
+  }, timeoutMs);
   const [stdout, stderr, code] = await Promise.all([
     Bun.readableStreamToText(proc.stdout),
     Bun.readableStreamToText(proc.stderr),
     proc.exited,
   ]);
-  if (proc.signalCode) {
+  clearTimeout(timer);
+  if (timedOut) {
     const note = `${label} timed out after ${timeoutMs / 1000}s`;
     return { output: `${stdout}${stderr}${stdout || stderr ? '\n' : ''}${note}`, code };
   }

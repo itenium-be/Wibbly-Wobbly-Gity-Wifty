@@ -44,4 +44,12 @@ describe('sh', () => {
     const { output } = await sh(dir, 'sleep 5', {}, 200);
     expect(output).toContain('`sleep 5` timed out after 0.2s');
   });
+
+  test('kills the whole process group, not just bash', async () => {
+    const dir = await tmp();
+    const start = Date.now();
+    const { output } = await sh(dir, 'sleep 5 | cat', {}, 200);
+    expect(Date.now() - start).toBeLessThan(1500);
+    expect(output).toContain('timed out after 0.2s');
+  });
 });
