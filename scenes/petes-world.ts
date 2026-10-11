@@ -8,8 +8,13 @@ export const petesWorld: Scene = {
   story: [
     {
       title: "Pete's World",
-      text: "The TARDIS falls into a parallel universe: zeppelins over London, Cybermen in the streets, and Rose's dad Pete is alive. Same past, different future.",
+      text: 'The TARDIS falls through a crack into a parallel universe.',
       images: [{ src: '/assets/episodes/petes-world.jpg' }],
+      boxes: [
+        { boxes: ['Zeppelins over London'] },
+        { boxes: ['Cybermen in the streets'] },
+        { boxes: ["Rose's dad is alive"] },
+      ],
     },
   ],
   steps: [
