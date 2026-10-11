@@ -1,6 +1,16 @@
-import { join } from 'node:path';
+import { isAbsolute, join, normalize } from 'node:path';
 import type { FileStatus, WorkDir } from '../shared/types';
 import { git } from './git';
+
+export class InvalidPathError extends Error {}
+
+export function livePath(root: string, path: string): string {
+  const rel = normalize(path);
+  const top = rel.split('/')[0];
+  if (path.includes('\0') || isAbsolute(path) || path.split('/').includes('..') || ['.', '.git'].includes(top))
+    throw new InvalidPathError(`invalid path: ${path}`);
+  return join(root, rel);
+}
 
 const UNMERGED = new Set(['DD', 'AU', 'UD', 'UA', 'DU', 'AA', 'UU']);
 

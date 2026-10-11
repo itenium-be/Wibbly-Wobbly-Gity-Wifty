@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { tmp } from '../test/tmp';
 import { buildSnapshot } from './build';
 import { git } from './git';
-import { classify, readWorkDir } from './workdir';
+import { classify, InvalidPathError, livePath, readWorkDir } from './workdir';
 
 describe('classify', () => {
   test.each(['DD', 'AU', 'UD', 'UA', 'DU', 'AA', 'UU'])('%s is conflicted', (xy) => {
@@ -87,5 +87,28 @@ describe('readWorkDir', () => {
     await writeFile(join(dir, 'docs/.gitkeep'), '');
     await git(dir, ['init', '-q']);
     expect((await readWorkDir(dir)).files.map((f) => f.path)).toEqual(['docs/.gitkeep']);
+  });
+});
+
+describe('livePath', () => {
+  test('resolves a relative path inside the live dir', () => {
+    expect(livePath('/live', 'episodes/rose.md')).toBe('/live/episodes/rose.md');
+    expect(livePath('/live', './a.md')).toBe('/live/a.md');
+  });
+
+  test.each([
+    '',
+    '.',
+    '..',
+    '../escape.md',
+    'episodes/../../escape.md',
+    'episodes/../rose.md',
+    '/etc/passwd',
+    '.git',
+    '.git/config',
+    './.git/HEAD',
+    'a\0b',
+  ])('rejects %p', (path) => {
+    expect(() => livePath('/live', path)).toThrow(InvalidPathError);
   });
 });

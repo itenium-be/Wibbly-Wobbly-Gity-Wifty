@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, test } from 'bun:test';
 import type { Scene } from '../shared/types';
 import { tmp } from '../test/tmp';
 import { Engine } from './engine';
+import { InvalidPathError } from './workdir';
 
 const scene = (id: string, commits: string[]): Scene => ({
   id,
@@ -36,6 +37,29 @@ describe('Engine', () => {
     ]);
     const result = await engine.run('git rm -q --cached episodes/rose.md');
     expect(result.workdir.files).toEqual([{ path: 'episodes/rose.md', status: 'untracked', code: '??' }]);
+  });
+
+  test('reads a file from the live dir', async () => {
+    await engine.enter('rose');
+    expect(await engine.readFile('episodes/rose.md')).toBe('# Rose\n');
+  });
+
+  test('writing a file returns the updated working directory', async () => {
+    await engine.enter('rose');
+    const workdir = await engine.writeFile('episodes/rose.md', '# Bad Wolf\n');
+    expect(workdir.files).toEqual([{ path: 'episodes/rose.md', status: 'modified', code: ' M' }]);
+    expect(await engine.readFile('episodes/rose.md')).toBe('# Bad Wolf\n');
+  });
+
+  test('writing a new file creates its directories', async () => {
+    await engine.enter('rose');
+    const workdir = await engine.writeFile('companions/jack.md', 'Jack\n');
+    expect(workdir.files).toContainEqual({ path: 'companions/jack.md', status: 'untracked', code: '??' });
+  });
+
+  test('rejects paths outside the live dir', async () => {
+    await expect(engine.readFile('../snapshots/rose/episodes/rose.md')).rejects.toBeInstanceOf(InvalidPathError);
+    await expect(engine.writeFile('.git/HEAD', 'x')).rejects.toBeInstanceOf(InvalidPathError);
   });
 
   test('re-entering a scene resets it', async () => {

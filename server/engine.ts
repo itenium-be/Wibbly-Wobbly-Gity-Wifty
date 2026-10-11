@@ -1,12 +1,12 @@
 import { cp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { LiveState, RunResult, Scene } from '../shared/types';
+import type { LiveState, RunResult, Scene, WorkDir } from '../shared/types';
 import { buildSnapshot } from './build';
 import { tokenize } from './command';
 import { git } from './git';
 import { readGraph } from './graph';
 import { collapseCarriageReturns } from './output';
-import { readWorkDir } from './workdir';
+import { livePath, readWorkDir } from './workdir';
 
 export class Engine {
   private readonly home: string;
@@ -41,6 +41,17 @@ export class Engine {
 
   run(input: string): Promise<RunResult> {
     return this.serialise(() => this.doRun(input));
+  }
+
+  readFile(path: string): Promise<string> {
+    return this.serialise(() => Bun.file(livePath(this.live, path)).text());
+  }
+
+  writeFile(path: string, content: string): Promise<WorkDir> {
+    return this.serialise(async () => {
+      await Bun.write(livePath(this.live, path), content);
+      return readWorkDir(this.live);
+    });
   }
 
   private async readLive(): Promise<LiveState> {
