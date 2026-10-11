@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { Episode } from '../shared/types';
 
-type Props = { episode: Episode; onPlay: () => Promise<boolean>; seconds?: number };
+type Props = { episode: Episode; onPlay: () => Promise<boolean> };
 
-export function NextEpisode({ episode, onPlay, seconds = 8 }: Props) {
-  const [left, setLeft] = useState(seconds);
+export function NextEpisode({ episode, onPlay }: Props) {
   const played = useRef(false);
-  // Held in a ref so a parent re-render (typing in the console) cannot restart the countdown.
   const onPlayRef = useRef(onPlay);
   onPlayRef.current = onPlay;
   const playOnce = useCallback(() => {
@@ -21,15 +19,6 @@ export function NextEpisode({ episode, onPlay, seconds = 8 }: Props) {
       },
     );
   }, []);
-
-  useEffect(() => {
-    if (left === 0) {
-      playOnce();
-      return;
-    }
-    const timer = setTimeout(() => setLeft((s) => s - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [left, playOnce]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -48,7 +37,7 @@ export function NextEpisode({ episode, onPlay, seconds = 8 }: Props) {
       <div className="code">{episode.code}</div>
       <div className="title">{episode.title}</div>
       <button type="button" onClick={playOnce}>
-        ▶ Play <span className="countdown">{left}</span>
+        ▶ Play
       </button>
     </aside>
   );

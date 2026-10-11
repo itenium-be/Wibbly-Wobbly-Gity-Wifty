@@ -35,12 +35,12 @@ describe('NextEpisode', () => {
     expect(onPlay).toHaveBeenCalledTimes(1);
   });
 
-  test('plays by itself when the countdown runs out', async () => {
+  test('waits for the presenter instead of playing by itself', async () => {
     const onPlay = mock(async () => true);
-    render(<NextEpisode episode={episode} onPlay={onPlay} seconds={1} />);
-    expect(screen.getByText('1')).toBeTruthy();
-    await act(() => new Promise((r) => setTimeout(r, 1100)));
-    expect(onPlay).toHaveBeenCalledTimes(1);
+    render(<NextEpisode episode={episode} onPlay={onPlay} />);
+    await act(() => new Promise((r) => setTimeout(r, 50)));
+    expect(onPlay).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: '▶ Play' })).toBeTruthy();
   });
 
   test('a play that was dropped can be retried', async () => {
@@ -59,15 +59,6 @@ describe('NextEpisode', () => {
     await act(async () => fireEvent.click(screen.getByRole('button', { name: /play/i })));
     await act(async () => fireEvent.click(screen.getByRole('button', { name: /play/i })));
     expect(onPlay).toHaveBeenCalledTimes(2);
-  });
-
-  test('a new onPlay on re-render does not delay the countdown', async () => {
-    const onPlay = mock(async () => true);
-    const { rerender } = render(<NextEpisode episode={episode} onPlay={async () => false} seconds={1} />);
-    await act(() => new Promise((r) => setTimeout(r, 500)));
-    rerender(<NextEpisode episode={episode} onPlay={onPlay} seconds={1} />);
-    await act(() => new Promise((r) => setTimeout(r, 600)));
-    expect(onPlay).toHaveBeenCalledTimes(1);
   });
 
   test.each(['ctrlKey', 'metaKey', 'altKey'])('n with %s does not play', (modifier) => {
