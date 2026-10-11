@@ -156,7 +156,10 @@ describe('scenes', () => {
     const scene = sceneOf('turn-left');
     const replay = scene.steps.findIndex((s) => 'cmd' in s && s.cmd.includes('--rebase-merges'));
     await playScene(engine, { ...scene, steps: scene.steps.slice(0, replay) });
-    expect(await out('git show --stat --format=%s')).toContain('1 file changed, 1 insertion(+)');
+    const changes = Bun.stripANSI(await out('git show'))
+      .split('\n')
+      .filter((l) => /^[+-](?![+-]{2} )/.test(l));
+    expect(changes).toEqual(['+Warning: Bad Wolf. The darkness is coming.']);
     expect((await engine.run((scene.steps[replay] as { cmd: string }).cmd)).output).toContain(
       "Resolved 'TARDIS.md' using previous resolution.",
     );
