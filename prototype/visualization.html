@@ -1,0 +1,436 @@
+<!doctype html>
+<!-- PROTOTYPE — throwaway, do not commit. Variant A (flat timeline) + working directory panel. States via ?state=next|conflict. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timeline Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --space: #050816; --space-2: #0b1230; --tardis: #1f4fa8; --glow: #7fd4ff; --gold: #ffcc4d;
+    --danger: #ff5a6e; --text: #e6ecff; --muted: #8a95c2; --panel: rgba(10, 16, 40, 0.82); --line: rgba(127, 212, 255, 0.25);
+    --st-untracked: #b48cff; --st-modified: #ffb347; --st-staged: #5fe39a; --st-conflicted: #ff5a6e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; color: var(--text); font-family: 'JetBrains Mono', monospace;
+    background: radial-gradient(ellipse at 40% 40%, var(--space-2), var(--space) 70%); }
+  #root { display: grid; grid-template-rows: auto 1fr auto; grid-template-columns: 1fr 420px; height: 100vh; }
+  header { grid-column: 1 / 3; display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; }
+  header .ep { font: 700 22px Orbitron, sans-serif; letter-spacing: 2px; }
+  header .ep small { color: var(--muted); font-size: 14px; margin-right: 12px; font-weight: 500; }
+  header .progress { color: var(--muted); font-size: 13px; }
+  main { min-height: 0; position: relative; }
+  svg.timeline { width: 100%; height: 100%; }
+
+  /* working directory panel */
+  aside { min-height: 0; margin: 0 24px 0 0; display: grid; grid-template-rows: auto auto 1fr; gap: 10px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  aside h3 { margin: 0; font: 700 13px Orbitron, sans-serif; letter-spacing: 3px; color: var(--muted); display: flex; justify-content: space-between; }
+  aside h3 .branch { font: 600 12px 'JetBrains Mono', monospace; letter-spacing: 0; color: var(--glow); }
+  aside h3 .branch.merging { color: var(--danger); }
+  .files { list-style: none; margin: 0; padding: 0; }
+  .files li { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer;
+    transition: background .2s, color .4s; }
+  .files li:hover, .files li.open { background: rgba(127, 212, 255, 0.08); }
+  .files .code { font-weight: 600; font-size: 12px; text-align: center; }
+  .files .tag { font-size: 11px; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; }
+  .files li.clean { color: var(--muted); }
+  .files li.untracked { color: var(--st-untracked); }
+  .files li.modified { color: var(--st-modified); }
+  .files li.staged { color: var(--st-staged); }
+  .files li.conflicted { color: var(--st-conflicted); }
+  .files li.flash { animation: flash .9s; }
+  @keyframes flash { 30% { background: rgba(95, 227, 154, 0.25); } }
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px; color: var(--muted); }
+  .legend span::before { content: '●'; margin-right: 4px; }
+  .legend .untracked::before { color: var(--st-untracked); } .legend .modified::before { color: var(--st-modified); }
+  .legend .staged::before { color: var(--st-staged); } .legend .conflicted::before { color: var(--st-conflicted); }
+  .viewer { min-height: 0; display: grid; grid-template-rows: auto 1fr; border-top: 1px solid var(--line); padding-top: 10px; }
+  .viewer .bar { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .viewer button { font: inherit; font-size: 12px; color: var(--text); background: var(--tardis); border: 0; border-radius: 6px; padding: 4px 12px; cursor: pointer; }
+  .viewer pre, .viewer textarea { margin: 0; min-height: 0; overflow: auto; font: 14px/1.6 'JetBrains Mono', monospace; color: var(--text);
+    background: rgba(0, 0, 0, 0.25); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; white-space: pre; }
+  .viewer textarea { resize: none; outline: none; border-color: var(--glow); caret-color: var(--glow); }
+  .viewer pre .marker { color: var(--st-conflicted); font-weight: 600; background: rgba(255, 90, 110, 0.12); display: block; }
+  .viewer pre .ours { background: rgba(127, 212, 255, 0.10); display: block; }
+  .viewer pre .theirs { background: rgba(255, 90, 110, 0.08); display: block; }
+  .viewer pre .changed { background: rgba(255, 179, 71, 0.14); display: block; }
+
+  /* console */
+  .console { grid-column: 1 / 3; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px 24px 72px; }
+  .console > * { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; font-size: 16px; }
+  .line { display: flex; gap: 10px; }
+  .sigil { color: var(--glow); }
+  .field { position: relative; flex: 1; }
+  .field .ghost, .field input { font: inherit; white-space: pre; }
+  .field .ghost { position: absolute; inset: 0; color: rgba(138, 149, 194, 0.45); pointer-events: none; }
+  .field .ghost .typed { visibility: hidden; }
+  .field input { position: relative; width: 100%; padding: 0; border: 0; outline: 0; color: var(--text); background: transparent; caret-color: var(--glow); }
+  .caption { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .output { color: var(--muted); font: 13px 'JetBrains Mono', monospace; max-height: 150px; overflow: auto; white-space: pre-wrap; }
+
+  /* timeline */
+  .lane-line { stroke: var(--line); stroke-dasharray: 2 10; }
+  .lane-kicker { fill: var(--muted); font-size: 13px; letter-spacing: 3px; }
+  .lane-name { fill: var(--text); font: 700 20px Orbitron, sans-serif; }
+  .edge { fill: none; stroke-width: 4; opacity: .8; }
+  .edge.prime { stroke: var(--glow); } .edge.parallel { stroke: var(--danger); }
+  .edge.wip { stroke: var(--st-modified); stroke-dasharray: 6 6; stroke-width: 3; }
+  .node { fill: var(--space); stroke-width: 4; }
+  .node.prime { stroke: var(--glow); filter: drop-shadow(0 0 6px var(--glow)); }
+  .node.parallel { stroke: var(--danger); filter: drop-shadow(0 0 6px var(--danger)); }
+  .node.wip { stroke: var(--st-modified); stroke-dasharray: 5 5; stroke-width: 3; }
+  .node.merge { stroke: var(--st-conflicted); stroke-dasharray: 5 5; stroke-width: 3; }
+  .message { fill: var(--text); font-size: 14px; text-anchor: middle; }
+  .message.wip { fill: var(--st-modified); } .message.merge { fill: var(--st-conflicted); }
+  .hash { fill: var(--muted); font-size: 11px; text-anchor: middle; }
+  .pill rect { fill: var(--tardis); } .pill.parallel rect { fill: #a8324a; }
+  .pill text { fill: #fff; font-size: 14px; font-weight: 600; }
+  .head-label { fill: var(--glow); font: 700 16px Orbitron, sans-serif; text-anchor: middle; }
+  .tardis { transition: transform .8s ease-in-out; }
+  .tardis-bob { animation: bob 3s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-8px); } }
+
+  /* next episode popup */
+  .next-ep { position: fixed; right: 460px; bottom: 190px; width: 340px; z-index: 20;
+    background: linear-gradient(160deg, #13204a, #0a1030); border: 1px solid var(--glow); border-radius: 12px; padding: 16px 18px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .6), 0 0 30px rgba(127, 212, 255, .2); animation: slidein .6s cubic-bezier(.2, .9, .3, 1.2); }
+  .next-ep.hidden { display: none; }
+  @keyframes slidein { from { transform: translateX(120%); opacity: 0; } }
+  .next-ep small { color: var(--muted); letter-spacing: 3px; font-size: 11px; }
+  .next-ep .title { font: 700 18px Orbitron, sans-serif; margin: 6px 0 2px; }
+  .next-ep .meta { color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+  .next-ep .countdown { height: 3px; background: rgba(255,255,255,.1); border-radius: 2px; overflow: hidden; margin-bottom: 12px; }
+  .next-ep .countdown div { height: 100%; width: 100%; background: var(--glow); animation: countdown 8s linear forwards; }
+  @keyframes countdown { to { width: 0; } }
+  .next-ep .buttons { display: flex; gap: 8px; }
+  .next-ep button { flex: 1; font: 600 13px 'JetBrains Mono', monospace; border-radius: 6px; padding: 8px; cursor: pointer; border: 1px solid var(--glow); }
+  .next-ep .play { background: #fff; color: #050816; border-color: #fff; }
+  .next-ep .ff { background: transparent; color: var(--text); }
+
+  /* prototype switcher — not part of the design */
+  #switcher { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; align-items: center; gap: 12px;
+    background: #fff; color: #111; border-radius: 999px; padding: 6px 10px; font: 600 13px system-ui, sans-serif; box-shadow: 0 4px 18px rgba(0,0,0,.5); }
+  #switcher button { border: 0; background: #eee; border-radius: 999px; width: 28px; height: 28px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="root">
+  <header>
+    <div class="ep"><small id="ep-num"></small><span id="ep-title"></span></div>
+    <div class="progress" id="progress"></div>
+  </header>
+  <main><svg class="timeline" id="timeline"></svg></main>
+  <aside>
+    <h3><span>WORKING DIRECTORY</span><span class="branch" id="branch"></span></h3>
+    <div>
+      <ul class="files" id="files"></ul>
+      <div class="legend"><span class="untracked">untracked</span><span class="modified">modified</span><span class="staged">staged</span><span class="conflicted">conflicted</span></div>
+    </div>
+    <div class="viewer">
+      <div class="bar"><span id="viewing"></span><button id="edit">Edit</button></div>
+      <pre id="view"></pre>
+    </div>
+  </aside>
+  <div class="console">
+    <div>
+      <div class="line"><span class="sigil">$</span>
+        <div class="field"><div class="ghost" aria-hidden="true"><span class="typed" id="ghost-typed"></span><span id="ghost-rest"></span></div>
+          <input id="input" spellcheck="false" aria-label="command"></div>
+      </div>
+      <div class="caption" id="caption"></div>
+    </div>
+    <pre class="output" id="output"></pre>
+  </div>
+</div>
+
+<div class="next-ep hidden" id="next-ep">
+  <small>NEXT EPISODE</small>
+  <div class="title">The End of the World</div>
+  <div class="meta">S01E02 · Platform One, the year five billion</div>
+  <div class="countdown"><div></div></div>
+  <div class="buttons"><button class="play" id="play">▶ Next Episode</button><button class="ff" id="ff">⏩ Fast Forward</button></div>
+</div>
+
+<div id="switcher"><button id="prev">◀</button><span id="state-label"></span><button id="next">▶</button></div>
+
+<script>
+const STATES = {
+  next: 'Rose — after Next Episode',
+  conflict: "Journey's End — merge conflict",
+};
+const keys = Object.keys(STATES);
+const current = new URLSearchParams(location.search).get('state') ?? 'next';
+document.getElementById('state-label').textContent = `${current} — ${STATES[current]}`;
+const go = (d) => { location.search = `?state=${keys[(keys.indexOf(current) + d + keys.length) % keys.length]}`; };
+document.getElementById('prev').onclick = () => go(-1);
+document.getElementById('next').onclick = () => go(1);
+
+const ROSE_LOG = '# TARDIS log\nDoctor: The Ninth Doctor\nCompanion: Rose Tyler\nLocation: London, 2005\n';
+
+const scenarios = {
+  next: {
+    ep: 'S01E01', title: 'Rose', progress: 'scene 1 / 10 · git', branch: 'prime-timeline',
+    commits: [{ id: 'a1f3c09', msg: 'Rose', lane: 0, col: 0 }],
+    lanes: [{ name: 'prime-timeline', kind: 'prime' }],
+    pills: [{ at: 0, name: 'prime-timeline', kind: 'prime' }],
+    head: { at: 0, label: 'HEAD → prime-timeline' },
+    wip: true,
+    files: [
+      { name: 'TARDIS.md', status: 'modified', committed: ROSE_LOG,
+        content: '# TARDIS log\nDoctor: The Ninth Doctor\nCompanion: Rose Tyler\nLocation: Platform One, year 5.5/apple/26\n' },
+    ],
+    cue: { cmd: 'git add TARDIS.md', caption: 'Stage the new log entry: watch it turn green' },
+    output: '$ git status --short\n M TARDIS.md',
+    popup: true,
+  },
+  conflict: {
+    ep: 'S04E13', title: "Journey's End", progress: 'scene 4 / 10 · git', branch: 'prime-timeline|MERGING', merging: true,
+    commits: [
+      { id: 'a1f3c09', msg: 'Rose', lane: 0, col: 0 },
+      { id: 'b2c4e18', msg: 'Doomsday', lane: 0, col: 1, parent: 0 },
+      { id: 'c39d0a2', msg: 'Partners in Crime', lane: 0, col: 2, parent: 1 },
+      { id: 'd47e6b1', msg: 'Turn Left', lane: 0, col: 3, parent: 2 },
+      { id: 'e58f7c3', msg: 'Rose crosses over', lane: 1, col: 2, parent: 1 },
+      { id: 'f6a081d', msg: 'Rose finds the Doctor', lane: 1, col: 3, parent: 4 },
+    ],
+    lanes: [{ name: 'prime-timeline', kind: 'prime' }, { name: 'petes-world', kind: 'parallel' }],
+    pills: [{ at: 3, name: 'prime-timeline', kind: 'prime' }, { at: 5, name: 'petes-world', kind: 'parallel' }],
+    head: { at: 3, label: 'HEAD → prime-timeline' },
+    merge: { from: [3, 5] },
+    files: [
+      { name: 'TARDIS.md', status: 'conflicted',
+        content: '# TARDIS log\nDoctor: The Tenth Doctor\n<<<<<<< HEAD\nCompanion: Donna Noble\n=======\nCompanion: Rose Tyler\n>>>>>>> petes-world\nLocation: The Medusa Cascade\n' },
+      { name: 'reality-bomb.txt', status: 'untracked', content: 'Davros was here.\n' },
+    ],
+    cue: { cmd: 'git add TARDIS.md', caption: 'Pick one companion, delete the markers, then mark it resolved' },
+    output: "$ git merge petes-world\nAuto-merging TARDIS.md\nCONFLICT (content): Merge conflict in TARDIS.md\nAutomatic merge failed; fix conflicts and then commit the result.",
+    popup: false,
+  },
+};
+
+const s = scenarios[current];
+document.getElementById('ep-num').textContent = s.ep;
+document.getElementById('ep-title').textContent = s.title;
+document.getElementById('progress').textContent = s.progress;
+const branchEl = document.getElementById('branch');
+branchEl.textContent = s.branch;
+branchEl.classList.toggle('merging', !!s.merging);
+
+// ── timeline ──────────────────────────────────────────────────────────
+const svgNS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs = {}, parent) => { const n = document.createElementNS(svgNS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); parent?.appendChild(n); return n; };
+const text = (parent, x, y, str, attrs = {}) => { const t = el('text', { x, y, ...attrs }, parent); t.textContent = str; return t; };
+
+function tardis(parent, x, y) {
+  const outer = el('g', { class: 'tardis', style: `transform: translate(${x}px, ${y}px)` }, parent);
+  const g = el('g', { transform: 'scale(1.4)' }, el('g', { class: 'tardis-bob' }, outer));
+  el('rect', { x: -4, y: -62, width: 8, height: 8, rx: 2, fill: '#fff', style: 'filter: drop-shadow(0 0 6px #bfe4ff)' }, g);
+  el('rect', { x: -20, y: -54, width: 40, height: 6, fill: '#163a80' }, g);
+  el('rect', { x: -22, y: -48, width: 44, height: 8, fill: '#0d1a33' }, g);
+  text(g, 0, -42, 'POLICE BOX', { 'font-size': 5, fill: '#fff', 'text-anchor': 'middle', 'font-family': 'sans-serif' });
+  el('rect', { x: -20, y: -40, width: 40, height: 48, fill: '#1f4fa8', stroke: '#163a80', 'stroke-width': 2 }, g);
+  for (const wx of [-16, 2]) for (const wy of [-36, -22, -8]) el('rect', { x: wx, y: wy, width: 14, height: 11, fill: wy === -36 ? '#dfeaff' : '#163a80' }, g);
+  el('line', { x1: 0, y1: -40, x2: 0, y2: 8, stroke: '#163a80', 'stroke-width': 2 }, g);
+}
+
+function drawTimeline() {
+  const svg = document.getElementById('timeline');
+  svg.innerHTML = '';
+  const X0 = 260, DX = 170, Y0 = 200, DY = 190;
+  const at = (c) => ({ x: X0 + c.col * DX, y: Y0 + c.lane * DY });
+  const maxCol = Math.max(...s.commits.map((c) => c.col)) + (s.wip || s.merge ? 1 : 0);
+  const W = X0 + maxCol * DX + 260, H = Y0 + s.lanes.length * DY;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  s.lanes.forEach((lane, i) => {
+    el('line', { x1: 40, x2: W - 40, y1: Y0 + i * DY, y2: Y0 + i * DY, class: 'lane-line' }, svg);
+    text(svg, 40, Y0 + i * DY - 52, lane.kind === 'prime' ? 'UNIVERSE · PRIME' : 'UNIVERSE · PARALLEL', { class: 'lane-kicker' });
+    text(svg, 40, Y0 + i * DY - 30, lane.name, { class: 'lane-name' });
+  });
+
+  for (const c of s.commits) {
+    if (c.parent === undefined) continue;
+    const a = at(s.commits[c.parent]), b = at(c);
+    const d = a.y === b.y ? `M${a.x} ${a.y} L${b.x} ${b.y}` : `M${a.x} ${a.y} C${a.x + DX * .6} ${a.y}, ${b.x - DX * .6} ${b.y}, ${b.x} ${b.y}`;
+    el('path', { d, class: `edge ${s.lanes[c.lane].kind}` }, svg);
+  }
+
+  // The working directory as a pending node: dashed, not yet in the timeline.
+  const head = at(s.commits[s.head.at]);
+  if (s.wip) {
+    const p = { x: head.x + DX, y: head.y };
+    el('path', { d: `M${head.x} ${head.y} L${p.x} ${p.y}`, class: 'edge wip' }, svg);
+    el('circle', { cx: p.x, cy: p.y, r: 13, class: 'node wip' }, svg);
+    text(svg, p.x, p.y + 42, 'uncommitted', { class: 'message wip' });
+    text(svg, p.x, p.y + 60, 'TARDIS.md', { class: 'hash' });
+  }
+  if (s.merge) {
+    const [a, b] = s.merge.from.map((i) => at(s.commits[i]));
+    const p = { x: a.x + DX, y: a.y };
+    el('path', { d: `M${a.x} ${a.y} L${p.x} ${p.y}`, class: 'edge wip', style: 'stroke: var(--st-conflicted)' }, svg);
+    el('path', { d: `M${b.x} ${b.y} C${b.x + DX * .6} ${b.y}, ${p.x - DX * .6} ${p.y}, ${p.x} ${p.y}`, class: 'edge wip', style: 'stroke: var(--st-conflicted)' }, svg);
+    el('circle', { cx: p.x, cy: p.y, r: 13, class: 'node merge' }, svg);
+    text(svg, p.x, p.y + 42, 'merge in progress', { class: 'message merge' });
+    text(svg, p.x, p.y + 60, 'universes colliding', { class: 'hash' });
+  }
+
+  for (const c of s.commits) {
+    const { x, y } = at(c);
+    el('circle', { cx: x, cy: y, r: 13, class: `node ${s.lanes[c.lane].kind}` }, svg);
+    text(svg, x, y + 42, c.msg, { class: 'message' });
+    text(svg, x, y + 60, c.id, { class: 'hash' });
+  }
+  for (const p of s.pills) {
+    const { x, y } = at(s.commits[p.at]);
+    const g = el('g', { class: `pill ${p.kind}` }, svg);
+    el('rect', { x: x + 22, y: y - 44, width: p.name.length * 9 + 16, height: 26, rx: 6 }, g);
+    text(g, x + 30, y - 26, p.name);
+  }
+  tardis(svg, head.x, head.y - 40);
+  text(svg, head.x, head.y - 140, s.head.label, { class: 'head-label' });
+}
+
+// ── working directory panel ───────────────────────────────────────────
+const CODES = { untracked: '??', modified: ' M', staged: 'M ', conflicted: 'UU', clean: '' };
+let open = s.files[0];
+let editing = false;
+
+function drawFiles(flash) {
+  const ul = document.getElementById('files');
+  ul.innerHTML = '';
+  for (const f of s.files) {
+    const li = document.createElement('li');
+    li.className = `${f.status}${f === open ? ' open' : ''}${f === flash ? ' flash' : ''}`;
+    li.innerHTML = `<span class="code"></span><span class="name"></span><span class="tag"></span>`;
+    li.querySelector('.code').textContent = CODES[f.status];
+    li.querySelector('.name').textContent = f.name;
+    li.querySelector('.tag').textContent = f.status;
+    li.onclick = () => { open = f; editing = false; drawFiles(); drawViewer(); };
+    ul.appendChild(li);
+  }
+}
+
+function drawViewer() {
+  document.getElementById('viewing').textContent = `${open.name} — ${open.status}`;
+  const btn = document.getElementById('edit');
+  btn.textContent = editing ? 'Save' : 'Edit';
+  const old = document.getElementById('view');
+  const committed = (open.committed ?? '').split('\n');
+  let node;
+  if (editing) {
+    node = document.createElement('textarea');
+    node.value = open.content;
+    node.spellcheck = false;
+  } else {
+    node = document.createElement('pre');
+    let side = null;
+    for (const [i, line] of open.content.replace(/\n$/, '').split('\n').entries()) {
+      const span = document.createElement('span');
+      span.textContent = line || ' ';
+      if (/^(<<<<<<<|=======|>>>>>>>)/.test(line)) {
+        span.className = 'marker';
+        side = line.startsWith('<<<<<<<') ? 'ours' : line.startsWith('=======') ? 'theirs' : null;
+      } else if (side) span.className = side;
+      else if (open.status === 'modified' && committed[i] !== line) span.className = 'changed';
+      else span.textContent += '\n';
+      node.appendChild(span);
+    }
+  }
+  node.id = 'view';
+  old.replaceWith(node);
+  if (editing) node.focus();
+}
+
+document.getElementById('edit').onclick = () => {
+  if (editing) {
+    const value = document.getElementById('view').value;
+    if (value !== open.content) {
+      open.content = value;
+      if (open.status === 'staged' || open.status === 'clean') open.status = 'modified';
+    }
+  }
+  editing = !editing;
+  drawFiles();
+  drawViewer();
+};
+
+// ── console (mocked commands, enough to see status colours change) ───
+const input = document.getElementById('input');
+let cue = s.cue;
+const out = document.getElementById('output');
+out.textContent = s.output;
+
+function drawCue() {
+  const typed = input.value;
+  const rest = cue && cue.cmd.startsWith(typed) ? cue.cmd.slice(typed.length) : '';
+  document.getElementById('ghost-typed').textContent = typed;
+  document.getElementById('ghost-rest').textContent = rest;
+  document.getElementById('caption').textContent = cue?.caption ?? '';
+  return rest;
+}
+
+function runMock(line) {
+  const [cmd, sub, ...args] = line.trim().split(/\s+/);
+  const file = (n) => s.files.find((f) => f.name === n);
+  if (cmd === 'git' && sub === 'add') {
+    const f = file(args[0]);
+    if (!f) return `fatal: pathspec '${args[0]}' did not match any files`;
+    if (f.status === 'conflicted' && /^(<<<<<<<|=======|>>>>>>>)/m.test(f.content)) {
+      f.status = 'staged';
+      drawFiles(f);
+      return '(real git would accept this — the conflict markers are still in the file!)';
+    }
+    f.status = 'staged';
+    drawFiles(f);
+    return '';
+  }
+  if (cmd === 'git' && sub === 'status') {
+    return s.files.map((f) => `${CODES[f.status]} ${f.name}`).join('\n');
+  }
+  if (cmd === 'git' && sub === 'commit') return '(mock) commit — not simulated in this prototype';
+  if (cmd === 'cat') return file(sub)?.content ?? `cat: ${sub}: No such file or directory`;
+  if (cmd === 'ls') return s.files.map((f) => f.name).join('  ');
+  return `(mock) ${line}`;
+}
+
+input.addEventListener('input', drawCue);
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Tab') { e.preventDefault(); const rest = drawCue(); if (rest) { input.value += rest; drawCue(); } }
+  if (e.key === 'Enter' && input.value.trim()) {
+    const line = input.value;
+    out.textContent = `$ ${line}\n${runMock(line)}`;
+    if (cue && line.trim() === cue.cmd) cue = null;
+    input.value = '';
+    drawCue();
+  }
+});
+
+// ── next episode popup ────────────────────────────────────────────────
+const popup = document.getElementById('next-ep');
+if (s.popup) setTimeout(() => popup.classList.remove('hidden'), 400);
+document.getElementById('play').onclick = () => {
+  popup.classList.add('hidden');
+  out.textContent = '(TARDIS.md updated for The End of the World — not committed)';
+};
+document.getElementById('ff').onclick = () => {
+  popup.classList.add('hidden');
+  cue = { cmd: 'git commit -am "The End of the World"', caption: 'Fast Forward: Tab + Enter to commit the episode' };
+  input.focus();
+  drawCue();
+};
+
+addEventListener('keydown', (e) => {
+  if (e.target === input || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowLeft') go(-1);
+  if (e.key === 'ArrowRight') go(1);
+});
+
+drawTimeline();
+drawFiles();
+drawViewer();
+drawCue();
+</script>
+</body>
+</html>
