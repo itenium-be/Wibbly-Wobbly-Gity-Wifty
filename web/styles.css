@@ -304,6 +304,7 @@ main {
 .story .frame {
   position: relative;
   aspect-ratio: 16 / 10;
+  container-type: inline-size;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -346,13 +347,39 @@ main {
 }
 
 .story .stamp {
-  grid-column: 1;
-  margin-top: 8px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: 90%;
+  padding: 1cqw 4cqw;
+  border: 1.6cqw solid var(--danger);
+  border-radius: 2cqw;
+  /* Orbitron is wide: shrink so the longest word fits inside the border. */
   font:
-    900 32px Orbitron,
+    700 min(16cqw, 64cqw / var(--longest-word)) / 1 Orbitron,
     sans-serif;
-  letter-spacing: 3px;
+  -webkit-text-stroke: 0.04em var(--danger);
+  letter-spacing: 0.06em;
+  text-align: center;
   color: var(--danger);
+  background: rgba(0, 0, 0, 0.45);
+  transform: translate(-50%, -50%) rotate(-12deg);
+  animation: stamp 0.25s ease-in;
+}
+
+.story .stamp small {
+  display: block;
+  margin-top: 0.15em;
+  font-size: 0.3em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-12deg) scale(3);
+  }
 }
 
 .story .fate {

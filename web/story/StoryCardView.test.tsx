@@ -7,7 +7,7 @@ const companions: StoryCard = {
   title: 'The Companions',
   text: 'They travel with him.',
   images: [
-    { src: '/clara.jpg', name: 'Clara Oswald', stamp: 'DIED', fate: 'Faced the raven' },
+    { src: '/clara.jpg', name: 'Clara Oswald', stamp: 'DEAD', fate: 'Faced the raven' },
     { src: '/donna.jpg', name: 'Donna Noble', stamp: 'MEMORY WIPED', fate: 'Her mind would burn' },
   ],
 };
@@ -18,14 +18,31 @@ describe('StoryCardView', () => {
     expect(screen.getByText('The Companions')).toBeTruthy();
     expect(screen.getByText('They travel with him.')).toBeTruthy();
     expect(screen.getByText('Clara Oswald')).toBeTruthy();
-    expect(screen.getByText('DIED')).toBeTruthy();
     expect(screen.getByText('Faced the raven')).toBeTruthy();
   });
 
   test('rotates to the next image and its captions', async () => {
     render(<StoryCardView card={companions} intervalMs={20} />);
     expect(await screen.findByText('Donna Noble', {}, { timeout: 500 })).toBeTruthy();
-    expect(screen.getByText('MEMORY WIPED')).toBeTruthy();
+    expect(await screen.findByText('MEMORY WIPED', {}, { timeout: 500 })).toBeTruthy();
+  });
+
+  test('stamps the image only after a wait', async () => {
+    const clara: StoryCard = { ...companions, images: [companions.images[0]] };
+    const { container } = render(<StoryCardView card={clara} intervalMs={100} />);
+    expect(screen.queryByText('DEAD')).toBeNull();
+    const stamp = await screen.findByText('DEAD', {}, { timeout: 500 });
+    expect(container.querySelector('.frame')?.contains(stamp)).toBe(true);
+  });
+
+  test('a stamp note is stamped with it', async () => {
+    const jack: StoryCard = {
+      ...companions,
+      images: [{ src: '/jack.jpg', name: 'Captain Jack', stamp: 'DEAD', stampNote: 'Got better' }],
+    };
+    const { container } = render(<StoryCardView card={jack} intervalMs={100} />);
+    const note = await screen.findByText('Got better', {}, { timeout: 500 });
+    expect(container.querySelector('.stamp')?.contains(note)).toBe(true);
   });
 
   test('shows the quote of the image', () => {
