@@ -5,6 +5,7 @@ export const rose: Scene = {
   episode: 'S01E01',
   title: 'Rose',
   story: [
+    { title: 'Wibbly Wobbly Gity Wifty', text: '', images: [], cover: ['Wibbly Wobbly', 'Gity', 'Wifty'] },
     {
       title: 'The Show',
       text: 'Doctor Who: BBC science fiction since 1963. Cancelled in 1989, revived in 2005 with "Rose". The longest-running sci-fi show in the world.',

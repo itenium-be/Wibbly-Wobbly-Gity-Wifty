@@ -11,6 +11,7 @@ export type StoryImage = {
  * `reveal`: images are stepped through with →/← instead of rotating.
  * `boxes`: titled groups of boxes under the text; the first shows at once, each next group takes a →, after any reveal images.
  * `qr`: a pre-rendered QR code image (`src`) for `url`, shown under the text.
+ * `cover`: a full-screen itenium conference opener with these title lines instead of the card.
  */
 export type BoxGroup = { title?: string; boxes: string[] };
 export type StoryCard = {
@@ -20,6 +21,7 @@ export type StoryCard = {
   reveal?: boolean;
   boxes?: BoxGroup[];
   qr?: { src: string; url: string };
+  cover?: string[];
 };
 /** `set`: `Key: value` lines in TARDIS.md, or `Key:` and a `- item` per entry. `event`: a line appended under `Events:`. */
 /**

@@ -142,4 +142,14 @@ describe('StoryCardView', () => {
     expect((screen.getByAltText('QR code to github.com/x/y') as HTMLImageElement).src).toContain('/qr.svg');
     expect(screen.getByText('github.com/x/y')).toBeTruthy();
   });
+
+  test('a cover card shows its title lines and the itenium logo', () => {
+    render(<StoryCardView card={{ title: 'Talk', text: '', images: [], cover: ['Wibbly Wobbly', 'Gity', 'Wifty'] }} />);
+    expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual([
+      'Wibbly Wobbly',
+      'Gity',
+      'Wifty',
+    ]);
+    expect(screen.getByAltText('itenium logo')).toBeTruthy();
+  });
 });

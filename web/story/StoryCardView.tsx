@@ -1,15 +1,26 @@
 import { type CSSProperties, useEffect, useState } from 'react';
 import type { StoryCard } from '../../shared/types';
 
-export function StoryCardView({
-  card,
-  step = 0,
-  intervalMs = 3000,
-}: {
-  card: StoryCard;
-  step?: number;
-  intervalMs?: number;
-}) {
+type Props = { card: StoryCard; step?: number; intervalMs?: number };
+
+export function StoryCardView(props: Props) {
+  return props.card.cover ? <Cover lines={props.card.cover} /> : <Story {...props} />;
+}
+
+function Cover({ lines }: { lines: string[] }) {
+  return (
+    <section className="cover">
+      <div className="cover-title">
+        {lines.map((line) => (
+          <h1 key={line}>{line}</h1>
+        ))}
+      </div>
+      <img className="cover-logo" src="/assets/itenium-logo.svg" alt="itenium logo" />
+    </section>
+  );
+}
+
+function Story({ card, step = 0, intervalMs = 3000 }: Props) {
   const [rotated, setRotated] = useState(0);
   const [stampedAt, setStampedAt] = useState(-1);
   const count = card.images.length;
