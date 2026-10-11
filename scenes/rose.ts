@@ -121,7 +121,7 @@ export const rose: Scene = {
     },
     {
       title: 'Rose',
-      text: 'Series 1, episode 1: Rose Tyler meets the Doctor. The first event in our timeline, so: the first commit.',
+      text: 'Series 1, episode 1: Rose Tyler meets the Doctor.',
       images: [{ src: '/assets/episodes/rose.jpg' }],
     },
   ],
