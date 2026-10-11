@@ -1,4 +1,6 @@
 import { beforeAll, describe, expect, test } from 'bun:test';
+import { mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import type { LiveState, RunResult, Scene, SceneView, WorkDir } from '../shared/types';
 import { tmp } from '../test/tmp';
 import { createRoutes } from './api';
@@ -33,8 +35,10 @@ const put = (body: unknown) =>
 
 describe('api', () => {
   let routes: ReturnType<typeof createRoutes>;
+  let home: string;
   beforeAll(async () => {
-    const engine = new Engine(await tmp(), scenes);
+    home = await tmp();
+    const engine = new Engine(home, scenes);
     await engine.prepare();
     routes = createRoutes(engine, scenes);
   });
@@ -100,6 +104,31 @@ describe('api', () => {
         expect((await routes['/api/file'].GET(get(url))).status).toBe(400);
       },
     );
+
+    describe('symlinks', () => {
+      let outside: string;
+      beforeAll(async () => {
+        await enter();
+        outside = join(await tmp(), 'secret.txt');
+        await writeFile(outside, 'secret\n');
+        await symlink(outside, join(home, 'live', 'leak.txt'));
+        await symlink(join(home, 'live', '.git'), join(home, 'live', 'dotgit'));
+        await mkdir(join(home, 'live', 'real'));
+        await symlink(join(home, 'live', '.git'), join(home, 'live', 'real', 'inner'));
+      });
+
+      test.each(['leak.txt', 'dotgit/config', 'real/inner/HEAD'])('GET through %s is a 400', async (path) => {
+        expect((await routes['/api/file'].GET(get(`/api/file?path=${path}`))).status).toBe(400);
+      });
+
+      test.each(['leak.txt', 'dotgit/config', 'dotgit/new', 'real/inner/new/file'])(
+        'PUT through %s is a 400',
+        async (path) => {
+          expect((await routes['/api/file'].PUT(put({ path, content: 'pwned\n' }))).status).toBe(400);
+          expect(await readFile(outside, 'utf8')).toBe('secret\n');
+        },
+      );
+    });
 
     test('PUT writes the file and returns the working directory', async () => {
       await enter();

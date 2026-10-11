@@ -44,12 +44,12 @@ export class Engine {
   }
 
   readFile(path: string): Promise<string> {
-    return this.serialise(() => Bun.file(livePath(this.live, path)).text());
+    return this.serialise(async () => Bun.file(await livePath(this.live, path)).text());
   }
 
   writeFile(path: string, content: string): Promise<WorkDir> {
     return this.serialise(async () => {
-      await Bun.write(livePath(this.live, path), content);
+      await Bun.write(await livePath(this.live, path), content);
       return readWorkDir(this.live);
     });
   }

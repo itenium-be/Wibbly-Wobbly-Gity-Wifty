@@ -91,9 +91,9 @@ describe('readWorkDir', () => {
 });
 
 describe('livePath', () => {
-  test('resolves a relative path inside the live dir', () => {
-    expect(livePath('/live', 'episodes/rose.md')).toBe('/live/episodes/rose.md');
-    expect(livePath('/live', './a.md')).toBe('/live/a.md');
+  test('resolves a relative path inside the live dir', async () => {
+    expect(await livePath('/live', 'episodes/rose.md')).toBe('/live/episodes/rose.md');
+    expect(await livePath('/live', './a.md')).toBe('/live/a.md');
   });
 
   test.each([
@@ -108,7 +108,7 @@ describe('livePath', () => {
     '.git/config',
     './.git/HEAD',
     'a\0b',
-  ])('rejects %p', (path) => {
-    expect(() => livePath('/live', path)).toThrow(InvalidPathError);
+  ])('rejects %p', async (path) => {
+    await expect(livePath('/live', path)).rejects.toBeInstanceOf(InvalidPathError);
   });
 });

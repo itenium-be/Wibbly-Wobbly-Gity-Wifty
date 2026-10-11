@@ -1,14 +1,28 @@
+import { lstat } from 'node:fs/promises';
 import { isAbsolute, join, normalize } from 'node:path';
 import type { FileStatus, WorkDir } from '../shared/types';
 import { git } from './git';
 
 export class InvalidPathError extends Error {}
 
-export function livePath(root: string, path: string): string {
+async function isSymlink(path: string) {
+  try {
+    return (await lstat(path)).isSymbolicLink();
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return false;
+    throw e;
+  }
+}
+
+export async function livePath(root: string, path: string): Promise<string> {
   const rel = normalize(path);
-  const top = rel.split('/')[0];
-  if (path.includes('\0') || isAbsolute(path) || path.split('/').includes('..') || ['.', '.git'].includes(top))
+  const segments = rel.split('/');
+  if (path.includes('\0') || isAbsolute(path) || path.split('/').includes('..') || ['.', '.git'].includes(segments[0]))
     throw new InvalidPathError(`invalid path: ${path}`);
+  // A symlink anywhere along the path could lead outside the live dir or into .git.
+  for (let i = 1; i <= segments.length; i++) {
+    if (await isSymlink(join(root, ...segments.slice(0, i)))) throw new InvalidPathError(`symlink in path: ${path}`);
+  }
   return join(root, rel);
 }
 
