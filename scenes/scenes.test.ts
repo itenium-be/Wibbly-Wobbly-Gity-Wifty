@@ -138,7 +138,7 @@ describe('scenes', () => {
 
   test("river's diary visits the erased timeline where Rose saved Pete, then returns", async () => {
     const scene = sceneOf('rivers-diary');
-    const checkout = scene.steps.findIndex((s) => 'cmd' in s && s.cmd.startsWith('git checkout'));
+    const checkout = scene.steps.findIndex((s) => 'cmd' in s && s.cmd.startsWith('git switch --detach'));
     await playScene(engine, { ...scene, steps: scene.steps.slice(0, checkout + 1) });
     expect(await out('git log --format=%s -1')).toBe('Rose saves Pete\n');
     await playScene(engine, scene);
