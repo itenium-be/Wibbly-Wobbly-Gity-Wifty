@@ -1,5 +1,4 @@
 import type { Scene } from '../shared/types';
-import { blink, forestOfTheDead } from './episodes';
 
 export const journeysEnd: Scene = {
   id: 'journeys-end',
@@ -13,8 +12,6 @@ export const journeysEnd: Scene = {
     },
   ],
   steps: [
-    { episode: blink },
-    { episode: forestOfTheDead },
     { cmd: 'git merge petes-world', caption: 'The universes collide', fails: true },
     { cmd: 'git st', caption: 'Both universes changed the same lines' },
     {

@@ -13,7 +13,10 @@ export const petesWorld: Scene = {
     },
   ],
   steps: [
-    { cmd: 'git switch -c petes-world', caption: 'A parallel universe: same past, different future' },
+    {
+      cmd: 'git switch -c petes-world HEAD~2',
+      caption: 'A parallel universe, split off after The Parting of the Ways',
+    },
     { episode: riseOfTheCybermen },
     { episode: doomsday },
     { cmd: 'git switch prime-timeline', caption: 'Back to our universe: Rose stays behind' },

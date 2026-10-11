@@ -70,11 +70,23 @@ describe('scenes', () => {
     );
   });
 
+  test('the timeline reads in broadcast order', async () => {
+    const { graph } = await engine.enter('journeys-end');
+    expect(graph.commits.map((c) => c.message)).toEqual([
+      'Rose',
+      "Father's Day",
+      'Bad Wolf',
+      'The Parting of the Ways',
+      'Rise of the Cybermen',
+      'Doomsday',
+      'Blink',
+      'Forest of the Dead',
+    ]);
+  });
+
   test("journey's end conflicts on the companion and resolves into a merge commit", async () => {
     const scene = sceneOf('journeys-end');
     await engine.enter(scene.id);
-    await engine.episode('S03E10');
-    await engine.episode('S04E09');
     expect((await engine.run('git merge petes-world')).code).not.toBe(0);
     expect(await engine.readFile('TARDIS.md')).toContain('Companions:\n<<<<<<< HEAD\n- Donna Noble\n');
     await playScene(engine, scene);
