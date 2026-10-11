@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Log with diff</title>
+<style>
+@font-face { font-family: "Orbitron"; font-weight: 700; src: url("../assets/fonts/orbitron-700.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 400; src: url("../assets/fonts/jetbrains-mono-400.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 600; src: url("../assets/fonts/jetbrains-mono-600.woff2") format("woff2"); }
+
+:root {
+  --space: #050816; --space-2: #0b1230; --tardis: #1f4fa8; --glow: #7fd4ff; --gold: #ffcc4d;
+  --danger: #ff5a6e; --text: #e6ecff; --muted: #8a95c2; --panel: rgba(10, 16, 40, 0.82);
+  --line: rgba(127, 212, 255, 0.25);
+  --st-untracked: #b48cff; --st-modified: #ffb347; --st-staged: #5fe39a;
+}
+html, body { height: 100%; margin: 0; }
+body {
+  color: var(--text);
+  background: radial-gradient(ellipse at 50% 40%, var(--space-2), var(--space) 70%);
+  font: 20px "JetBrains Mono", monospace;
+  display: grid; grid-template-columns: 1fr 640px; gap: 24px; padding: 24px; box-sizing: border-box;
+}
+.note { color: var(--muted); font-size: 15px; line-height: 1.6; max-width: 60ch; }
+.note h2 { font: 700 18px Orbitron, sans-serif; letter-spacing: 2px; color: var(--glow); }
+
+.workdir {
+  min-height: 0; display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); gap: 12px; padding: 16px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+}
+.workdir h3 { margin: 0; display: flex; justify-content: space-between; align-items: center; font: 700 16px Orbitron, sans-serif; letter-spacing: 3px; }
+.tabs { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.tab { padding: 6px 14px; border: 0; background: none; color: var(--muted); font: inherit; letter-spacing: inherit; }
+.tab + .tab { border-left: 1px solid var(--line); }
+.tab[aria-selected="true"] { color: var(--space); background: var(--glow); }
+.branch { color: var(--glow); font: 600 18px "JetBrains Mono", monospace; letter-spacing: 0; }
+
+.scope { display: flex; gap: 6px; font-size: 14px; }
+.scope span { padding: 2px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
+.scope .on { color: var(--text); border-color: var(--glow); }
+
+.log { margin: 0; padding: 0; list-style: none; font-size: 19px; max-height: 22vh; overflow: auto; }
+.log li { display: grid; grid-template-columns: 28px 7ch minmax(0, 1fr); gap: 10px; align-items: center; height: 38px; border-radius: 6px; cursor: pointer; }
+.log li:hover, .log li.open { background: rgba(127, 212, 255, 0.08); }
+.log .dot { justify-self: center; width: 12px; height: 12px; border-radius: 50%; background: var(--glow); }
+.log .head .dot { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+.hash { color: var(--gold); }
+.msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ref { font-size: .7em; padding: 0 8px; margin-right: 6px; border-radius: 999px; border: 1px solid currentColor; color: var(--glow); vertical-align: 2px; }
+.ref.head { color: var(--space); background: var(--gold); border-color: var(--gold); }
+.ref.tag { color: var(--st-untracked); border-style: dashed; }
+
+/* the split viewer: commit header on top, diff below */
+.viewer { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+.commit-head {
+  margin: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: rgba(0,0,0,.25);
+  font: 18px / 1.5 "JetBrains Mono", monospace; white-space: pre-wrap;
+}
+.commit-head .muted { color: var(--muted); }
+.diff {
+  min-height: 0; overflow: auto; border: 1px solid var(--line); border-radius: 6px; background: rgba(0,0,0,.25);
+  font: 18px / 1.5 "JetBrains Mono", monospace;
+}
+.diff .file {
+  position: sticky; top: 0; display: flex; justify-content: space-between; padding: 6px 12px;
+  color: var(--glow); background: var(--space-2); border-bottom: 1px solid var(--line); font-weight: 600;
+}
+.diff .file .stat { color: var(--muted); font-weight: 400; }
+.diff .file .stat b { color: var(--st-staged); font-weight: 400; }
+.diff .file .stat i { color: var(--danger); font-style: normal; }
+.diff .hunk { color: var(--muted); padding: 2px 12px; background: rgba(127, 212, 255, 0.05); }
+.diff .ln { display: grid; grid-template-columns: 1.4em minmax(0, 1fr); padding: 0 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.diff .add { color: var(--st-staged); background: rgba(95, 227, 154, 0.1); }
+.diff .del { color: var(--danger); background: rgba(255, 90, 110, 0.1); }
+.diff .ctx { color: var(--muted); }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<section class="note">
+  <h2>LOG + DIFF</h2>
+  <p>When you click a commit, the viewer below the list splits in two:</p>
+  <ul>
+    <li><b>Top:</b> the commit header as today: hash, labels, parents, message. It sizes to its content.</li>
+    <li><b>Bottom:</b> the diff, <code>git show --format= -U3 &lt;sha&gt;</code>. One sticky header per file with its <span style="color:var(--st-staged)">+</span>/<span style="color:var(--danger)">−</span> counts. Added lines green, removed lines red, context dimmed. It takes the remaining height and scrolls.</li>
+  </ul>
+  <p>Click the other commits to compare:</p>
+  <ul>
+    <li><b>The Parting of the Ways</b> (amended): Ninth → Tenth Doctor, plus the Bad Wolf line.</li>
+    <li><b>Rose</b>: the first commit, so the whole file is new (all <code>+</code>).</li>
+    <li><b>Journey's End</b>: a merge. Plain <code>git show</code> shows nothing for a clean merge. The mockup shows the diff against the first parent (<code>--first-parent</code>), which is "what the merge brought into prime-timeline".</li>
+  </ul>
+  <p>Needs a new server endpoint, since the browser only has the graph, not file contents.</p>
+</section>
+
+<aside class="workdir">
+  <h3>
+    <div class="tabs"><button class="tab" aria-selected="false">dir</button><button class="tab" aria-selected="true">log</button></div>
+    <span class="branch">prime-timeline</span>
+  </h3>
+  <div class="scope"><span>HEAD</span><span class="on">--all</span></div>
+  <ul class="log">
+    <li class="head" data-c="merge"><span class="dot"></span><span class="hash">7e1d0c4</span><span class="msg"><span class="ref head">HEAD → prime-timeline</span>Journey's End</span></li>
+    <li data-c="parting" class="open"><span class="dot"></span><span class="hash">b81f2a9</span><span class="msg">The Parting of the Ways</span></li>
+    <li data-c="badwolf"><span class="dot"></span><span class="hash">28d63c2</span><span class="msg">Bad Wolf</span></li>
+    <li data-c="rose"><span class="dot"></span><span class="hash">e3df6a4</span><span class="msg">Rose</span></li>
+  </ul>
+  <div></div>
+
+  <div class="viewer" data-v="parting">
+<pre class="commit-head"><span class="hash">commit b81f2a9c03e1d7a54f0b6e2c9d1a8f3e7b5c4d20</span>
+<span class="muted">Date:   Sat Jun 18 2005</span>
+
+    The Parting of the Ways</pre>
+    <div class="diff">
+      <div class="file"><span>TARDIS.md</span><span class="stat"><b>+2</b> <i>−1</i></span></div>
+      <div class="hunk">@@ -1,9 +1,10 @@</div>
+      <div class="ln ctx"><span> </span><span># TARDIS log</span></div>
+      <div class="ln del"><span>-</span><span>Doctor: The Ninth Doctor</span></div>
+      <div class="ln add"><span>+</span><span>Doctor: The Tenth Doctor</span></div>
+      <div class="ln ctx"><span> </span><span>Companions:</span></div>
+      <div class="ln ctx"><span> </span><span>- Rose Tyler</span></div>
+      <div class="hunk">@@ -8,3 +9,4 @@</div>
+      <div class="ln ctx"><span> </span><span>Events:</span></div>
+      <div class="ln ctx"><span> </span><span>- The Game Station is run by the Bad Wolf Corporation</span></div>
+      <div class="ln add"><span>+</span><span>- "I am the Bad Wolf. I create myself."</span></div>
+    </div>
+  </div>
+
+  <div class="viewer" data-v="badwolf" hidden>
+<pre class="commit-head"><span class="hash">commit 28d63c2e9a1f4b7c6d3e0f8a2b5c1d9e4f7a3b60</span>
+<span class="muted">Date:   Sat Jun 11 2005</span>
+
+    Bad Wolf</pre>
+    <div class="diff">
+      <div class="file"><span>TARDIS.md</span><span class="stat"><b>+4</b> <i>−1</i></span></div>
+      <div class="hunk">@@ -3,4 +3,7 @@</div>
+      <div class="ln ctx"><span> </span><span>Companions:</span></div>
+      <div class="ln ctx"><span> </span><span>- Rose Tyler</span></div>
+      <div class="ln del"><span>-</span><span>Location: London, 7 November 1987</span></div>
+      <div class="ln add"><span>+</span><span>Location: The Game Station, the year 200,100</span></div>
+      <div class="ln ctx"><span> </span><span>Pete Tyler: dead</span></div>
+      <div class="ln add"><span>+</span><span></span></div>
+      <div class="ln add"><span>+</span><span>Events:</span></div>
+      <div class="ln add"><span>+</span><span>- The Game Station is run by the Bad Wolf Corporation</span></div>
+    </div>
+  </div>
+
+  <div class="viewer" data-v="rose" hidden>
+<pre class="commit-head"><span class="hash">commit e3df6a4b1c9d2e7f0a3b6c8d4e1f5a9b2c7d0e3f</span>
+<span class="muted">Date:   Sat Mar 26 2005</span>
+
+    Rose</pre>
+    <div class="diff">
+      <div class="file"><span>TARDIS.md <span class="stat">(new file)</span></span><span class="stat"><b>+5</b></span></div>
+      <div class="hunk">@@ -0,0 +1,5 @@</div>
+      <div class="ln add"><span>+</span><span># TARDIS log</span></div>
+      <div class="ln add"><span>+</span><span>Doctor: The Ninth Doctor</span></div>
+      <div class="ln add"><span>+</span><span>Companions:</span></div>
+      <div class="ln add"><span>+</span><span>- Rose Tyler</span></div>
+      <div class="ln add"><span>+</span><span>Location: London, 2005</span></div>
+    </div>
+  </div>
+
+  <div class="viewer" data-v="merge" hidden>
+<pre class="commit-head"><span class="hash">commit 7e1d0c4f2a8b5c3d9e6f1a7b4c0d8e2f5a9b3c61</span> <span class="ref head">HEAD → prime-timeline</span>
+<span class="muted">Merge:  b81f2a9 98afe6a</span>
+<span class="muted">Date:   Sat Jul 05 2008</span>
+
+    Journey's End</pre>
+    <div class="diff">
+      <div class="file"><span>TARDIS.md <span class="stat">(vs first parent)</span></span><span class="stat"><b>+4</b> <i>−1</i></span></div>
+      <div class="hunk">@@ -3,6 +3,9 @@</div>
+      <div class="ln ctx"><span> </span><span>Companions:</span></div>
+      <div class="ln ctx"><span> </span><span>- Rose Tyler</span></div>
+      <div class="ln add"><span>+</span><span>- Donna Noble</span></div>
+      <div class="ln add"><span>+</span><span>- Martha Jones</span></div>
+      <div class="ln add"><span>+</span><span>- Mickey Smith</span></div>
+      <div class="ln del"><span>-</span><span>Location: The Library, 51st century</span></div>
+      <div class="ln add"><span>+</span><span>Location: Bad Wolf Bay, Norway</span></div>
+      <div class="ln ctx"><span> </span><span>Pete Tyler: dead</span></div>
+    </div>
+  </div>
+</aside>
+
+<script>
+for (const li of document.querySelectorAll('.log li')) {
+  li.addEventListener('click', () => {
+    for (const o of document.querySelectorAll('.log li.open')) o.classList.remove('open');
+    li.classList.add('open');
+    for (const v of document.querySelectorAll('.viewer')) v.hidden = v.dataset.v !== li.dataset.c;
+  });
+}
+</script>
+</body>
+</html>
