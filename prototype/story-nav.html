@@ -1,0 +1,138 @@
+<!doctype html>
+<!-- PROTOTYPE — throwaway, do not commit. Story card prev/next buttons, three placements. Serve the repo root so ../assets resolves. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Story Nav</title>
+<style>
+  @font-face { font-family: Orbitron; font-weight: 500; src: url("../assets/fonts/orbitron-500.woff2") format("woff2"); }
+  @font-face { font-family: Orbitron; font-weight: 700; src: url("../assets/fonts/orbitron-700.woff2") format("woff2"); }
+  @font-face { font-family: "JetBrains Mono"; font-weight: 400; src: url("../assets/fonts/jetbrains-mono-400.woff2") format("woff2"); }
+  @font-face { font-family: "JetBrains Mono"; font-weight: 600; src: url("../assets/fonts/jetbrains-mono-600.woff2") format("woff2"); }
+  :root { --space: #050816; --space-2: #0b1230; --tardis: #1f4fa8; --glow: #7fd4ff; --gold: #ffcc4d; --danger: #ff5a6e;
+    --text: #e6ecff; --muted: #8a95c2; --panel: rgba(10, 16, 40, 0.82); --line: rgba(127, 212, 255, 0.25); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; color: var(--text); font-family: "JetBrains Mono", monospace;
+    background: radial-gradient(ellipse at 50% 40%, var(--space-2), var(--space) 70%); }
+  #root { display: grid; grid-template-rows: auto minmax(0, 1fr); height: 100vh; position: relative; }
+  header { display: flex; align-items: center; gap: 10px; padding: 14px 24px; }
+  header .ep { font: 700 22px Orbitron, sans-serif; letter-spacing: 2px; }
+  header .ep small { color: var(--muted); font-size: 14px; margin-right: 12px; }
+  .btn { padding: 8px 18px; border: 1px solid var(--line); border-radius: 6px; color: var(--text); background: var(--panel);
+    font: 600 14px "JetBrains Mono", monospace; letter-spacing: 1px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; }
+  .btn:hover:not(:disabled) { border-color: var(--glow); box-shadow: 0 0 16px rgba(127, 212, 255, 0.3); }
+  .btn:disabled { opacity: .35; cursor: default; }
+  .btn.primary { background: var(--tardis); border-color: var(--glow); }
+  kbd { font: 600 11px "JetBrains Mono", monospace; padding: 1px 6px; border: 1px solid currentColor; border-radius: 4px; opacity: .6; }
+  .skip-intro { margin-left: auto; }
+
+  .story { display: grid; grid-template-columns: 3fr 2fr; gap: 48px; align-items: center; padding: 24px 64px 48px; min-height: 0; }
+  .story figure { margin: 0; }
+  .frame { position: relative; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 0 40px rgba(79, 134, 255, 0.25); }
+  .frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  figcaption { margin-top: 16px; }
+  .name { font: 700 20px Orbitron, sans-serif; letter-spacing: 2px; text-transform: uppercase; }
+  .quote { margin-top: 8px; font-size: 18px; font-style: italic; }
+  .story-text h2 { font: 700 40px Orbitron, sans-serif; letter-spacing: 3px; text-transform: uppercase; margin: 0 0 24px; }
+  .story-text p { font-size: 22px; line-height: 1.6; }
+  .boxes { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+  .box { flex: 1; padding: 16px 20px; border: 2px solid var(--glow); border-radius: 8px; background: var(--panel); text-align: center;
+    font: 700 20px Orbitron, sans-serif; letter-spacing: 2px; text-transform: uppercase; animation: box-in .4s ease-out; }
+  @keyframes box-in { from { opacity: 0; transform: translateY(8px); } }
+
+  /* A: bottom pager */
+  .pager { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 18px;
+    padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+  .pager .track { display: flex; gap: 8px; }
+  .pager .track span { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--glow); }
+  .pager .track span.on { background: var(--glow); }
+  .pager .track span.done { background: rgba(127, 212, 255, .35); }
+
+  /* B: edge chevrons */
+  .edge { position: absolute; top: 72px; bottom: 0; width: 64px; display: grid; place-items: center; border: 0; cursor: pointer;
+    color: var(--glow); background: transparent; font: 700 44px Orbitron, sans-serif; opacity: .35; transition: opacity .2s, background .2s; }
+  .edge:hover:not(:disabled) { opacity: 1; }
+  .edge.prev { left: 0; } .edge.prev:hover:not(:disabled) { background: linear-gradient(90deg, rgba(127, 212, 255, .12), transparent); }
+  .edge.next { right: 0; } .edge.next:hover:not(:disabled) { background: linear-gradient(270deg, rgba(127, 212, 255, .12), transparent); }
+  .edge:disabled { opacity: 0; cursor: default; }
+  .edge.next.nudge { animation: nudge 1.6s ease-in-out infinite; }
+  @keyframes nudge { 0%, 100% { opacity: .35; } 50% { opacity: .9; transform: translateX(4px); } }
+
+  /* variant switcher (mock only) */
+  .mock { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 9; font-size: 12px; color: var(--muted); align-items: center; }
+  .mock button { font: 600 12px "JetBrains Mono", monospace; color: var(--text); background: #000a; border: 1px dashed var(--muted); border-radius: 4px; padding: 3px 8px; cursor: pointer; }
+  .mock button.on { border-style: solid; border-color: var(--gold); color: var(--gold); }
+</style>
+</head>
+<body>
+<div class="mock" id="mock">mock:</div>
+<div id="root">
+  <header>
+    <div class="ep"><small>S01E01</small>Rose</div>
+    <span id="headerNav" style="display: contents"></span>
+    <button class="btn skip-intro">Skip Intro</button>
+  </header>
+  <section class="story" id="story"></section>
+  <div id="chrome"></div>
+</div>
+<script>
+const CARDS = [
+  { title: 'The Show', text: 'Doctor Who: BBC science fiction since 1963. Cancelled in 1989, revived in 2005 with "Rose".', img: '../assets/logo.jpg', boxes: [['SPOILERS', 'MINIMAL SPOILERS']] },
+  { title: 'The Doctor', text: 'This is the Doctor. He travels through time and space.', img: '../assets/doctors/10-tennant.jpg', name: 'The Tenth Doctor · David Tennant', quote: '"Wibbly wobbly, timey wimey… stuff."',
+    boxes: [['Fun Adventures'], ['Companions Do the Dirty Work'], ['Hands Clean, Conscience Clear']] },
+  { title: 'The TARDIS', text: 'Time And Relative Dimension In Space. Bigger on the inside.', img: '../assets/tardis.jpg', boxes: [] },
+  { title: 'Rose', text: 'Rose Tyler, shop assistant. Until the mannequins came alive.', img: '../assets/episodes/rose.jpg', boxes: [] },
+];
+const VARIANTS = { 'A · bottom pager': 'pager', 'B · edge chevrons': 'edge', 'C · in header': 'header' };
+let variant = 'pager', card = 0, step = 0;
+
+const steps = (c) => Math.max(CARDS[c].boxes.length, 1);
+function move(dir) {
+  if (dir === 1) {
+    if (step < steps(card) - 1) step++;
+    else if (card < CARDS.length - 1) { card++; step = 0; }
+  } else if (step > 0) step--;
+  else if (card > 0) { card--; step = steps(card) - 1; }
+  render();
+}
+const atStart = () => card === 0 && step === 0;
+const atEnd = () => card === CARDS.length - 1 && step === steps(card) - 1;
+// The last card's "next" leaves the story for the git console, so it says where it goes.
+const nextLabel = () => atEnd() ? 'Into the TARDIS' : 'Next';
+
+const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content; };
+function render() {
+  const c = CARDS[card];
+  document.getElementById('story').replaceChildren(h(`
+    <figure><div class="frame"><img src="${c.img}" alt=""></div>
+      <figcaption>${c.name ? `<div class="name">${c.name}</div>` : ''}${c.quote ? `<div class="quote">${c.quote}</div>` : ''}</figcaption></figure>
+    <div class="story-text"><h2>${c.title}</h2><p>${c.text}</p>
+      ${c.boxes.slice(0, step + 1).map((g) => `<div class="boxes">${g.map((b) => `<div class="box">${b}</div>`).join('')}</div>`).join('')}</div>`));
+
+  const prev = `<button class="btn" data-dir="-1" ${atStart() ? 'disabled' : ''}><kbd>←</kbd> Back</button>`;
+  const next = `<button class="btn primary" data-dir="1">${nextLabel()} <kbd>→</kbd></button>`;
+  const chrome = document.getElementById('chrome'), hdr = document.getElementById('headerNav');
+  chrome.replaceChildren(); hdr.replaceChildren();
+  if (variant === 'pager') {
+    const track = CARDS.map((_, i) => `<span class="${i === card ? 'on' : i < card ? 'done' : ''}"></span>`).join('');
+    chrome.append(h(`<nav class="pager">${prev}<div class="track">${track}</div>${next}</nav>`));
+  } else if (variant === 'edge') {
+    chrome.append(h(`<button class="edge prev" data-dir="-1" aria-label="Back" ${atStart() ? 'disabled' : ''}>‹</button>
+      <button class="edge next ${atStart() ? 'nudge' : ''}" data-dir="1" aria-label="${nextLabel()}">›</button>`));
+  } else {
+    hdr.append(h(`<span style="margin-left: auto; display: flex; gap: 8px">${prev}${next}</span>`));
+  }
+  document.querySelector('.skip-intro').style.marginLeft = variant === 'header' ? '0' : 'auto';
+  for (const b of document.querySelectorAll('[data-dir]')) b.onclick = () => move(+b.dataset.dir);
+
+  document.getElementById('mock').replaceChildren('mock:', ...Object.entries(VARIANTS).map(([label, v]) => {
+    const b = document.createElement('button'); b.textContent = label; b.className = v === variant ? 'on' : '';
+    b.onclick = () => { variant = v; render(); }; return b;
+  }));
+}
+addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') move(1); if (e.key === 'ArrowLeft') move(-1); });
+render();
+</script>
+</body>
+</html>

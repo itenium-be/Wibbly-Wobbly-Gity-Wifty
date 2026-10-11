@@ -1,0 +1,243 @@
+<!doctype html>
+<!-- PROTOTYPE — throwaway, do not commit. TARDIS travel animations: click a commit to move HEAD there. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TARDIS Twirl</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --space: #050816; --space-2: #0b1230; --tardis: #1f4fa8; --glow: #7fd4ff; --gold: #ffcc4d; --text: #e6ecff; --muted: #8a95c2; --line: rgba(127, 212, 255, 0.25); }
+  html, body { margin: 0; height: 100%; overflow: hidden; color: var(--text); font-family: 'JetBrains Mono', monospace;
+    background: radial-gradient(ellipse at 50% 40%, var(--space-2), var(--space) 70%); }
+  .bar { display: flex; gap: 10px; align-items: center; padding: 14px 24px; flex-wrap: wrap; }
+  .bar h1 { font: 700 20px Orbitron, sans-serif; letter-spacing: 2px; margin: 0 20px 0 0; }
+  .bar button { font: 600 13px 'JetBrains Mono', monospace; color: var(--text); background: transparent; border: 1px solid var(--line);
+    border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  .bar button.on { background: var(--tardis); border-color: var(--glow); }
+  .bar label { color: var(--muted); font-size: 13px; margin-left: 12px; }
+  .hint { color: var(--muted); font-size: 13px; padding: 0 24px; }
+  svg { width: 100%; height: calc(100% - 110px); }
+  .lane-line { stroke: var(--line); stroke-width: 2; }
+  .edge { stroke: var(--glow); stroke-width: 3; fill: none; opacity: .6; }
+  .node { fill: var(--tardis); stroke: var(--glow); stroke-width: 3; cursor: pointer; }
+  .node:hover { fill: var(--glow); }
+  .message { fill: var(--text); font-size: 13px; text-anchor: middle; }
+  .tardis-bob { animation: bob 3s ease-in-out infinite; }
+  .tardis-lamp { fill: #fff; filter: drop-shadow(0 0 6px #bfe4ff); }
+  @keyframes bob { 50% { transform: translateY(-8px); } }
+  .vortex path { fill: none; stroke-width: 3; stroke-linecap: round; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>TARDIS TWIRL</h1>
+  <span id="variants"></span>
+  <label>duration <input id="dur" type="range" min="600" max="3000" step="100" value="1600"> <span id="durv"></span></label>
+  <label><input id="shade" type="checkbox" checked> darken side-on</label>
+</div>
+<div class="hint" id="desc"></div>
+<svg id="svg" viewBox="0 0 1200 520">
+  <defs>
+    <radialGradient id="vglow"><stop offset="0" stop-color="#bfe4ff" stop-opacity=".9"/><stop offset="1" stop-color="#7fd4ff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g id="graph"></g>
+  <g id="vortexA" class="vortex" opacity="0"></g>
+  <g id="vortexB" class="vortex" opacity="0"></g>
+  <g id="tardis">
+    <g class="tardis-bob">
+      <g transform="scale(1.4)">
+        <rect x="-4" y="-62" width="8" height="8" rx="2" class="tardis-lamp" id="lamp"/>
+        <rect x="-20" y="-54" width="40" height="6" fill="#163a80"/>
+        <rect x="-22" y="-48" width="44" height="8" fill="#0d1a33"/>
+        <text x="0" y="-42" font-size="5" fill="#fff" text-anchor="middle">POLICE BOX</text>
+        <rect x="-20" y="-40" width="40" height="48" fill="#1f4fa8" stroke="#163a80" stroke-width="2"/>
+        <rect x="-16" y="-36" width="14" height="11" fill="#dfeaff"/><rect x="2" y="-36" width="14" height="11" fill="#dfeaff"/>
+        <rect x="-16" y="-22" width="14" height="11" fill="#163a80"/><rect x="2" y="-22" width="14" height="11" fill="#163a80"/>
+        <rect x="-16" y="-8" width="14" height="11" fill="#163a80"/><rect x="2" y="-8" width="14" height="11" fill="#163a80"/>
+        <line x1="0" y1="-40" x2="0" y2="8" stroke="#163a80" stroke-width="2"/>
+      </g>
+    </g>
+  </g>
+</svg>
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const NODES = [
+  { id: 'a', x: 140, y: 300, m: 'Rose' }, { id: 'b', x: 340, y: 300, m: 'The End of the World' },
+  { id: 'c', x: 540, y: 300, m: 'Bad Wolf' }, { id: 'd', x: 740, y: 300, m: 'Parting of the Ways' },
+  { id: 'e', x: 940, y: 300, m: 'The End of Time' }, { id: 'f', x: 540, y: 460, m: "Pete's World" },
+  { id: 'g', x: 740, y: 460, m: 'Turn Left' },
+];
+const EDGES = [['a','b'],['b','c'],['c','d'],['d','e'],['b','f'],['f','g']];
+const CY = -38; // visual centre of the box relative to its feet, so it spins about its middle
+
+const ease = (t) => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+const inQ = (t) => t*t;
+const outQ = (t) => 1 - (1-t)*(1-t);
+const lerp = (a, b, t) => a + (b - a) * t;
+
+// Each variant: f(t, from, to) -> { x, y, rot, sx, fsx, fsy, trail }.
+// sx = spin (cos of the turn, about the box centre); fsx/fsy = squash & stretch about the feet.
+const hop = (a, b, t, h) => ({ x: lerp(a.x, b.x, ease(t)), y: lerp(a.y, b.y, ease(t)) - Math.sin(Math.PI * t) * h });
+const spin = (p, n) => Math.cos(p * Math.PI * 2 * n);
+const VARIANTS = {
+  'classic': {
+    desc: 'The original: arc of 140px, 3 turns, slight tilt.',
+    f: (t, a, b) => ({ ...hop(a, b, t, 140), rot: Math.sin(Math.PI * 2 * t) * 12, sx: spin(ease(t), 3), trail: Math.sin(Math.PI * t) * .6 }),
+  },
+  'low & quick': {
+    desc: 'Flat arc (70px), 5 fast turns. Feels like a scoot rather than a leap.',
+    f: (t, a, b) => ({ ...hop(a, b, t, 70), rot: Math.sin(Math.PI * 2 * t) * 8, sx: spin(ease(t), 5), trail: Math.sin(Math.PI * t) * .5 }),
+  },
+  'whirl at the apex': {
+    desc: 'Barely turns at take-off and landing, whirls fastest at the top of the arc.',
+    f: (t, a, b) => ({ ...hop(a, b, t, 160), rot: 0, sx: spin(ease(ease(t)), 4), trail: Math.sin(Math.PI * t) * .7 }),
+  },
+  'crouch & spring': {
+    desc: 'Crouches, springs up stretched, twirls, lands with a squash and a little settle.',
+    f(t, a, b) {
+      if (t < .18) { const u = Math.sin((t / .18) * Math.PI / 2); return { x: a.x, y: a.y, sx: 1, fsx: 1 + .18 * u, fsy: 1 - .25 * u }; }
+      if (t < .82) {
+        const u = (t - .18) / .64;
+        const stretch = Math.max(0, 1 - u * 4) * .2 + Math.max(0, u * 4 - 3) * .1;
+        return { ...hop(a, b, u, 150), sx: spin(ease(u), 3), fsx: 1 - stretch * .5, fsy: 1 + stretch, trail: Math.sin(Math.PI * u) * .6 };
+      }
+      const u = (t - .82) / .18;
+      const sq = Math.sin(u * Math.PI) * Math.exp(-u * 2);
+      return { x: b.x, y: b.y, sx: 1, fsx: 1 + .2 * sq, fsy: 1 - .28 * sq };
+    },
+  },
+  'wobbly': {
+    desc: 'Tumbles side to side (±25°) while twirling, like the title sequence.',
+    f: (t, a, b) => ({ ...hop(a, b, t, 140), rot: Math.sin(t * Math.PI * 3) * 25 * Math.sin(Math.PI * t), sx: spin(ease(t), 3), trail: Math.sin(Math.PI * t) * .6 }),
+  },
+  'into the distance': {
+    desc: 'Shrinks to 55% at the apex as if flying away from you, then comes back.',
+    f(t, a, b) {
+      const k = 1 - Math.sin(Math.PI * t) * .45;
+      return { ...hop(a, b, t, 120), rot: Math.sin(Math.PI * 2 * t) * 10, sx: spin(ease(t), 3) * k, sy: k, trail: Math.sin(Math.PI * t) * .8 };
+    },
+  },
+  'bounce-bounce': {
+    desc: 'A big twirling hop that overshoots most of the way, then a small one to land.',
+    f(t, a, b) {
+      const mid = { x: lerp(a.x, b.x, .8), y: lerp(a.y, b.y, .8) };
+      if (t < .68) { const u = t / .68; return { ...hop(a, mid, u, 150), sx: spin(ease(u), 2), trail: Math.sin(Math.PI * u) * .6 }; }
+      const u = (t - .68) / .32;
+      return { x: lerp(mid.x, b.x, u), y: lerp(mid.y, b.y, u) - Math.sin(Math.PI * u) * 40, sx: spin(u, 1), trail: 0 };
+    },
+  },
+};
+
+// graph
+const g = document.getElementById('graph');
+const byId = Object.fromEntries(NODES.map((n) => [n.id, n]));
+for (const y of [300, 460]) { const l = document.createElementNS(NS, 'line'); Object.assign(l, {}); l.setAttribute('x1', 40); l.setAttribute('x2', 1160); l.setAttribute('y1', y); l.setAttribute('y2', y); l.setAttribute('class', 'lane-line'); g.append(l); }
+for (const [f, t] of EDGES) {
+  const a = byId[f], b = byId[t];
+  const p = document.createElementNS(NS, 'path');
+  p.setAttribute('d', a.y === b.y ? `M${a.x} ${a.y} L${b.x} ${b.y}` : `M${a.x} ${a.y} C${a.x + 100} ${a.y} ${b.x - 100} ${b.y} ${b.x} ${b.y}`);
+  p.setAttribute('class', 'edge'); g.append(p);
+}
+for (const n of NODES) {
+  const c = document.createElementNS(NS, 'circle');
+  c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 13); c.setAttribute('class', 'node');
+  c.addEventListener('click', () => travel(n));
+  const tx = document.createElementNS(NS, 'text');
+  tx.setAttribute('x', n.x); tx.setAttribute('y', n.y + 40); tx.setAttribute('class', 'message'); tx.textContent = n.m;
+  g.append(c, tx);
+}
+
+// vortex: a few spiral arms in a squashed ellipse, rotated per frame
+function buildVortex(el) {
+  const glow = document.createElementNS(NS, 'ellipse');
+  glow.setAttribute('rx', 110); glow.setAttribute('ry', 46); glow.setAttribute('fill', 'url(#vglow)');
+  el.append(glow);
+  const spin = document.createElementNS(NS, 'g');
+  const colors = ['#7fd4ff', '#b48cff', '#dfeaff', '#4a7dff'];
+  for (let k = 0; k < 4; k++) {
+    let d = '';
+    for (let i = 0; i <= 40; i++) {
+      const r = 6 + i * 2.6, ang = k * Math.PI / 2 + i * .18;
+      d += `${i ? 'L' : 'M'}${(Math.cos(ang) * r).toFixed(1)} ${(Math.sin(ang) * r).toFixed(1)}`;
+    }
+    const p = document.createElementNS(NS, 'path');
+    p.setAttribute('d', d); p.setAttribute('stroke', colors[k]); p.setAttribute('opacity', .8);
+    spin.append(p);
+  }
+  const squash = document.createElementNS(NS, 'g');
+  squash.setAttribute('transform', 'scale(1 .4)');
+  squash.append(spin);
+  el.append(squash);
+  el._spin = spin;
+}
+const vA = document.getElementById('vortexA'), vB = document.getElementById('vortexB');
+buildVortex(vA); buildVortex(vB);
+
+const tardis = document.getElementById('tardis');
+const lamp = document.getElementById('lamp');
+let cur = byId.c, variant = 'classic', busy = false;
+const trail = [];
+
+function place({ x, y, rot = 0, sx = 1, sy = 1, fsx = 1, fsy = 1, op = 1 }) {
+  tardis.setAttribute('transform', `translate(${x} ${y - 40}) scale(${fsx} ${fsy}) translate(0 ${CY}) rotate(${rot}) scale(${sx} ${sy}) translate(0 ${-CY})`);
+  tardis.setAttribute('opacity', op);
+  tardis.style.filter = document.getElementById('shade').checked ? `brightness(${.5 + .5 * Math.abs(sx / sy)})` : '';
+}
+function vortexAt(el, n, k, t) {
+  el.setAttribute('opacity', Math.min(1, k));
+  el.setAttribute('transform', `translate(${n.x} ${n.y - 10}) scale(${.4 + k * .8})`);
+  el._spin.setAttribute('transform', `rotate(${t * 0.6})`);
+}
+
+function travel(to) {
+  if (busy || to === cur) return;
+  busy = true;
+  const from = cur, dur = +document.getElementById('dur').value, f = VARIANTS[variant].f;
+  const t0 = performance.now();
+  function frame(now) {
+    const t = Math.min(1, (now - t0) / dur);
+    const s = f(t, from, to);
+    place(s);
+    
+    lamp.style.fill = t < 1 && Math.floor(now / 120) % 2 ? '#7fd4ff' : '#fff';
+    drawTrail(s, t < 1);
+    if (t < 1) requestAnimationFrame(frame);
+    else { cur = to; busy = false; vA.setAttribute('opacity', 0); vB.setAttribute('opacity', 0); }
+  }
+  requestAnimationFrame(frame);
+}
+
+const trailG = document.createElementNS(NS, 'g');
+document.getElementById('svg').insertBefore(trailG, tardis);
+function drawTrail(s, live) {
+  if (live && s.trail) trail.push({ x: s.x, y: s.y - 40 + CY * 1.4, k: s.trail });
+  if (trail.length > 28 || (!live && trail.length)) trail.shift();
+  if (!live) trail.length = 0;
+  trailG.replaceChildren(...trail.map((p, i) => {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', 3 + i * .9 * p.k);
+    c.setAttribute('fill', i % 2 ? '#7fd4ff' : '#b48cff'); c.setAttribute('opacity', (i / trail.length) * .5 * p.k);
+    return c;
+  }));
+}
+
+// controls
+const vEl = document.getElementById('variants');
+function renderButtons() {
+  vEl.replaceChildren(...Object.keys(VARIANTS).map((k) => {
+    const b = document.createElement('button');
+    b.textContent = k; b.className = k === variant ? 'on' : '';
+    b.onclick = () => { variant = k; renderButtons(); };
+    return b;
+  }));
+  document.getElementById('desc').textContent = `${VARIANTS[variant].desc}  —  click any commit to travel.`;
+}
+const dur = document.getElementById('dur'), durv = document.getElementById('durv');
+dur.oninput = () => { durv.textContent = `${dur.value}ms`; };
+dur.oninput();
+renderButtons();
+place({ x: cur.x, y: cur.y });
+</script>
+</body>
+</html>
