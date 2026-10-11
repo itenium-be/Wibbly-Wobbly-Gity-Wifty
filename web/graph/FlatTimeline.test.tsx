@@ -224,6 +224,6 @@ describe('FlatTimeline', () => {
     );
     const edge = container.querySelector('path.pending');
     const pill = container.querySelector('.pill');
-    expect(edge?.compareDocumentPosition(pill as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect((edge as Element).compareDocumentPosition(pill as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });
