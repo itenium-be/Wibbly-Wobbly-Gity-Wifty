@@ -15,6 +15,7 @@ A git session using the revived Doctor Who series (2005, "Rose", onwards) as the
 | Branch | Parallel universe: Pete's World, *Turn Left*. |
 | Merge | *Journey's End*: universes collide, the Doctor-Donna. |
 | Merge conflict | *Day of the Doctor*: three Doctors, incompatible memories, resolved manually. |
+| `commit --amend` | Regeneration (*The Parting of the Ways*): same episode, new face, new hash. |
 | Rebase / force-push | *Father's Day*: Rose rewrites shared history and the Reapers arrive. Don't rewrite public history. |
 | Reflog | River's diary. Nothing is truly lost. Spoilers. |
 | Cherry-pick | River and the Doctor meeting out of order. |
@@ -27,6 +28,7 @@ A git session using the revived Doctor Who series (2005, "Rose", onwards) as the
 
 **Specials (side shows):**
 - Rebase: *Father's Day*
+- Amend: *The Parting of the Ways*
 - Reflog: River's diary
 - Bisect: *Blink*
 

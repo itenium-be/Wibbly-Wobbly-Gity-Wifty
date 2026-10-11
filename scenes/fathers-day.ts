@@ -1,5 +1,5 @@
 import type { Scene } from '../shared/types';
-import { badWolf, blink, fathersDay, forestOfTheDead, partingOfTheWays, roseSavesPete } from './episodes';
+import { badWolf, fathersDay, roseSavesPete } from './episodes';
 
 export const fathersDayScene: Scene = {
   id: 'fathers-day',
@@ -22,8 +22,5 @@ export const fathersDayScene: Scene = {
     { cmd: 'git merge --abort', caption: 'Undo the merge' },
     { cmd: 'git branch -D pete-lives', caption: 'Pete steps in front of the car' },
     { episode: badWolf },
-    { episode: partingOfTheWays },
-    { episode: blink },
-    { episode: forestOfTheDead },
   ],
 };

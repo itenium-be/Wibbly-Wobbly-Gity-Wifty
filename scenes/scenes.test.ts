@@ -62,6 +62,21 @@ describe('scenes', () => {
     expect(await out('git status --short')).toBe('');
   });
 
+  test('the parting of the ways regenerates the Doctor by amending the episode', async () => {
+    const scene = sceneOf('parting-of-the-ways');
+    const amend = scene.steps.findIndex((s) => 'cmd' in s && s.cmd.includes('--amend'));
+    await playScene(engine, { ...scene, steps: scene.steps.slice(0, amend) });
+    expect(await out('git show HEAD:TARDIS.md')).toContain('Doctor: The Ninth Doctor\n');
+    expect(await engine.readFile('TARDIS.md')).toContain('Doctor: The Tenth Doctor\n');
+    const ninth = await out('git rev-parse HEAD');
+
+    await engine.run((scene.steps[amend] as { cmd: string }).cmd);
+    expect(await out('git log --format=%s -2')).toBe('The Parting of the Ways\nBad Wolf\n');
+    expect(await out('git show HEAD:TARDIS.md')).toContain('Doctor: The Tenth Doctor\n');
+    expect(await out('git rev-parse HEAD')).not.toBe(ninth);
+    expect(await out('git status --short')).toBe('');
+  });
+
   test("pete's world branches off after Series 1 and diverges on both sides", async () => {
     await playScene(engine, sceneOf('petes-world'));
     expect(await out('git log --format=%s -2 petes-world')).toBe('Doomsday\nRise of the Cybermen\n');

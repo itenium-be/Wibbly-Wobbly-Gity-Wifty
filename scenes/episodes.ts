@@ -26,7 +26,6 @@ export const partingOfTheWays: Episode = {
   code: 'S01E13',
   aired: '2005-06-18',
   title: 'The Parting of the Ways',
-  set: { Doctor: 'The Tenth Doctor' },
   event: '"I am the Bad Wolf. I create myself."',
 };
 
