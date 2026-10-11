@@ -41,6 +41,21 @@ describe('layout', () => {
     expect(l.head).toEqual({ col: 1, lane: 0, label: 'HEAD → prime-timeline' });
   });
 
+  test('marks edges from a second parent as merges', () => {
+    const l = layout(
+      graph({
+        commits: [c('a', 'Rose'), c('b', 'Dalek', 'a'), c('m', 'Merge', 'a', 'b')],
+        branches: [{ name: 'prime-timeline', hash: 'm' }],
+        head: { hash: 'm', branch: 'prime-timeline' },
+      }),
+    );
+    expect(l.edges.map((e) => [e.from.hash, e.to.hash, e.merge])).toEqual([
+      ['a', 'b', false],
+      ['a', 'm', false],
+      ['b', 'm', true],
+    ]);
+  });
+
   test('a branch gets its own lane above prime', () => {
     const l = layout(
       graph({

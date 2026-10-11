@@ -49,12 +49,20 @@ export function FlatTimeline({ layout, codes = {}, zoom = 1 }: Props) {
   const at = (p: { col: number; lane: number }) => ({ x: xs[p.col], y: Y0 + p.lane * DY });
   const width = xs[cols] + 260;
   const height = Y0 + Math.max(1, layout.lanes.length) * DY;
-  const link = (from: { col: number; lane: number }, to: { col: number; lane: number }) => {
+  const curve = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+    `C${a.x + DX * 0.6} ${a.y}, ${b.x - DX * 0.6} ${b.y}, ${b.x} ${b.y}`;
+  // Bend in a single column gap so the long stretch runs along a lane instead of slicing through labels:
+  // a fork bends right after its parent, a merge right before its merge commit.
+  const link = (from: { col: number; lane: number }, to: { col: number; lane: number }, merge: boolean) => {
     const a = at(from);
     const b = at(to);
-    return a.y === b.y
-      ? `M${a.x} ${a.y} L${b.x} ${b.y}`
-      : `M${a.x} ${a.y} C${a.x + DX * 0.6} ${a.y}, ${b.x - DX * 0.6} ${b.y}, ${b.x} ${b.y}`;
+    if (a.y === b.y) return `M${a.x} ${a.y} L${b.x} ${b.y}`;
+    if (merge) {
+      const k = { x: xs[to.col - 1], y: a.y };
+      return `M${a.x} ${a.y} L${k.x} ${k.y} ${curve(k, b)}`;
+    }
+    const k = { x: xs[from.col + 1], y: b.y };
+    return `M${a.x} ${a.y} ${curve(a, k)} L${b.x} ${b.y}`;
   };
   const kind = (lane: number) => layout.lanes[lane]?.kind ?? 'prime';
   const tardis = at(layout.head ?? { col: 0, lane: 0 });
@@ -85,12 +93,12 @@ export function FlatTimeline({ layout, codes = {}, zoom = 1 }: Props) {
         </text>
       )}
 
-      {layout.edges.map(({ from, to }) => (
-        <path key={`${from.hash}-${to.hash}`} d={link(from, to)} className={`edge lane-${kind(to.lane)}`} />
+      {layout.edges.map(({ from, to, merge }) => (
+        <path key={`${from.hash}-${to.hash}`} d={link(from, to, merge)} className={`edge lane-${kind(to.lane)}`} />
       ))}
 
-      {layout.pending?.from && <path d={link(layout.pending.from, layout.pending)} className="edge pending" />}
-      {layout.pending?.merge && <path d={link(layout.pending.merge, layout.pending)} className="edge pending" />}
+      {layout.pending?.from && <path d={link(layout.pending.from, layout.pending, false)} className="edge pending" />}
+      {layout.pending?.merge && <path d={link(layout.pending.merge, layout.pending, true)} className="edge pending" />}
 
       {layout.nodes.map((n) => {
         const { x, y } = at(n);
