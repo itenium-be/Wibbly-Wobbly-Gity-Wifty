@@ -10,10 +10,14 @@ export type StoryImage = {
 /** `reveal`: images are stepped through with →/← instead of rotating. */
 export type StoryCard = { title: string; text: string; images: StoryImage[]; reveal?: boolean };
 /** `set`: `Key: value` lines in TARDIS.md, or `Key:` and a `- item` per entry. `event`: a line appended under `Events:`. */
-/** `fastForward`: a scripted moment inside an episode, not a new episode. */
+/**
+ * `aired`: broadcast date (YYYY-MM-DD); the commit carries it so the timeline sorts in broadcast order.
+ * `fastForward`: a scripted moment inside an episode, not a new episode.
+ */
 export type Episode = {
   code: string;
   title: string;
+  aired?: string;
   set?: Record<string, string | string[]>;
   event?: string;
   fastForward?: true;

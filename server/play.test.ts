@@ -30,6 +30,14 @@ describe('play', () => {
     expect((await sh(dir, 'git log -1 --format=%s')).output).toBe("Father's Day\n");
   });
 
+  test('an episode commits on its air date, whatever the clock says', async () => {
+    const dir = await repo();
+    const episode = { code: 'S01E08', title: "Father's Day", aired: '2005-05-14', set: { Location: 'London, 1987' } };
+    await play(dir, { episode }, { date: '@1700000000 +0000' });
+    expect((await sh(dir, 'git log -1 --format=%ad --date=short')).output).toBe('2005-05-14\n');
+    expect((await sh(dir, 'git log -1 --format=%cd --date=short')).output).toBe('2005-05-14\n');
+  });
+
   test('an edit step writes the files without committing', async () => {
     const dir = await repo();
     const played = await play(dir, { edit: { 'TARDIS.md': 'Doctor: The Tenth Doctor\n' }, caption: '' }, {});

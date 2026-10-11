@@ -16,7 +16,8 @@ export async function play(dir: string, step: Step, options: StageOptions): Prom
   const path = join(dir, TARDIS_MD);
   await Bun.write(path, applyEpisode(await Bun.file(path).text(), step.episode));
   const cmd = `git commit -am "${step.episode.title}"`;
-  return { cmd, ...(await sh(dir, cmd, options)) };
+  const date = step.episode.aired ? `${step.episode.aired} 19:00:00 +0000` : options.date;
+  return { cmd, ...(await sh(dir, cmd, { ...options, date })) };
 }
 
 export const meetsExpectation = (step: Step, code: number) => ('cmd' in step && step.fails ? code !== 0 : code === 0);
