@@ -26,16 +26,19 @@ export type Layout = {
 
 const PRIME = 'prime-timeline';
 const DETACHED = 'detached';
+const REFLOG = 'reflog';
 const UNIVERSES = new Set(['petes-world']);
 
 const kindOf = (name: string): LaneKind => {
   if (name === PRIME) return 'prime';
-  if (name === DETACHED) return 'detached';
+  if (name === DETACHED || name === REFLOG) return 'detached';
   return UNIVERSES.has(name) ? 'parallel' : 'branch';
 };
 
-// Top to bottom: branches and detached commits above prime (a checked-out erased branch stays where it was), parallel universes below.
-const ORDER: LaneKind[] = ['branch', 'detached', 'prime', 'parallel'];
+// Top to bottom: ordinary branches above prime, parallel universes and merged-in commits below.
+// Commits only HEAD reaches (a deleted branch checked out from the reflog) sit above prime, where that branch was.
+const ORDER = ['branch', REFLOG, 'prime', 'parallel', 'detached'];
+const slotOf = (name: string) => (name === REFLOG ? REFLOG : kindOf(name));
 
 export function layout(graph: GraphModel, dirty = false): Layout {
   const firstParent = new Map(graph.commits.map((c) => [c.hash, c.parents[0] ?? null]));
@@ -48,12 +51,21 @@ export function layout(graph: GraphModel, dirty = false): Layout {
     (a, b) => Number(b.name === PRIME) - Number(a.name === PRIME) || a.name.localeCompare(b.name),
   );
   for (const b of branches) claim(b.hash, b.name);
-  for (const c of graph.commits) claim(c.hash, DETACHED);
+
+  const parents = new Map(graph.commits.map((c) => [c.hash, c.parents]));
+  const reachable = new Set<string>();
+  const stack = graph.branches.map((b) => b.hash);
+  for (let h = stack.pop(); h !== undefined; h = stack.pop())
+    if (!reachable.has(h)) {
+      reachable.add(h);
+      stack.push(...(parents.get(h) ?? []));
+    }
+  for (const c of graph.commits) claim(c.hash, reachable.has(c.hash) ? DETACHED : REFLOG);
 
   const used = new Set(owner.values());
-  const laneNames = [...branches.map((b) => b.name), DETACHED]
+  const laneNames = [...branches.map((b) => b.name), REFLOG, DETACHED]
     .filter((n) => used.has(n))
-    .sort((a, b) => ORDER.indexOf(kindOf(a)) - ORDER.indexOf(kindOf(b)));
+    .sort((a, b) => ORDER.indexOf(slotOf(a)) - ORDER.indexOf(slotOf(b)));
   const lanes = laneNames.map((name) => ({ name, kind: kindOf(name) }));
 
   const nodes: Node[] = graph.commits.map((c, col) => ({

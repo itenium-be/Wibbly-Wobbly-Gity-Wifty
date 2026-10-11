@@ -109,7 +109,7 @@ describe('layout', () => {
     expect(l.nodes[0].branches).toEqual(['prime-timeline', 'petes-world']);
   });
 
-  test('a commit on no branch goes to the detached lane, above prime where branches fork off', () => {
+  test('a commit only HEAD reaches goes to the reflog lane, above prime where its deleted branch was', () => {
     const l = layout(
       graph({
         commits: [c('a', 'Rose'), c('x', 'Save Caecilius', 'a')],
@@ -117,8 +117,26 @@ describe('layout', () => {
         head: { hash: 'x', branch: null },
       }),
     );
-    expect(l.lanes.map((x) => x.kind)).toEqual(['detached', 'prime']);
+    expect(l.lanes).toEqual([
+      { name: 'reflog', kind: 'detached' },
+      { name: 'prime-timeline', kind: 'prime' },
+    ]);
     expect(l.head).toEqual({ col: 1, lane: 0, label: 'HEAD (detached)' });
+  });
+
+  test('a merged-in commit whose branch is deleted stays in the detached lane below prime', () => {
+    const l = layout(
+      graph({
+        commits: [c('a', 'Rose'), c('p', 'Rise of the Cybermen', 'a'), c('m', "Journey's End", 'a', 'p')],
+        branches: [{ name: 'prime-timeline', hash: 'm' }],
+        head: { hash: 'm', branch: 'prime-timeline' },
+      }),
+    );
+    expect(l.lanes).toEqual([
+      { name: 'prime-timeline', kind: 'prime' },
+      { name: 'detached', kind: 'detached' },
+    ]);
+    expect(l.nodes[1].lane).toBe(1);
   });
 
   test('tags are attached to their commit', () => {
