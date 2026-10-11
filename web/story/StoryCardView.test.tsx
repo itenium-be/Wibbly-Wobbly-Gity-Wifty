@@ -75,6 +75,11 @@ describe('StoryCardView', () => {
     expect(screen.getByText('Inside')).toBeTruthy();
   });
 
+  test('a card without text leaves no empty paragraph', () => {
+    const { container } = render(<StoryCardView card={{ title: 'The End', text: '', images: [] }} />);
+    expect(container.querySelector('.story-text p')).toBeNull();
+  });
+
   test('a single image shows no position dots', () => {
     const { container } = render(
       <StoryCardView card={{ title: 'The TARDIS', text: 'His time machine.', images: [{ src: '/tardis.jpg' }] }} />,

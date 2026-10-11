@@ -57,7 +57,7 @@ export function StoryCardView({
       </figure>
       <div className="story-text">
         <h2>{card.title}</h2>
-        <p>{card.text}</p>
+        {card.text && <p>{card.text}</p>}
         {card.boxes?.map((group, i) => (
           <div
             key={group.boxes.join('|')}
