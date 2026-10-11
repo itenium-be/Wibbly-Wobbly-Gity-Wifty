@@ -119,6 +119,26 @@ describe('api', () => {
     });
   });
 
+  describe('/api/blame', () => {
+    const enter = () => routes['/api/scenes/:id/enter'].POST(post('/api/scenes/rose/enter', undefined, { id: 'rose' }));
+
+    test('GET returns the blame hunks of a file', async () => {
+      await enter();
+      const res = await routes['/api/blame'].GET(get('/api/blame?path=TARDIS.md'));
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual([
+        expect.objectContaining({ summary: 'Rose', lines: ['Location: London, 2005'] }),
+      ]);
+    });
+
+    test('a missing or invalid path is a 400, a file outside history a 404', async () => {
+      await enter();
+      expect((await routes['/api/blame'].GET(get('/api/blame'))).status).toBe(400);
+      expect((await routes['/api/blame'].GET(get('/api/blame?path=../x'))).status).toBe(400);
+      expect((await routes['/api/blame'].GET(get('/api/blame?path=nope.md'))).status).toBe(404);
+    });
+  });
+
   describe('/api/file', () => {
     const enter = () => routes['/api/scenes/:id/enter'].POST(post('/api/scenes/rose/enter', undefined, { id: 'rose' }));
 

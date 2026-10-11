@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test } from 'bun:test';
 import { join } from 'node:path';
 import type { Scene } from '../shared/types';
 import { tmp } from '../test/tmp';
-import { Engine, InvalidCommitError, UnknownCommitError, UnknownEpisodeError } from './engine';
+import { Engine, InvalidCommitError, NotInHistoryError, UnknownCommitError, UnknownEpisodeError } from './engine';
 import { GITCONFIG } from './shell';
 import { InvalidPathError } from './workdir';
 
@@ -112,7 +112,23 @@ describe('Engine', () => {
     await expect(engine.show('deadbeef')).rejects.toBeInstanceOf(UnknownCommitError);
   });
 
+  test('blames each line of a file on the commit that last changed it', async () => {
+    await engine.enter('dalek');
+    const hunks = await engine.blame('TARDIS.md');
+    expect(hunks.map(({ summary, lines }) => ({ summary, lines }))).toEqual([
+      { summary: 'Rose', lines: ['Doctor: The Ninth Doctor'] },
+      { summary: 'The End of the World', lines: ['Location: Platform One'] },
+    ]);
+  });
+
+  test('a file outside history cannot be blamed', async () => {
+    await engine.enter('dalek');
+    await engine.writeFile('new.md', 'x\n');
+    await expect(engine.blame('new.md')).rejects.toBeInstanceOf(NotInHistoryError);
+  });
+
   test('rejects paths outside the live dir', async () => {
+    await expect(engine.blame('../snapshots/rose/TARDIS.md')).rejects.toBeInstanceOf(InvalidPathError);
     await expect(engine.readFile('../snapshots/rose/TARDIS.md')).rejects.toBeInstanceOf(InvalidPathError);
     await expect(engine.writeFile('.git/HEAD', 'x')).rejects.toBeInstanceOf(InvalidPathError);
   });

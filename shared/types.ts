@@ -62,6 +62,9 @@ export type GraphModel = {
   mergeHead?: string;
 };
 
+/** Consecutive lines last changed by one commit. `date`: author date, YYYY-MM-DD. */
+export type BlameHunk = { hash: string; author: string; date: string; summary: string; lines: string[] };
+
 export type FileStatus = 'clean' | 'untracked' | 'modified' | 'staged' | 'conflicted';
 /** `code`: the two-letter `git status --short` code, '' when clean. */
 export type WorkFile = { path: string; status: FileStatus; code: string };
