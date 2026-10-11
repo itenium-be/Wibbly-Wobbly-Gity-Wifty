@@ -44,7 +44,7 @@ export function NextEpisode({ episode, onPlay, seconds = 8 }: Props) {
 
   return (
     <aside className="next-episode" aria-label="next episode">
-      <small className="kicker">NEXT EPISODE</small>
+      <small className="kicker">{episode.fastForward ? 'FAST FORWARD' : 'NEXT EPISODE'}</small>
       <div className="code">{episode.code}</div>
       <div className="title">{episode.title}</div>
       <button type="button" onClick={playOnce}>

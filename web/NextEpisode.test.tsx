@@ -15,6 +15,12 @@ describe('NextEpisode', () => {
     expect(onPlay).toHaveBeenCalledTimes(1);
   });
 
+  test('a fast forward says so instead of Next Episode', () => {
+    render(<NextEpisode episode={{ ...episode, fastForward: true }} onPlay={async () => true} />);
+    expect(screen.getByText('FAST FORWARD')).toBeTruthy();
+    expect(screen.queryByText('NEXT EPISODE')).toBeNull();
+  });
+
   test('plays on n, unless the console has text in it', () => {
     const onPlay = mock(async () => true);
     render(
