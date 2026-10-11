@@ -1,0 +1,12 @@
+[user]
+	name = The Doctor
+	email = doctor@tardis.gallifrey
+[init]
+	defaultBranch = prime-timeline
+[commit]
+	gpgsign = false
+[core]
+	autocrlf = false
+	pager = cat
+[color]
+	ui = false
