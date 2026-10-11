@@ -148,6 +148,29 @@ describe('App', () => {
     expect(location.search).toBe('?scene=rose&card=1');
   });
 
+  test('Next and Back step through a card like → and ←', async () => {
+    history.replaceState(null, '', '?scene=tardis&card=0');
+    render(<App />);
+    expect(await screen.findByText('Outside')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Next/ }));
+    expect(await screen.findByText('Inside')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Back/ }));
+    expect(await screen.findByText('Outside')).toBeTruthy();
+  });
+
+  test('Next on the last story step says it enters the git phase', async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /Into the TARDIS/ }));
+    expect(await screen.findByText('Where is the TARDIS?')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Into the TARDIS|Next|Back/ })).toBeNull();
+  });
+
+  test('Back is disabled on the very first card', async () => {
+    render(<App />);
+    const back = (await screen.findByRole('button', { name: /Back/ })) as HTMLButtonElement;
+    expect(back.disabled).toBe(true);
+  });
+
   test('Skip Intro only shows in the first scene', async () => {
     history.replaceState(null, '', '?scene=dalek&card=0');
     render(<App />);

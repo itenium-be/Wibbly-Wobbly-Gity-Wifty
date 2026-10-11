@@ -92,6 +92,8 @@ export function App() {
   }, [scenes, reset]);
 
   if (!scene) return null;
+  const forward = move(pos, 1, scenes);
+  const back = move(pos, -1, scenes);
   const cueIndex = current(scene.steps, cueState);
   const step = scene.steps[cueIndex];
   const cue = step && 'cmd' in step ? step : step && 'edit' in step ? { cmd: '', caption: step.caption } : undefined;
@@ -159,6 +161,16 @@ export function App() {
           <small>{scene.episode}</small>
           {scene.title}
         </div>
+        {!gitPhase && (
+          <div className="story-nav">
+            <button type="button" disabled={back === pos} onClick={() => setPos(back)}>
+              <kbd>←</kbd> Back
+            </button>
+            <button type="button" className="primary" onClick={() => setPos(forward)}>
+              {forward.card === scene.story.length ? 'Into the TARDIS' : 'Next'} <kbd>→</kbd>
+            </button>
+          </div>
+        )}
         {!gitPhase && pos.scene === 0 && (
           <button
             type="button"

@@ -92,12 +92,38 @@ header .zoom {
 }
 
 /* The story view has no workdir column, so the header can reach the right edge. */
-header:has(.skip-intro) {
+header:has(.story-nav) {
   grid-column: 1 / -1;
+  gap: 8px;
 }
 
-.skip-intro {
+.story-nav {
+  display: flex;
+  gap: 8px;
   margin-left: auto;
+}
+
+.story-nav button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.story-nav button.primary {
+  background: var(--tardis);
+  border-color: var(--glow);
+}
+
+.story-nav kbd {
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.story-nav button,
+.skip-intro {
   padding: 8px 18px;
   border: 1px solid var(--line);
   border-radius: 6px;
