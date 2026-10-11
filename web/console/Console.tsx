@@ -1,6 +1,7 @@
 import type { KeyboardEvent, RefObject } from 'react';
 import type { CmdStep } from '../../shared/types';
 import { ghost } from '../cue';
+import { ResizeHandle } from '../ResizeHandle';
 
 type Props = {
   cue: CmdStep | undefined;
@@ -24,6 +25,7 @@ export function Console({ cue, value, onChange, onRun, output, inputRef }: Props
 
   return (
     <div className="console">
+      <ResizeHandle edge="top" variable="--console-height" min={160} />
       <div className="prompt">
         <div className="line">
           <span className="sigil">$</span>

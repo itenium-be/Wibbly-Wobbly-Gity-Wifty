@@ -75,4 +75,20 @@ describe('Console', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(onRun).not.toHaveBeenCalled();
   });
+
+  test('dragging the top edge resizes the console', () => {
+    setup('');
+    const handle = document.querySelector('.console .resize') as HTMLElement;
+    const height = () => document.documentElement.style.getPropertyValue('--console-height');
+    fireEvent.pointerDown(handle, { button: 0, clientY: 500 });
+    fireEvent.pointerMove(handle, { clientY: 400 });
+    expect(height()).toBe(`${innerHeight - 400}px`);
+    fireEvent.pointerMove(handle, { clientY: innerHeight - 10 });
+    expect(height()).toBe('160px');
+    fireEvent.pointerMove(handle, { clientY: 10 });
+    expect(height()).toBe(`${innerHeight - 160}px`);
+    fireEvent.pointerUp(handle);
+    fireEvent.pointerMove(handle, { clientY: 400 });
+    expect(height()).toBe(`${innerHeight - 160}px`);
+  });
 });
