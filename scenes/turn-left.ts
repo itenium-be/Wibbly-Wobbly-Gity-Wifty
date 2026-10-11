@@ -1,22 +1,6 @@
 import type { Scene } from '../shared/types';
 import { turnRight } from './episodes';
 
-// The warning sits under the title, outside Journey's End's conflict, so rerere's recorded resolution still matches.
-const runawayBrideWithWarning = [
-  '# TARDIS log',
-  'Warning: Bad Wolf. The darkness is coming.',
-  'Doctor: The Tenth Doctor',
-  'Companions:',
-  '- Donna Noble',
-  'Location: London, Christmas 2006',
-  'Pete Tyler: dead',
-  '',
-  'Events:',
-  '- Game Station run by Bad Wolf Corp',
-  '- I am the Bad Wolf. I create myself.',
-  '',
-].join('\n');
-
 export const turnLeft: Scene = {
   id: 'turn-left',
   episode: 'S04E11',
@@ -54,9 +38,11 @@ export const turnLeft: Scene = {
     },
     { cmd: 'git add TARDIS.md', caption: 'Rose made it', accepts: 'git add' },
     { cmd: 'git cherry-pick --continue', caption: 'Rose finds Donna' },
+    { cmd: 'git restore --source e09813f TARDIS.md', caption: 'Donna turns left: back to how it was at Christmas' },
+    // Under the title, outside Journey's End's conflict, so rerere's recorded resolution still matches.
     {
-      edit: { 'TARDIS.md': runawayBrideWithWarning },
-      caption: 'Donna turns left: the Doctor lives, the warning stays',
+      cmd: "sed -i '1a Warning: Bad Wolf. The darkness is coming.' TARDIS.md",
+      caption: 'Rose\'s last words: "Bad Wolf"',
     },
     { cmd: 'git commit -am "Turn Left"', caption: 'Turn Left', accepts: 'git commit' },
     { cmd: 'git reset --soft e09813f', caption: 'Fold the dark world up' },
