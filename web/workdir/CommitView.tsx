@@ -45,9 +45,9 @@ function Diff({ files }: { files: DiffFile[] }) {
   );
 }
 
-type Props = { commit: Commit; refs: RefLabel[]; show: (hash: string) => Promise<string> };
+type Show = (hash: string) => Promise<string>;
 
-export function CommitView({ commit, refs, show }: Props) {
+export function CommitDiff({ hash, show }: { hash: string; show: Show }) {
   const [files, setFiles] = useState<DiffFile[] | null>(null);
   const [error, setError] = useState('');
 
@@ -55,7 +55,7 @@ export function CommitView({ commit, refs, show }: Props) {
     let current = true;
     setFiles(null);
     setError('');
-    show(commit.hash)
+    show(hash)
       .then((text) => {
         if (current) setFiles(parseDiff(text));
       })
@@ -65,12 +65,16 @@ export function CommitView({ commit, refs, show }: Props) {
     return () => {
       current = false;
     };
-  }, [commit.hash, show]);
+  }, [hash, show]);
 
+  return error ? <div className="error">{error}</div> : files && <Diff files={files} />;
+}
+
+export function CommitView({ commit, refs, show }: { commit: Commit; refs: RefLabel[]; show: Show }) {
   return (
     <div className="viewer commit-view">
       {details(commit, refs)}
-      {error ? <div className="error">{error}</div> : files && <Diff files={files} />}
+      <CommitDiff hash={commit.hash} show={show} />
     </div>
   );
 }

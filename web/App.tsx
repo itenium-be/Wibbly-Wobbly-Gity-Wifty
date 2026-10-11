@@ -190,7 +190,7 @@ export function App() {
             )}
           </Pan>
           {popover && graph && (
-            <CommitPopover graph={graph} hash={popover.hash} at={popover.at} show={showCommit} onClose={closePopover} />
+            <CommitPopover hash={popover.hash} at={popover.at} show={showCommit} onClose={closePopover} />
           )}
           {workdir && graph && (
             <WorkDirPanel

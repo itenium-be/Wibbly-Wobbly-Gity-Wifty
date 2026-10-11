@@ -1,19 +1,15 @@
 import { useEffect, useRef } from 'react';
-import type { GraphModel } from '../../shared/types';
-import { CommitView } from '../workdir/CommitView';
-import { labels } from '../workdir/history';
+import { CommitDiff } from '../workdir/CommitView';
 
 type Props = {
-  graph: GraphModel;
   hash: string;
   at: { x: number; y: number };
   show: (hash: string) => Promise<string>;
   onClose: () => void;
 };
 
-export function CommitPopover({ graph, hash, at, show, onClose }: Props) {
+export function CommitPopover({ hash, at, show, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const commit = graph.commits.find((c) => c.hash === hash);
 
   useEffect(() => {
     const press = (e: PointerEvent) => {
@@ -30,14 +26,13 @@ export function CommitPopover({ graph, hash, at, show, onClose }: Props) {
     };
   }, [onClose]);
 
-  if (!commit) return null;
   return (
     <div
       ref={ref}
       className="popover"
       style={{ left: `min(${at.x}px, calc(100vw - var(--popover-width) - 16px))`, top: `min(${at.y}px, 30vh)` }}
     >
-      <CommitView commit={commit} refs={labels(graph, hash)} show={show} />
+      <CommitDiff hash={hash} show={show} />
     </div>
   );
 }

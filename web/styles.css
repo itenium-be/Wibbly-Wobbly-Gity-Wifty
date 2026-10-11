@@ -424,6 +424,11 @@ main {
   white-space: nowrap;
 }
 
+.popover .error {
+  padding: 10px 12px;
+  color: var(--danger);
+}
+
 .viewer .bar .error {
   color: var(--danger);
 }
@@ -759,19 +764,13 @@ main {
 
 /* commit popover */
 .popover {
-  --popover-width: min(760px, calc(100vw - 32px));
+  --popover-width: min(600px, calc(100vw - 32px));
   position: fixed;
   z-index: 10;
   width: var(--popover-width);
-  padding: 0 14px 14px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 6px;
   background: var(--space-2);
   box-shadow: 0 0 24px rgba(127, 212, 255, 0.25);
-}
-
-.popover .viewer {
-  border-top: 0;
 }
 
 .popover .diff {
