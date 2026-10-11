@@ -11,6 +11,7 @@ const LABEL_GAP = 24;
 
 const KICKER: Record<LaneKind, string> = {
   prime: 'UNIVERSE · PRIME',
+  branch: '',
   parallel: 'UNIVERSE · PARALLEL',
   detached: 'OFF THE TIMELINE',
 };

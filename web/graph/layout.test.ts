@@ -41,27 +41,43 @@ describe('layout', () => {
     expect(l.head).toEqual({ col: 1, lane: 0, label: 'HEAD → prime-timeline' });
   });
 
-  test('a branch gets its own parallel lane below prime', () => {
+  test('a branch gets its own lane above prime', () => {
     const l = layout(
       graph({
         commits: [c('a', 'Rose'), c('b', 'Pete dies', 'a'), c('x', 'Rose saves Pete', 'a')],
         branches: [
-          { name: 'fathers-day', hash: 'x' },
+          { name: 'pete-lives', hash: 'x' },
           { name: 'prime-timeline', hash: 'b' },
         ],
-        head: { hash: 'x', branch: 'fathers-day' },
+        head: { hash: 'x', branch: 'pete-lives' },
+      }),
+    );
+    expect(l.lanes).toEqual([
+      { name: 'pete-lives', kind: 'branch' },
+      { name: 'prime-timeline', kind: 'prime' },
+    ]);
+    expect(l.nodes.map((n) => [n.hash, n.lane])).toEqual([
+      ['a', 1],
+      ['b', 1],
+      ['x', 0],
+    ]);
+    expect(l.nodes[2].branches).toEqual(['pete-lives']);
+  });
+
+  test("pete's world is a parallel universe below prime", () => {
+    const l = layout(
+      graph({
+        commits: [c('a', 'Rose'), c('b', 'Blink', 'a'), c('x', 'Rise of the Cybermen', 'a')],
+        branches: [
+          { name: 'petes-world', hash: 'x' },
+          { name: 'prime-timeline', hash: 'b' },
+        ],
       }),
     );
     expect(l.lanes).toEqual([
       { name: 'prime-timeline', kind: 'prime' },
-      { name: 'fathers-day', kind: 'parallel' },
+      { name: 'petes-world', kind: 'parallel' },
     ]);
-    expect(l.nodes.map((n) => [n.hash, n.lane])).toEqual([
-      ['a', 0],
-      ['b', 0],
-      ['x', 1],
-    ]);
-    expect(l.nodes[2].branches).toEqual(['fathers-day']);
   });
 
   test('a branch with no commits of its own adds no lane', () => {

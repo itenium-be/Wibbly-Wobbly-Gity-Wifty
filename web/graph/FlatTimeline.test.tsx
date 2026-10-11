@@ -31,6 +31,28 @@ describe('FlatTimeline', () => {
     expect(y('The Fires of Pompeii')).toBeLessThan(y('a1'));
   });
 
+  test('an ordinary branch lane has a name but no universe kicker', () => {
+    render(
+      <FlatTimeline
+        layout={layout({
+          initialized: true,
+          commits: [
+            { hash: 'a1', short: 'a1', message: 'Rose', parents: [] },
+            { hash: 'b2', short: 'b2', message: 'Rose saves Pete', parents: ['a1'] },
+          ],
+          branches: [
+            { name: 'prime-timeline', hash: 'a1' },
+            { name: 'pete-lives', hash: 'b2' },
+          ],
+          tags: [],
+          head: { hash: 'b2', branch: 'pete-lives' },
+        })}
+      />,
+    );
+    expect(screen.getAllByText('pete-lives').length).toBeGreaterThan(0);
+    expect(screen.queryByText('UNIVERSE · PARALLEL')).toBeNull();
+  });
+
   test('draws tag labels below the commit so the TARDIS cannot hide them', () => {
     render(<FlatTimeline layout={pompeii} />);
     const y = Number(screen.getByText('⚑ fixed-point/pompeii').getAttribute('y'));

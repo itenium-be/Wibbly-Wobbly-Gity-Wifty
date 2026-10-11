@@ -158,6 +158,8 @@ main {
   color: var(--glow);
 }
 
+.edge.lane-branch,
+.node.lane-branch,
 .edge.lane-parallel,
 .node.lane-parallel {
   stroke: var(--danger);

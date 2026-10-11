@@ -1,6 +1,6 @@
 import type { GraphModel } from '../../shared/types';
 
-export type LaneKind = 'prime' | 'parallel' | 'detached';
+export type LaneKind = 'prime' | 'branch' | 'parallel' | 'detached';
 export type Lane = { name: string; kind: LaneKind };
 export type Node = {
   hash: string;
@@ -25,12 +25,16 @@ export type Layout = {
 
 const PRIME = 'prime-timeline';
 const DETACHED = 'detached';
+const UNIVERSES = new Set(['petes-world']);
 
 const kindOf = (name: string): LaneKind => {
   if (name === PRIME) return 'prime';
   if (name === DETACHED) return 'detached';
-  return 'parallel';
+  return UNIVERSES.has(name) ? 'parallel' : 'branch';
 };
+
+// Top to bottom: ordinary branches above prime, parallel universes and detached commits below.
+const ORDER: LaneKind[] = ['branch', 'prime', 'parallel', 'detached'];
 
 export function layout(graph: GraphModel, dirty = false): Layout {
   const firstParent = new Map(graph.commits.map((c) => [c.hash, c.parents[0] ?? null]));
@@ -46,7 +50,9 @@ export function layout(graph: GraphModel, dirty = false): Layout {
   for (const c of graph.commits) claim(c.hash, DETACHED);
 
   const used = new Set(owner.values());
-  const laneNames = [...branches.map((b) => b.name), DETACHED].filter((n) => used.has(n));
+  const laneNames = [...branches.map((b) => b.name), DETACHED]
+    .filter((n) => used.has(n))
+    .sort((a, b) => ORDER.indexOf(kindOf(a)) - ORDER.indexOf(kindOf(b)));
   const lanes = laneNames.map((name) => ({ name, kind: kindOf(name) }));
 
   const nodes: Node[] = graph.commits.map((c, col) => ({
@@ -75,7 +81,11 @@ export function layout(graph: GraphModel, dirty = false): Layout {
 
   const pending =
     dirty && graph.initialized
-      ? { col: nodes.length, lane: at?.lane ?? 0, from: at ? { col: at.col, lane: at.lane } : null }
+      ? {
+          col: nodes.length,
+          lane: at?.lane ?? Math.max(0, laneNames.indexOf(PRIME)),
+          from: at ? { col: at.col, lane: at.lane } : null,
+        }
       : null;
 
   return { initialized: graph.initialized, lanes, nodes, edges, head, pending };
