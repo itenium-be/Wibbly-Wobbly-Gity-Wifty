@@ -48,4 +48,17 @@ describe('Engine', () => {
     await expect(engine.enter('nope')).rejects.toThrow('unknown scene: nope');
     expect((await engine.run('git log --format=%s')).output).toBe('Dalek\nRose\n');
   });
+
+  test('concurrent enters are serialised and the live repo matches the last one', async () => {
+    const ids = Array.from({ length: 10 }, (_, i) => (i % 2 === 0 ? 'rose' : 'dalek'));
+    const graphs = await Promise.all(ids.map((id) => engine.enter(id)));
+    expect(graphs.map((g) => g.commits.length)).toEqual(ids.map((id) => (id === 'rose' ? 1 : 2)));
+    expect((await engine.run('git log --format=%s')).output).toBe('Dalek\nRose\n');
+  });
+
+  test('a failed call does not poison the queue', async () => {
+    const [bad, good] = await Promise.allSettled([engine.enter('nope'), engine.enter('rose')]);
+    expect(bad.status).toBe('rejected');
+    expect(good.status).toBe('fulfilled');
+  });
 });
