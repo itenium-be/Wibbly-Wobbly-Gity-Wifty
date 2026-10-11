@@ -59,9 +59,10 @@ export const rose: Scene = {
     },
     {
       title: 'The TARDIS',
-      text: 'Time And Relative Dimension In Space: his time machine. It goes anywhere in time and space, it is stuck looking like a 1960s police box, and it is bigger on the inside.',
+      text: 'Time And Relative Dimension In Space: his time machine. It goes anywhere in time and space.',
       reveal: true,
       images: [{ src: '/assets/tardis.jpg' }, { src: '/assets/tardis-console.jpg' }],
+      boxes: [{ boxes: ['Stuck as a 1960s Police Box'] }, { boxes: ['Bigger on the Inside'] }],
     },
     {
       title: 'The Companions',
