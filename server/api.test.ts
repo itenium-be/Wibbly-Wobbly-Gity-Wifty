@@ -105,6 +105,15 @@ describe('api', () => {
       },
     );
 
+    test.each(['episodes', 'episodes/', 'episodes/rose.md/', 'episodes/rose.md/x'])(
+      'GET and PUT of the non-file %p are a 400',
+      async (path) => {
+        await enter();
+        expect((await routes['/api/file'].GET(get(`/api/file?path=${path}`))).status).toBe(400);
+        expect((await routes['/api/file'].PUT(put({ path, content: 'x' }))).status).toBe(400);
+      },
+    );
+
     describe('symlinks', () => {
       let outside: string;
       beforeAll(async () => {

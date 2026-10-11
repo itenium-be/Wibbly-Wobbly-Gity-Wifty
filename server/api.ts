@@ -17,7 +17,9 @@ async function fileErrors(task: () => Promise<Response>): Promise<Response> {
     return await task();
   } catch (e) {
     if (e instanceof InvalidPathError) return new Response(e.message, { status: 400 });
-    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return new Response('no such file', { status: 404 });
+    const code = (e as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') return new Response('no such file', { status: 404 });
+    if (code === 'EISDIR' || code === 'ENOTDIR') return new Response('not a file', { status: 400 });
     throw e;
   }
 }
