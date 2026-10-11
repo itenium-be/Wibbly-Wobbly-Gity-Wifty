@@ -11,8 +11,8 @@ export const fathersDayScene: Scene = {
       text: "7 November 1987. Pete Tyler, Rose's dad, is hit by a car. He dies alone.",
       images: [{ src: '/assets/episodes/fathers-day.jpg' }],
       boxes: [
-        { boxes: ['Rose was a baby'] },
         { boxes: ['Now she has a time machine'] },
+        { boxes: ['She saves her dad'] },
         { boxes: ['The Reapers come to sterilise the wound'] },
       ],
     },
