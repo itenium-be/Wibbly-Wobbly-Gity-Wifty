@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-35 -63 70 72">
+  <title>TARDIS</title>
+  <rect x="-4" y="-62" width="8" height="8" rx="2" fill="#fff" />
+  <rect x="-20" y="-54" width="40" height="6" fill="#163a80" />
+  <rect x="-22" y="-48" width="44" height="8" fill="#0d1a33" />
+  <rect x="-20" y="-40" width="40" height="48" fill="#1f4fa8" stroke="#163a80" stroke-width="2" />
+  <rect x="-16" y="-36" width="14" height="11" fill="#dfeaff" />
+  <rect x="2" y="-36" width="14" height="11" fill="#dfeaff" />
+  <rect x="-16" y="-22" width="14" height="11" fill="#163a80" />
+  <rect x="2" y="-22" width="14" height="11" fill="#163a80" />
+  <rect x="-16" y="-8" width="14" height="11" fill="#163a80" />
+  <rect x="2" y="-8" width="14" height="11" fill="#163a80" />
+  <line x1="0" y1="-40" x2="0" y2="8" stroke="#163a80" stroke-width="2" />
+</svg>
