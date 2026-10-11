@@ -71,7 +71,15 @@ describe('Console', () => {
     expect(fireEvent.keyDown(input, { key: 'Tab' })).toBe(false);
   });
 
-  test('Escape blurs the input', () => {
+  test('Escape clears what was typed and keeps focus', () => {
+    const { onChange, input } = setup('git sta');
+    input.focus();
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(onChange).toHaveBeenCalledWith('');
+    expect(document.activeElement).toBe(input);
+  });
+
+  test('Escape on an empty input blurs it', () => {
     const { input } = setup('');
     input.focus();
     expect(document.activeElement).toBe(input);

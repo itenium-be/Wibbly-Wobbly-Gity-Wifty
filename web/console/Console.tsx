@@ -21,7 +21,10 @@ export function Console({ cue, value, onChange, onRun, output, inputRef }: Props
     else if (e.key === 'Tab') {
       e.preventDefault();
       if (rest) onChange(value + rest);
-    } else if (e.key === 'Escape') e.currentTarget.blur();
+    } else if (e.key === 'Escape') {
+      if (value) onChange('');
+      else e.currentTarget.blur();
+    }
   };
 
   return (
