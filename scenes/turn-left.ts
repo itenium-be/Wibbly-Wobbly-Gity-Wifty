@@ -13,7 +13,7 @@ export const turnLeft: Scene = {
       boxes: [
         { boxes: ['She Never Meets the Doctor'] },
         { boxes: ['He Dies Under the Thames'] },
-        { boxes: ['Rose Crosses Over'] },
+        { boxes: ['The Universe Starts Dying'] },
       ],
     },
   ],
