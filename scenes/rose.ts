@@ -8,12 +8,17 @@ export const rose: Scene = {
     {
       title: 'The Show',
       text: 'Doctor Who: BBC science fiction since 1963. Cancelled in 1989, revived in 2005 with "Rose". The longest-running sci-fi show in the world.',
-      images: [{ src: '/assets/doctors/01-hartnell.jpg' }],
+      images: [{ src: '/assets/logo.jpg' }],
     },
     {
       title: 'The Doctor',
       text: 'This is the Doctor. He travels through time on fun adventures, where he lets his companions do the dirty work so he can keep his hands clean and his conscience clear.',
       images: [
+        {
+          src: '/assets/doctors/01-hartnell.jpg',
+          name: 'The First Doctor · William Hartnell',
+          quote: '"One day, I shall come back. Yes, I shall come back."',
+        },
         {
           src: '/assets/doctors/09-eccleston.jpg',
           name: 'The Ninth Doctor · Christopher Eccleston',
