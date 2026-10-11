@@ -89,22 +89,25 @@ describe('StoryCardView', () => {
       boxes: [{ title: 'Choose your timeline', boxes: ['SPOILERS', 'MINIMAL SPOILERS'] }, { boxes: ['Upbeat'] }],
     };
 
+    // Unrevealed groups are rendered but hidden, so they already hold their space and nothing shifts.
+    const revealed = (text: string) => !screen.getByText(text).closest('[aria-hidden="true"]');
+
     test('the first group shows straight away', () => {
       render(<StoryCardView card={show} />);
-      expect(screen.getByText('SPOILERS')).toBeTruthy();
-      expect(screen.getByText('MINIMAL SPOILERS')).toBeTruthy();
-      expect(screen.queryByText('Upbeat')).toBeNull();
+      expect(revealed('SPOILERS')).toBe(true);
+      expect(revealed('MINIMAL SPOILERS')).toBe(true);
+      expect(revealed('Upbeat')).toBe(false);
     });
 
     test('a group shows its title', () => {
       render(<StoryCardView card={show} />);
-      expect(screen.getByText('Choose your timeline')).toBeTruthy();
+      expect(revealed('Choose your timeline')).toBe(true);
     });
 
     test('each step shows the next group', () => {
       render(<StoryCardView card={show} step={1} />);
-      expect(screen.getByText('MINIMAL SPOILERS')).toBeTruthy();
-      expect(screen.getByText('Upbeat')).toBeTruthy();
+      expect(revealed('MINIMAL SPOILERS')).toBe(true);
+      expect(revealed('Upbeat')).toBe(true);
     });
 
     test('on a reveal card the groups follow its images', () => {
@@ -118,10 +121,10 @@ describe('StoryCardView', () => {
       };
       const { rerender } = render(<StoryCardView card={tardis} step={1} />);
       expect(screen.getByText('Inside')).toBeTruthy();
-      expect(screen.queryByText('Upbeat')).toBeNull();
+      expect(revealed('Upbeat')).toBe(false);
       rerender(<StoryCardView card={tardis} step={2} />);
       expect(screen.getByText('Inside')).toBeTruthy();
-      expect(screen.getByText('Upbeat')).toBeTruthy();
+      expect(revealed('Upbeat')).toBe(true);
     });
   });
 });

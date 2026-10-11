@@ -1030,6 +1030,15 @@ main {
   color: var(--text);
 }
 
+.story-text .box-group {
+  animation: box-in 0.4s ease-out;
+}
+
+.story-text .box-group.pending {
+  visibility: hidden;
+  animation: none;
+}
+
 .story-text .boxes-title {
   margin: 24px 0 0;
   color: var(--glow);
@@ -1038,7 +1047,6 @@ main {
     sans-serif;
   letter-spacing: 2px;
   text-transform: uppercase;
-  animation: box-in 0.4s ease-out;
 }
 
 .story-text .boxes {
@@ -1061,7 +1069,6 @@ main {
     sans-serif;
   letter-spacing: 2px;
   text-transform: uppercase;
-  animation: box-in 0.4s ease-out;
 }
 
 @keyframes box-in {

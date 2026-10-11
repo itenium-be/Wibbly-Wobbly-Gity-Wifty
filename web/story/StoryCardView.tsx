@@ -15,7 +15,7 @@ export function StoryCardView({
   const count = card.images.length;
   const imageSteps = card.reveal ? count : 1;
   const index = card.reveal ? Math.min(step, count - 1) : rotated;
-  const groups = card.boxes?.slice(0, Math.max(step - imageSteps + 1, 0) + 1) ?? [];
+  const revealedGroups = Math.max(step - imageSteps + 1, 0) + 1;
 
   useEffect(() => {
     if (card.reveal || count < 2) return;
@@ -58,8 +58,12 @@ export function StoryCardView({
       <div className="story-text">
         <h2>{card.title}</h2>
         <p>{card.text}</p>
-        {groups.map((group) => (
-          <div key={group.boxes.join('|')}>
+        {card.boxes?.map((group, i) => (
+          <div
+            key={group.boxes.join('|')}
+            className={i < revealedGroups ? 'box-group' : 'box-group pending'}
+            aria-hidden={i >= revealedGroups}
+          >
             {group.title && <h3 className="boxes-title">{group.title}</h3>}
             <div className="boxes">
               {group.boxes.map((box) => (
