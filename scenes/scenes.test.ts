@@ -148,6 +148,31 @@ describe('scenes', () => {
     expect(await out('git branch --show-current')).toBe('prime-timeline\n');
   });
 
+  test('turn left starts after bad wolf, and its cues name the right commits', async () => {
+    await engine.enter('turn-left');
+    expect(await out('git rev-parse --short HEAD')).toBe('8d4bf96\n');
+    expect(await out('git log -1 --format=%s e09813f')).toBe('The Runaway Bride\n');
+    expect(await out('git log -1 --format=%s ebf7702')).toBe('Forest of the Dead\n');
+  });
+
+  test('turn left squashes the dark world into one episode, in broadcast order, and rerere replays the merge', async () => {
+    const scene = sceneOf('turn-left');
+    const replay = scene.steps.findIndex((s) => 'cmd' in s && s.cmd.includes('--rebase-merges'));
+    await playScene(engine, { ...scene, steps: scene.steps.slice(0, replay) });
+    expect(await out('git show --stat --format=%s')).toContain('1 file changed, 1 insertion(+)');
+    expect((await engine.run((scene.steps[replay] as { cmd: string }).cmd)).output).toContain(
+      "Resolved 'TARDIS.md' using previous resolution.",
+    );
+    await playScene(engine, scene);
+    expect(await out('git log --first-parent --format=%s -6')).toBe(
+      "Angels quantum-locked\nJourney's End\nThe Stolen Earth\nTurn Left\nForest of the Dead\nBlink\n",
+    );
+    expect(await out('git show HEAD:TARDIS.md')).toContain('Warning: Bad Wolf. The darkness is coming.\n');
+    expect(await out('git log -1 --format=%s petes-world')).toBe('The dimension cannon\n');
+    expect(await out('git branch --show-current')).toBe('prime-timeline\n');
+    expect(await out('git status --short')).toBe('');
+  });
+
   test('bad wolf finds every episode that wrote it', async () => {
     await engine.enter('bad-wolf');
     expect(await out('git log -S "Bad Wolf" --format=%s')).toBe('Doomsday\nThe Parting of the Ways\nBad Wolf\n');
