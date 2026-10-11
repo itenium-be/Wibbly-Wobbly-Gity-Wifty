@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Timeline routing</title>
+<style>
+@font-face { font-family: "Orbitron"; font-weight: 700; src: url("../assets/fonts/orbitron-700.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 400; src: url("../assets/fonts/jetbrains-mono-400.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 600; src: url("../assets/fonts/jetbrains-mono-600.woff2") format("woff2"); }
+
+:root {
+  --space: #050816; --space-2: #0b1230; --tardis: #1f4fa8; --glow: #7fd4ff; --gold: #ffcc4d;
+  --danger: #ff5a6e; --text: #e6ecff; --muted: #8a95c2; --line: rgba(127, 212, 255, 0.25);
+  --st-modified: #ffb347;
+}
+html, body { margin: 0; }
+body {
+  color: var(--text);
+  font-family: "JetBrains Mono", monospace;
+  background: radial-gradient(ellipse at 50% 40%, var(--space-2), var(--space) 70%);
+  min-height: 100vh;
+}
+h2 { font: 700 18px Orbitron, sans-serif; letter-spacing: 2px; margin: 24px 24px 0; color: var(--muted); }
+h2 b { color: var(--text); }
+svg { display: block; width: 100%; max-width: 1100px; }
+
+.lane-line { stroke: var(--line); stroke-dasharray: 2 10; }
+.lane-kicker { fill: var(--muted); font-size: 13px; letter-spacing: 3px; }
+.lane-name { fill: var(--text); font: 700 20px Orbitron, sans-serif; }
+.edge { fill: none; stroke-width: 4; opacity: 0.8; filter: drop-shadow(0 0 4px currentColor); }
+.node { fill: var(--space); stroke-width: 4; filter: drop-shadow(0 0 6px currentColor); }
+.lane-prime { stroke: var(--glow); color: var(--glow); }
+.lane-parallel { stroke: var(--danger); color: var(--danger); }
+.fixed-point { fill: var(--gold); filter: drop-shadow(0 0 8px var(--gold)); }
+.message { fill: var(--text); font-size: 14px; text-anchor: middle; }
+.episode-code { fill: var(--muted); font-size: 12px; text-anchor: middle; }
+.hash { fill: var(--muted); font-size: 11px; text-anchor: middle; }
+.tag { fill: var(--gold); font-size: 13px; font-weight: 600; text-anchor: middle; }
+.pill rect { fill: var(--tardis); stroke: none; }
+.pill.lane-parallel rect { fill: #a8324a; }
+.pill text { fill: #fff; stroke: none; font-size: 14px; font-weight: 600; }
+.head-label { fill: var(--glow); font: 700 16px Orbitron, sans-serif; text-anchor: middle; }
+.pending { stroke: var(--st-modified); stroke-dasharray: 6 6; fill: none; }
+.pending-text { fill: var(--st-modified); font-size: 14px; text-anchor: middle; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <g id="tardis" transform="scale(1.4)">
+    <rect x="-4" y="-62" width="8" height="8" rx="2" fill="#fff"/>
+    <rect x="-20" y="-54" width="40" height="6" fill="#163a80"/>
+    <rect x="-22" y="-48" width="44" height="8" fill="#0d1a33"/>
+    <text x="0" y="-42" font-size="5" fill="#fff" text-anchor="middle">POLICE BOX</text>
+    <rect x="-20" y="-40" width="40" height="48" fill="#1f4fa8" stroke="#163a80" stroke-width="2"/>
+    <rect x="-16" y="-36" width="14" height="11" fill="#dfeaff"/><rect x="2" y="-36" width="14" height="11" fill="#dfeaff"/>
+    <rect x="-16" y="-22" width="14" height="11" fill="#163a80"/><rect x="2" y="-22" width="14" height="11" fill="#163a80"/>
+    <rect x="-16" y="-8" width="14" height="11" fill="#163a80"/><rect x="2" y="-8" width="14" height="11" fill="#163a80"/>
+    <line x1="0" y1="-40" x2="0" y2="8" stroke="#163a80" stroke-width="2"/>
+  </g>
+</defs></svg>
+
+<h2><b>Before</b> · current</h2>
+<svg viewBox="0 0 970 580" id="before">
+  <g class="lanes"></g>
+  <path class="edge lane-prime" d="M260 200 L410 200"/>
+  <path class="edge lane-parallel" d="M260 200 C350 200, 470 390, 560 390"/>
+  <path class="pending" d="M410 200 L710 200"/>
+  <g class="nodes"></g>
+  <g class="pill lane-prime"><rect x="434" y="187" width="142" height="26" rx="6"/><text x="442" y="205">prime-timeline</text></g>
+  <g class="pill lane-parallel"><rect x="584" y="377" width="106" height="26" rx="6"/><text x="592" y="395">pete-lives</text></g>
+  <g class="pend"></g>
+  <g class="tardis-at"></g>
+</svg>
+
+<h2><b>After</b> · pills up-right · metro routing</h2>
+<svg viewBox="0 0 970 580" id="after">
+  <g class="lanes"></g>
+  <path class="edge lane-prime" d="M260 200 L410 200"/>
+  <!-- leave parent flat, turn down in the gap between column 0 and column 1 labels, run flat along lane -->
+  <path class="edge lane-parallel" d="M260 200 L290 200 Q312 200 312 222 L312 368 Q312 390 334 390 L560 390"/>
+  <path class="pending" d="M410 200 L710 200"/>
+  <g class="nodes"></g>
+  <g class="pill lane-prime"><rect x="446" y="154" width="142" height="26" rx="6"/><text x="454" y="172">prime-timeline</text></g>
+  <g class="pill lane-parallel"><rect x="596" y="344" width="106" height="26" rx="6"/><text x="604" y="362">pete-lives</text></g>
+  <g class="pend"></g>
+  <g class="tardis-at"></g>
+</svg>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs, text) => {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text) e.textContent = text;
+  return e;
+};
+const star = (x, y, r) => Array.from({ length: 10 }, (_, k) => {
+  const a = -Math.PI / 2 + (k * Math.PI) / 5, rr = k % 2 ? r * 0.45 : r;
+  return `${x + rr * Math.cos(a)},${y + rr * Math.sin(a)}`;
+}).join(' ');
+
+for (const svg of document.querySelectorAll('svg')) {
+  const lanes = svg.querySelector('.lanes');
+  [['UNIVERSE · PRIME', 'prime-timeline', 200], ['UNIVERSE · PARALLEL', 'pete-lives', 390]].forEach(([k, n, y]) => {
+    lanes.append(el('line', { x1: 40, x2: 930, y1: y, y2: y, class: 'lane-line' }));
+    lanes.append(el('text', { x: 40, y: y - 52, class: 'lane-kicker' }, k));
+    lanes.append(el('text', { x: 40, y: y - 30, class: 'lane-name' }, n));
+  });
+
+  const nodes = svg.querySelector('.nodes');
+  nodes.append(el('circle', { cx: 260, cy: 200, r: 13, class: 'node lane-prime' }));
+  nodes.append(el('text', { x: 260, y: 242, class: 'episode-code' }, 'S01E01'));
+  nodes.append(el('text', { x: 260, y: 260, class: 'message' }, 'Rose'));
+  nodes.append(el('text', { x: 260, y: 278, class: 'hash' }, '01128c2'));
+
+  nodes.append(el('polygon', { points: star(410, 200, 22), class: 'fixed-point' }));
+  nodes.append(el('text', { x: 410, y: 242, class: 'episode-code' }, 'S01E08'));
+  nodes.append(el('text', { x: 410, y: 260, class: 'message' }, "Father's Day"));
+  nodes.append(el('text', { x: 410, y: 278, class: 'hash' }, '8898347'));
+  nodes.append(el('text', { x: 410, y: 296, class: 'tag' }, '⚑ fixed-point/pete'));
+
+  nodes.append(el('circle', { cx: 560, cy: 390, r: 13, class: 'node lane-parallel' }));
+  nodes.append(el('text', { x: 560, y: 432, class: 'episode-code' }, '7 November 1987'));
+  nodes.append(el('text', { x: 560, y: 450, class: 'message' }, 'Rose saves Pete'));
+  nodes.append(el('text', { x: 560, y: 468, class: 'hash' }, '6cb8d6a'));
+
+  const pend = svg.querySelector('.pend');
+  pend.append(el('circle', { cx: 710, cy: 200, r: 13, class: 'node pending' }));
+  pend.append(el('text', { x: 710, y: 242, class: 'pending-text' }, 'uncommitted'));
+
+  const t = svg.querySelector('.tardis-at');
+  const g = el('g', { transform: 'translate(410 160)' });
+  g.append(el('use', { href: '#tardis' }));
+  t.append(g);
+  t.append(el('text', { x: 410, y: 60, class: 'head-label' }, 'HEAD → prime-timeline'));
+}
+</script>
+</body>
+</html>
