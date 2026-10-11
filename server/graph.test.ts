@@ -49,6 +49,24 @@ describe('readGraph', () => {
     expect(g.head).toEqual({ hash: dalek.hash, branch: 'prime-timeline' });
   });
 
+  test('orders commits by when they were made, across branches', async () => {
+    const g = await repo([
+      { git: ['init', '-q'] },
+      { commit: 'Rose' },
+      { git: ['switch', '-q', '-c', 'petes-world'] },
+      { commit: 'Rise of the Cybermen' },
+      { git: ['switch', '-q', 'prime-timeline'] },
+      { commit: 'Blink' },
+      { git: ['merge', '-q', '--no-edit', 'petes-world'] },
+    ]);
+    expect(g.commits.map((c) => c.message)).toEqual([
+      'Rose',
+      'Rise of the Cybermen',
+      'Blink',
+      "Merge branch 'petes-world' into prime-timeline",
+    ]);
+  });
+
   test('an annotated tag points at its commit', async () => {
     const g = await repo([
       { git: ['init', '-q'] },

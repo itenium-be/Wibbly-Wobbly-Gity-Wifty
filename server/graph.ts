@@ -31,7 +31,7 @@ export async function readGraph(cwd: string): Promise<GraphModel> {
       '--branches',
       '--tags',
       'HEAD',
-      '--topo-order',
+      '--date-order',
       '--reverse',
       '--format=%H%x1f%h%x1f%P%x1f%s',
     ])
