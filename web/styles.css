@@ -1084,7 +1084,7 @@ main {
 
 .blame .hunk {
   display: grid;
-  grid-template-columns: minmax(0, 13em) minmax(0, 1fr);
+  grid-template-columns: clamp(150px, 45%, 360px) minmax(0, 1fr);
   border-top: 1px solid var(--line);
 }
 
@@ -1098,7 +1098,6 @@ main {
   align-items: flex-start;
   gap: 2px;
   padding: 6px 10px;
-  border-left: 4px solid rgb(255 204 77 / calc(0.15 + 0.85 * var(--age)));
   border-radius: 0;
   background: transparent;
   text-align: left;
