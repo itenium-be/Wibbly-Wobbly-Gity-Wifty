@@ -42,7 +42,7 @@ export function WorkDirPanel({ workdir, branch, graph, load, save, onDone }: Pro
   const [tab, setTab] = useState<'files' | 'history'>('files');
   const [flashing, setFlashing] = useState<Set<string>>(new Set());
   const previous = useRef<Map<string, FileStatus>>(new Map());
-  const [openPath, setOpenPath] = useState<string | null>(null);
+  const [openPath, setOpenPath] = useState<string | null>('TARDIS.md');
   const [content, setContent] = useState<string | null>(null);
   const [draft, setDraft] = useState<string | null>(null);
   const [error, setError] = useState('');

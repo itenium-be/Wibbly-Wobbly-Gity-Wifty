@@ -97,6 +97,12 @@ describe('WorkDirPanel', () => {
     expect(row('new.md').className).not.toContain('flash');
   });
 
+  test('opens TARDIS.md from the start', async () => {
+    const { load } = setup();
+    expect(await screen.findByText('TARDIS.md — conflicted')).toBeTruthy();
+    expect(load).toHaveBeenCalledWith('TARDIS.md');
+  });
+
   test('clicking a file shows its content', async () => {
     const { load } = setup('# Clean\n');
     await open('clean.md');
