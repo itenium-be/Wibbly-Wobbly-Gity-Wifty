@@ -22,10 +22,10 @@ describe('scenes', () => {
   for (const scene of scenes) {
     test(`${scene.id}: every cue runs cleanly against its snapshot`, async () => {
       const dir = await tmp();
-      await buildSnapshot(dir, scene.build);
+      await buildSnapshot(dir, scene.build ?? []);
       await replay(
         dir,
-        scene.steps.map((s) => s.cmd),
+        scene.steps.flatMap((s) => ('cmd' in s ? [s.cmd] : [])),
       );
     });
   }
@@ -34,7 +34,7 @@ describe('scenes', () => {
     const scene = scenes.find((s) => s.id === 'fixed-points');
     if (!scene) throw new Error('fixed-points scene missing');
     const dir = await tmp();
-    await buildSnapshot(dir, scene.build);
+    await buildSnapshot(dir, scene.build ?? []);
     await replay(dir, ['git tag fixed-point/pompeii HEAD~2']);
     const { output } = await git(dir, ['log', '-1', '--format=%s', 'fixed-point/pompeii']);
     expect(output.trim()).toBe('The Fires of Pompeii');

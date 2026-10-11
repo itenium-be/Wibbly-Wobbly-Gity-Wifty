@@ -75,6 +75,8 @@ export function App() {
   }, [scenes, reset]);
 
   if (!scene) return null;
+  const step = scene.steps[cueIndex];
+  const cue = step && 'cmd' in step ? step : undefined;
 
   const run = async (cmd: string) => {
     if (running.current) return;
@@ -127,14 +129,7 @@ export function App() {
               onDone={() => inputRef.current?.focus()}
             />
           )}
-          <Console
-            cue={scene.steps[cueIndex]}
-            value={input}
-            onChange={setInput}
-            onRun={run}
-            output={output}
-            inputRef={inputRef}
-          />
+          <Console cue={cue} value={input} onChange={setInput} onRun={run} output={output} inputRef={inputRef} />
         </>
       ) : (
         <StoryCardView key={`${scene.id}-${pos.card}`} card={scene.story[pos.card]} image={pos.image} />

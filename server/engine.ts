@@ -26,7 +26,7 @@ export class Engine {
   }
 
   async prepare() {
-    for (const scene of this.scenes) await buildSnapshot(this.snapshot(scene.id), scene.build);
+    for (const scene of this.scenes) await buildSnapshot(this.snapshot(scene.id), scene.build ?? []);
   }
 
   private serialise<T>(task: () => Promise<T>): Promise<T> {
