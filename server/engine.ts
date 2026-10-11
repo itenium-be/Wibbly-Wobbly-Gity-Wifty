@@ -1,0 +1,39 @@
+import { cp, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import type { GraphModel, RunResult, Scene } from '../shared/types';
+import { buildSnapshot } from './build';
+import { tokenize } from './command';
+import { git } from './git';
+import { readGraph } from './graph';
+
+export class Engine {
+  private readonly home: string;
+  private readonly scenes: Scene[];
+  private readonly live: string;
+
+  constructor(home: string, scenes: Scene[]) {
+    this.home = home;
+    this.scenes = scenes;
+    this.live = join(home, 'live');
+  }
+
+  private snapshot(id: string) {
+    return join(this.home, 'snapshots', id);
+  }
+
+  async prepare() {
+    for (const scene of this.scenes) await buildSnapshot(this.snapshot(scene.id), scene.build);
+  }
+
+  async enter(id: string): Promise<GraphModel> {
+    await rm(this.live, { recursive: true, force: true });
+    await cp(this.snapshot(id), this.live, { recursive: true });
+    return readGraph(this.live);
+  }
+
+  async run(input: string): Promise<RunResult> {
+    const parsed = tokenize(input);
+    const result = parsed.ok ? await git(this.live, parsed.args) : { output: parsed.error, code: 1 };
+    return { ...result, graph: await readGraph(this.live) };
+  }
+}
