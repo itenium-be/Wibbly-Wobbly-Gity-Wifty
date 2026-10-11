@@ -9,7 +9,11 @@ export const partingOfTheWaysScene: Scene = {
     {
       title: 'Regeneration',
       text: 'The Doctor takes the time vortex out of Rose and it is killing him.',
-      images: [{ src: '/assets/episodes/parting-of-the-ways.jpg', stamp: 'DEAD', stampNote: '(Creative Differences)' }],
+      reveal: true,
+      images: [
+        { src: '/assets/episodes/parting-of-the-ways.jpg', stamp: 'DEAD', stampNote: '(Creative Differences)' },
+        { src: '/assets/episodes/parting-of-the-ways-tennant.jpg' },
+      ],
     },
   ],
   steps: [
