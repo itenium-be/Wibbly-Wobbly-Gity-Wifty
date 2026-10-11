@@ -91,6 +91,12 @@ describe('WorkDirPanel', () => {
     ]);
   });
 
+  test('does not mistake a setext heading underline for a conflict marker', async () => {
+    const { container } = setup('Bad Wolf\n=======\n\nRose\n========\n');
+    await open('clean.md');
+    expect(container.querySelectorAll('.viewer pre .marker')).toHaveLength(0);
+  });
+
   test('reloads the open file when the working directory changes', async () => {
     const { load, rerender, props } = setup();
     await open('TARDIS.md');

@@ -2,7 +2,6 @@ import { type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import type { FileStatus, WorkDir } from '../../shared/types';
 
 const LEGEND: FileStatus[] = ['untracked', 'modified', 'staged', 'conflicted'];
-const MARKER = /^(<{7}|={7}|>{7})/;
 
 type Props = {
   workdir: WorkDir;
@@ -16,9 +15,17 @@ function Highlighted({ text }: { text: string }) {
   let side: 'ours' | 'theirs' | undefined;
   for (const [i, line] of text.replace(/\n$/, '').split('\n').entries()) {
     let kind: string | undefined = side;
-    if (MARKER.test(line)) {
+    // Only a marker in sequence counts: a lone `=======` is also a markdown setext underline.
+    const next = /^<{7} /.test(line)
+      ? 'ours'
+      : side === 'ours' && /^={7}$/.test(line)
+        ? 'theirs'
+        : side === 'theirs' && /^>{7} /.test(line)
+          ? undefined
+          : side;
+    if (next !== side) {
       kind = 'marker';
-      side = line.startsWith('<') ? 'ours' : line.startsWith('=') ? 'theirs' : undefined;
+      side = next;
     }
     lines.push(
       <span key={i} className={kind}>
