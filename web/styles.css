@@ -275,15 +275,30 @@ main {
 }
 
 .files li {
-  display: grid;
-  grid-template-columns: 2.4em minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
   border-radius: 6px;
   transition:
     background 0.2s,
     color 0.4s;
+}
+
+.files li:hover,
+.files li.open {
+  background: rgba(127, 212, 255, 0.08);
+}
+
+.files button {
+  display: grid;
+  grid-template-columns: 2.4em minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  color: inherit;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .files .code {
@@ -363,6 +378,90 @@ main {
 
 .legend .conflicted::before {
   color: var(--st-conflicted);
+}
+
+.viewer {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.viewer .bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.viewer .bar > :first-child {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewer .bar .error {
+  color: var(--danger);
+}
+
+.viewer button {
+  padding: 4px 14px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--tardis);
+  font: inherit;
+  cursor: pointer;
+}
+
+.viewer button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.viewer pre,
+.viewer textarea {
+  min-height: 0;
+  margin: 0;
+  overflow: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.25);
+  font:
+    22px / 1.5 "JetBrains Mono",
+    monospace;
+  white-space: pre;
+}
+
+.viewer textarea {
+  resize: none;
+  outline: none;
+  border-color: var(--glow);
+  caret-color: var(--glow);
+}
+
+.viewer pre span {
+  display: block;
+}
+
+.viewer pre .marker {
+  color: var(--st-conflicted);
+  font-weight: 600;
+  background: rgba(255, 90, 110, 0.12);
+}
+
+.viewer pre .ours {
+  background: rgba(127, 212, 255, 0.1);
+}
+
+.viewer pre .theirs {
+  background: rgba(255, 90, 110, 0.08);
 }
 
 /* console */

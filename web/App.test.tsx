@@ -58,10 +58,20 @@ const enterScene = mock(async (_id: string) => live(graph));
 const ran = (output: string, g = graph): RunResult => ({ output, code: 0, ...live(g) });
 const runCommand = mock(async (_input: string) => ran('a1 Episode one'));
 
+const readFile = mock(async (_path: string) => '# Rose\n');
+const writeFile = mock(
+  async (path: string, _content: string): Promise<WorkDir> => ({
+    files: [{ path, status: 'modified', code: ' M' }],
+    merging: false,
+  }),
+);
+
 mock.module('./api', () => ({
   fetchScenes: async () => scenes,
   enterScene,
   runCommand,
+  readFile,
+  writeFile,
 }));
 const { App } = await import('./App');
 
@@ -77,7 +87,15 @@ beforeEach(() => {
   enterScene.mockImplementation(async () => live(graph));
   runCommand.mockReset();
   runCommand.mockImplementation(async () => ran('a1 Episode one'));
+  writeFile.mockClear();
 });
+
+async function editRose() {
+  await toGitPhase();
+  fireEvent.click(await screen.findByText('episodes/rose.md'));
+  fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+  return screen.getByLabelText('edit episodes/rose.md') as HTMLTextAreaElement;
+}
 
 describe('App', () => {
   test('→ on a reveal card shows its next image before leaving the card', async () => {
@@ -187,5 +205,22 @@ describe('App', () => {
     expect(await screen.findByText(/500 boom/)).toBeTruthy();
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(await screen.findByText(/a1 Episode one/)).toBeTruthy();
+  });
+
+  test('saving an edited file writes it and refreshes the working directory', async () => {
+    const editor = await editRose();
+    fireEvent.change(editor, { target: { value: '# Bad Wolf\n' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(screen.getByText('episodes/rose.md').closest('li')?.className).toContain('modified'));
+    expect(writeFile).toHaveBeenCalledWith('episodes/rose.md', '# Bad Wolf\n');
+  });
+
+  test('arrow keys and r do nothing while typing in the editor', async () => {
+    const editor = await editRose();
+    fireEvent.keyDown(editor, { key: 'ArrowRight' });
+    fireEvent.keyDown(editor, { key: 'ArrowLeft' });
+    fireEvent.keyDown(editor, { key: 'r' });
+    expect(screen.getByLabelText('edit episodes/rose.md')).toBeTruthy();
+    expect(enterScene).toHaveBeenCalledTimes(1);
   });
 });

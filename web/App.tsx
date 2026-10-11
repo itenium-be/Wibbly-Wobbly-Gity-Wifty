@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GraphModel, RunResult, SceneView, WorkDir } from '../shared/types';
-import { enterScene, fetchScenes, runCommand } from './api';
+import { enterScene, fetchScenes, readFile, runCommand, writeFile } from './api';
 import { Console } from './console/Console';
 import { advance } from './cue';
 import { FlatTimeline } from './graph/FlatTimeline';
@@ -53,6 +53,7 @@ export function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLTextAreaElement) return;
       const typing = e.target instanceof HTMLInputElement;
       if (typing && (e.target as HTMLInputElement).value !== '') return;
       if (e.key === 'ArrowRight') setPos((p) => move(p, 1, scenes));
@@ -86,6 +87,12 @@ export function App() {
     setInput('');
   };
 
+  const save = async (path: string, content: string) => {
+    const mine = epoch.current;
+    const updated = await writeFile(path, content);
+    if (mine === epoch.current) setWorkdir(updated);
+  };
+
   return (
     <>
       <header>
@@ -105,6 +112,8 @@ export function App() {
               key={scene.id}
               workdir={workdir}
               branch={graph?.initialized ? (graph.head.branch ?? 'HEAD (detached)') : ''}
+              load={readFile}
+              save={save}
             />
           )}
           <Console

@@ -1,13 +1,44 @@
-import { useEffect, useRef, useState } from 'react';
+import { type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import type { FileStatus, WorkDir } from '../../shared/types';
 
 const LEGEND: FileStatus[] = ['untracked', 'modified', 'staged', 'conflicted'];
+const MARKER = /^(<{7}|={7}|>{7})/;
 
-type Props = { workdir: WorkDir; branch: string };
+type Props = {
+  workdir: WorkDir;
+  branch: string;
+  load: (path: string) => Promise<string>;
+  save: (path: string, content: string) => Promise<void>;
+};
 
-export function WorkDirPanel({ workdir, branch }: Props) {
+function Highlighted({ text }: { text: string }) {
+  const lines = [];
+  let side: 'ours' | 'theirs' | undefined;
+  for (const [i, line] of text.replace(/\n$/, '').split('\n').entries()) {
+    let kind: string | undefined = side;
+    if (MARKER.test(line)) {
+      kind = 'marker';
+      side = line.startsWith('<') ? 'ours' : line.startsWith('=') ? 'theirs' : undefined;
+    }
+    lines.push(
+      <span key={i} className={kind}>
+        {line || ' '}
+      </span>,
+    );
+  }
+  return <pre>{lines}</pre>;
+}
+
+export function WorkDirPanel({ workdir, branch, load, save }: Props) {
   const [flashing, setFlashing] = useState<Set<string>>(new Set());
   const previous = useRef<Map<string, FileStatus>>(new Map());
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const [content, setContent] = useState<string | null>(null);
+  const [draft, setDraft] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const editor = useRef<HTMLTextAreaElement>(null);
+
+  const open = workdir.files.find((f) => f.path === openPath);
 
   useEffect(() => {
     const before = previous.current;
@@ -17,12 +48,58 @@ export function WorkDirPanel({ workdir, branch }: Props) {
     previous.current = new Map(workdir.files.map((f) => [f.path, f.status]));
   }, [workdir]);
 
+  const openFile = open?.path;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a command (merge, checkout) may rewrite the open file, so every new workdir reloads it.
+  useEffect(() => {
+    if (!openFile) return;
+    let current = true;
+    load(openFile)
+      .then((text) => {
+        if (!current) return;
+        setContent(text);
+        setError('');
+      })
+      .catch((e) => {
+        if (current) setError(e instanceof Error ? e.message : String(e));
+      });
+    return () => {
+      current = false;
+    };
+  }, [openFile, workdir, load]);
+
+  const editing = draft !== null;
+  useEffect(() => {
+    if (editing) editor.current?.focus();
+  }, [editing]);
+
   const unflash = (path: string) =>
     setFlashing((s) => {
       const next = new Set(s);
       next.delete(path);
       return next;
     });
+
+  const select = (path: string) => {
+    setOpenPath(path);
+    setContent(null);
+    setDraft(null);
+    setError('');
+  };
+
+  const onSave = async () => {
+    if (!openPath || draft === null) return;
+    try {
+      await save(openPath, draft);
+      setDraft(null);
+      setError('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  const onEditorKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') setDraft(null);
+  };
 
   return (
     <aside className="workdir">
@@ -37,12 +114,14 @@ export function WorkDirPanel({ workdir, branch }: Props) {
           {workdir.files.map((f) => (
             <li
               key={f.path}
-              className={`${f.status}${flashing.has(f.path) ? ' flash' : ''}`}
+              className={`${f.status}${f === open ? ' open' : ''}${flashing.has(f.path) ? ' flash' : ''}`}
               onAnimationEnd={() => unflash(f.path)}
             >
-              <span className="code">{f.code}</span>
-              <span className="name">{f.path}</span>
-              <span className="badge">{f.status}</span>
+              <button type="button" onClick={() => select(f.path)}>
+                <span className="code">{f.code}</span>
+                <span className="name">{f.path}</span>
+                <span className="badge">{f.status}</span>
+              </button>
             </li>
           ))}
         </ul>
@@ -54,6 +133,35 @@ export function WorkDirPanel({ workdir, branch }: Props) {
           ))}
         </div>
       </div>
+      {open && (
+        <div className="viewer">
+          <div className="bar">
+            <span>{`${open.path} — ${open.status}`}</span>
+            {error && <span className="error">{error}</span>}
+            {editing ? (
+              <button type="button" onClick={onSave}>
+                Save
+              </button>
+            ) : (
+              <button type="button" disabled={content === null} onClick={() => setDraft(content)}>
+                Edit
+              </button>
+            )}
+          </div>
+          {editing ? (
+            <textarea
+              ref={editor}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={onEditorKey}
+              spellCheck={false}
+              aria-label={`edit ${open.path}`}
+            />
+          ) : (
+            content !== null && <Highlighted text={content} />
+          )}
+        </div>
+      )}
     </aside>
   );
 }
