@@ -63,7 +63,7 @@ describe('HistoryView', () => {
   test('clicking a commit shows its details', () => {
     const { onDone } = setup();
     fireEvent.click(screen.getByText('Pete lives'));
-    expect(screen.getByText('bbb — Pete lives')).toBeTruthy();
+    expect(screen.queryByText('bbb — Pete lives')).toBeNull();
     expect(screen.getByText(/commit bbb000000000/)).toBeTruthy();
     expect(screen.getByText('Pete lives').closest('li')?.className).toContain('open');
     expect(onDone).toHaveBeenCalled();

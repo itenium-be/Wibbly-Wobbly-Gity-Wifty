@@ -171,12 +171,8 @@ export function HistoryView({ graph, show, onDone }: Props) {
       </div>
       {open && (
         <div className="viewer commit-view">
-          <div className="bar">
-            <span>{`${open.commit.short} — ${open.commit.message}`}</span>
-            {error && <span className="error">{error}</span>}
-          </div>
           {details(open)}
-          {files && <Diff files={files} />}
+          {error ? <div className="error">{error}</div> : files && <Diff files={files} />}
         </div>
       )}
     </>

@@ -687,12 +687,11 @@ main {
 
 /* commit diff */
 .viewer.commit-view {
-  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 10px;
 }
 
-.viewer.commit-view .bar {
-  margin-bottom: 0;
+.viewer.commit-view .error {
+  color: var(--danger);
 }
 
 .diff {
