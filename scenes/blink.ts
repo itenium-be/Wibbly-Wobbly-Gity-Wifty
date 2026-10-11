@@ -12,7 +12,6 @@ export const blinkScene: Scene = {
     },
   ],
   steps: [
-    { cmd: 'cat TARDIS.md', caption: "There's an Angel in the log. Don't blink." },
     { cmd: 'git bisect start', caption: 'Search the timeline' },
     { cmd: 'git bisect bad', caption: 'The Angel is here now' },
     { cmd: 'git bisect good fixed-point/pete', caption: 'No Angels in 1987' },
