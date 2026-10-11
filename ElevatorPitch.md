@@ -7,20 +7,14 @@
 Somewhere in your history, the Weeping Angels got in. You don't know when. You blinked.
 
 Git is a time machine, and so is the TARDIS. This session replays the Doctor's adventures
-as a live git repository. It is the only way really, we as developers, can make any sense
+as a live git repository. It is the only way, we as developers, can make any sense
 of all the time travel happening within Doctor Who.
 
 Fixed points in time, parallel and crashing universes, and the occasional paradox,
 nothing git can't handle really.
 
-Universes will collide in a merge conflict. `bisect` will hunt down the exact episode where the
-Angels slipped in. A `rebase` and force-push will tear a paradox through everyone else's timeline,
-and `reflog` will prove that, just this once, everybody lives.
-
-There are new commands: git switch (others?) instead of git checkout
---> we should maybe take that in the elevatorpitch as well...
-
-
+In this session we cover git switch, rebase, bisect, reflog and more. If you're not yet
+a Doctor Who fan, that's fine... But after this session you will be!
 
 ## Target Audience
 
