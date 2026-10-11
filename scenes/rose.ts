@@ -6,33 +6,88 @@ export const rose: Scene = {
   title: 'Rose',
   story: [
     {
+      title: 'The Show',
+      text: 'Doctor Who: BBC science fiction since 1963. Cancelled in 1989, revived in 2005 with "Rose". The longest-running sci-fi show in the world.',
+      images: [{ src: '/assets/doctors/01-hartnell.jpg' }],
+    },
+    {
       title: 'The Doctor',
       text: 'This is the Doctor. He travels through time on fun adventures, where he lets his companions do the dirty work so he can keep his hands clean and his conscience clear.',
       images: [
-        { src: '/assets/doctors/09-eccleston.jpg', name: 'The Ninth Doctor' },
-        { src: '/assets/doctors/10-tennant.jpg', name: 'The Tenth Doctor' },
-        { src: '/assets/doctors/11-smith.jpg', name: 'The Eleventh Doctor' },
-        { src: '/assets/doctors/12-capaldi.jpg', name: 'The Twelfth Doctor' },
-        { src: '/assets/doctors/13-whittaker.jpg', name: 'The Thirteenth Doctor' },
-        { src: '/assets/doctors/14-tennant.jpg', name: 'The Fourteenth Doctor' },
-        { src: '/assets/doctors/15-gatwa.jpg', name: 'The Fifteenth Doctor' },
+        {
+          src: '/assets/doctors/09-eccleston.jpg',
+          name: 'The Ninth Doctor · Christopher Eccleston',
+          quote: '"Just this once, everybody lives!"',
+        },
+        {
+          src: '/assets/doctors/10-tennant.jpg',
+          name: 'The Tenth Doctor · David Tennant',
+          quote: '"Wibbly wobbly, timey wimey… stuff."',
+        },
+        {
+          src: '/assets/doctors/11-smith.jpg',
+          name: 'The Eleventh Doctor · Matt Smith',
+          quote: '"Bow ties are cool."',
+        },
+        {
+          src: '/assets/doctors/12-capaldi.jpg',
+          name: 'The Twelfth Doctor · Peter Capaldi',
+          quote: '"Laugh hard. Run fast. Be kind."',
+        },
+        {
+          src: '/assets/doctors/13-whittaker.jpg',
+          name: 'The Thirteenth Doctor · Jodie Whittaker',
+          quote: '"We\'re all capable of the most incredible change."',
+        },
+        {
+          src: '/assets/doctors/15-gatwa.jpg',
+          name: 'The Fifteenth Doctor · Ncuti Gatwa',
+          quote: '"Nobody grows up wrong."',
+        },
       ],
     },
     {
       title: 'The TARDIS',
-      text: 'This is the TARDIS, his time machine. Wherever it lands is where we are in the timeline.',
-      images: [{ src: '/assets/tardis.jpg' }],
+      text: 'Time And Relative Dimension In Space: his time machine. It goes anywhere in time and space, it is stuck looking like a 1960s police box, and it is bigger on the inside.',
+      reveal: true,
+      images: [{ src: '/assets/tardis.jpg' }, { src: '/assets/tardis-console.jpg' }],
     },
     {
       title: 'The Companions',
       text: 'These are the companions of the Doctor. They travel with him on his adventures, until they get themselves killed (or worse).',
       images: [
-        { src: '/assets/companions/rose.jpg', name: 'Rose Tyler', fate: 'TRAPPED IN A PARALLEL UNIVERSE' },
-        { src: '/assets/companions/donna.jpg', name: 'Donna Noble', fate: 'MEMORY WIPED' },
-        { src: '/assets/companions/amy-rory.jpg', name: 'Amy & Rory', fate: 'ZAPPED INTO 1938 BY A WEEPING ANGEL' },
-        { src: '/assets/companions/clara.jpg', name: 'Clara Oswald', fate: 'DEAD (EVENTUALLY)' },
-        { src: '/assets/companions/bill.jpg', name: 'Bill Potts', fate: 'CONVERTED INTO A CYBERMAN' },
-        { src: '/assets/companions/river.jpg', name: 'River Song', fate: 'UPLOADED INTO A LIBRARY COMPUTER' },
+        {
+          src: '/assets/companions/jack.jpg',
+          name: 'Captain Jack',
+          stamp: 'DIED',
+          fate: 'Exterminated by a Dalek. Got better.',
+        },
+        {
+          src: '/assets/companions/river.jpg',
+          name: 'River Song',
+          stamp: 'DIED',
+          fate: "Uploaded to the Library's computer",
+        },
+        {
+          src: '/assets/companions/amy.jpg',
+          name: 'Amy Pond',
+          stamp: 'DIED',
+          fate: 'Zapped to 1938 by a Weeping Angel, lived through WWII',
+        },
+        {
+          src: '/assets/companions/rory.jpg',
+          name: 'Rory Williams',
+          stamp: 'DIED',
+          fate: 'Several times. Once erased from existence',
+        },
+        { src: '/assets/companions/clara.jpg', name: 'Clara Oswald', stamp: 'DIED', fate: 'Faced the raven' },
+        { src: '/assets/companions/bill.jpg', name: 'Bill Potts', stamp: 'DIED', fate: 'Converted into a Cyberman' },
+        {
+          src: '/assets/companions/donna.jpg',
+          name: 'Donna Noble',
+          stamp: 'MEMORY WIPED',
+          fate: 'Her mind would burn if she ever remembered him',
+        },
       ],
     },
     {
