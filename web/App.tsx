@@ -142,9 +142,6 @@ export function App() {
           <small>{scene.episode}</small>
           {scene.title}
         </div>
-        <div className="progress">
-          scene {pos.scene + 1} / {scenes.length}
-        </div>
       </header>
       {gitPhase ? (
         <>

@@ -65,9 +65,8 @@ body {
 }
 
 header {
-  grid-column: 1 / -1;
+  grid-column: 1;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 14px 24px;
 }
@@ -82,11 +81,6 @@ header .ep small {
   color: var(--muted);
   font-size: 14px;
   margin-right: 12px;
-}
-
-header .progress {
-  color: var(--muted);
-  font-size: 13px;
 }
 
 main {
@@ -225,9 +219,9 @@ main {
 /* working directory */
 .workdir {
   grid-column: 2;
-  grid-row: 2;
+  grid-row: 1 / 3;
   min-height: 0;
-  margin-right: 24px;
+  margin: 14px 24px 0 0;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
   gap: 12px;
