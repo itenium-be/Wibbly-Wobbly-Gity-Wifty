@@ -1,5 +1,5 @@
 import { copyFile, cp, mkdir, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import type { EpisodeResult, LiveState, RunResult, Scene, WorkDir } from '../shared/types';
 import { buildSnapshot, DAY, ROSE_AIRED } from './build';
 import { readGraph } from './graph';
@@ -24,13 +24,13 @@ export class Engine {
   private readonly scenes: Scene[];
   private readonly live: string;
   private current: Scene | undefined;
-  // enter and run share one live dir; interleaved rm/cp corrupts it.
+  // every call shares one live dir; interleaved rm/cp corrupts it.
   private queue: Promise<unknown> = Promise.resolve();
 
   constructor(home: string, scenes: Scene[]) {
-    this.home = home;
+    this.home = resolve(home);
     this.scenes = scenes;
-    this.live = join(home, 'live');
+    this.live = join(this.home, 'live');
   }
 
   private snapshot(id: string) {
@@ -106,6 +106,7 @@ export class Engine {
   private async doEnter(id: string): Promise<LiveState> {
     const scene = this.scenes.find((s) => s.id === id);
     if (!scene) throw new Error(`unknown scene: ${id}`);
+    this.current = undefined;
     await copyRepo(this.snapshot(id), this.live);
     this.current = scene;
     return { graph: await readGraph(this.live), workdir: await readWorkDir(this.live) };
