@@ -13,7 +13,7 @@ Doctor Who (2005 revival, from "Rose") is the running storyline; the repo is the
 
 | Time  | Min | Scene                        | Git                                         | Doctor Who                                       |
 |-------|-----|------------------------------|---------------------------------------------|--------------------------------------------------|
-| 00:00 | 4   | Cold open                    | —                                           | Who is the Doctor: TARDIS, companions, regeneration |
+| 00:00 | 4   | Cold open                    | —                                           | The show, the Doctor, the TARDIS, the companions   |
 | 04:00 | 3   | Rose                         | `init`, `commit`, `log`, HEAD               | The timeline begins; HEAD = where the TARDIS is  |
 | 07:00 | 4   | Fixed points                 | `tag`, `checkout <tag>`, detached HEAD      | Pompeii: look, but don't change                  |
 | 11:00 | 4   | Pete's World                 | `branch`, `switch`                          | Parallel universe                                |
@@ -69,7 +69,7 @@ type Scene = {
 ### Scene flow
 
 Each scene: story cards → git phase (graph + command input).
-The cold open is the Rose scene's story cards: the Doctor, the TARDIS, the companions.
+The cold open is the Rose scene's story cards: the show, the Doctor, the TARDIS, the companions. Pure lore, no git.
 
 ### Story cards
 
@@ -77,8 +77,10 @@ The cold open is the Rose scene's story cards: the Doctor, the TARDIS, the compa
 type StoryCard = {
   title: string;                                            // "The Companions"
   text: string;
-  images: { src: string; name?: string; fate?: string }[];  // rotates when > 1
+  images: StoryImage[];                                     // rotates when > 1
+  reveal?: boolean;                                         // `→` steps through images instead
 };
+type StoryImage = { src: string; name?: string; quote?: string; stamp?: string; fate?: string };
 ```
 
 Full-screen slide: large image left, title + text right.
@@ -95,20 +97,46 @@ Full-screen slide: large image left, title + text right.
 │  │                          │   killed (or worse).         │
 │  └──────────────────────────┘                              │
 │   AMY POND                                                 │
-│   ZAPPED INTO 1938 BY A WEEPING ANGEL      ● ● ○ ● ●       │
+│   DIED                                                     │
+│   Zapped to 1938 by a Weeping Angel        ● ● ○ ● ●       │
 └────────────────────────────────────────────────────────────┘
 ```
 
-- More than one image: crossfade every ~3s; `name` and `fate` captions swap with the image; dots show the position.
-- `→` advances the card, not the image.
+- More than one image: crossfade every ~3s; captions swap with the image; dots show the position.
+- `→` advances the card, not the image, except on a `reveal` card: there `→` / `←` step through the images first, and nothing auto-rotates.
+- Captions: `name`, then `quote` (italic), `stamp` (large, red) and `fate` (small, under the stamp).
 
 Cold open cards:
 
-| Card           | Images                           | Captions         |
-|----------------|----------------------------------|------------------|
-| The Doctor     | Each Doctor, rotating            | name             |
-| The TARDIS     | The TARDIS                       | —                |
-| The Companions | Each companion, rotating         | name + fate      |
+| Card           | Mode   | Images                                  | Captions             |
+|----------------|--------|-----------------------------------------|----------------------|
+| The Show       | single | The First Doctor                        | —                    |
+| The Doctor     | auto   | 9, 10, 11, 12, 13, 15                   | name + quote         |
+| The TARDIS     | reveal | Police box → console room               | —                    |
+| The Companions | auto   | Those who died first, then Donna        | name + stamp + fate  |
+
+The Doctor card skips War (one special) and 14 (Tennant again).
+
+| Doctor | Quote                                                 | From                          |
+|--------|-------------------------------------------------------|-------------------------------|
+| 9      | "Just this once, everybody lives!"                    | *The Doctor Dances*           |
+| 10     | "Wibbly wobbly, timey wimey… stuff."                  | *Blink*                       |
+| 11     | "Bow ties are cool."                                  | *The Eleventh Hour*           |
+| 12     | "Laugh hard. Run fast. Be kind."                      | *Twice Upon a Time*           |
+| 13     | "We're all capable of the most incredible change."    | *The Woman Who Fell to Earth* |
+| 15     | "Nobody grows up wrong."                              | *Space Babies*                |
+
+Rose is not among the companions: she is the next card.
+
+| Companion     | Stamp        | Fate                                                    |
+|---------------|--------------|---------------------------------------------------------|
+| Captain Jack  | DIED         | Exterminated by a Dalek. Got better.                    |
+| River Song    | DIED         | Uploaded to the Library's computer                       |
+| Amy Pond      | DIED         | Zapped to 1938 by a Weeping Angel, lived through WWII    |
+| Rory Williams | DIED         | Several times. Once erased from existence                |
+| Clara Oswald  | DIED         | Faced the raven                                          |
+| Bill Potts    | DIED         | Converted into a Cyberman                                |
+| Donna Noble   | MEMORY WIPED | Her mind would burn if she ever remembered him           |
 
 ### Layout
 
@@ -125,14 +153,14 @@ Cold open cards:
 
 ### Keys
 
-| Key     | Action                                                                     |
-|---------|----------------------------------------------------------------------------|
-| `→`     | Next story card / next scene (when the command input is empty or unfocused) |
-| `←`     | Previous story card / previous scene                                        |
-| `Esc`   | Unfocus the command input                                                   |
-| `Enter` | Run the typed command                                                       |
-| `Tab`   | Accept the ghost-text cue                                                   |
-| `r`     | Reset the current scene to its snapshot (command input unfocused)           |
+| Key     | Action                                                                                |
+|---------|---------------------------------------------------------------------------------------|
+| `→`     | Next reveal image / story card / scene (when the command input is empty or unfocused) |
+| `←`     | Previous reveal image / story card / scene                                            |
+| `Esc`   | Unfocus the command input                                                             |
+| `Enter` | Run the typed command                                                                 |
+| `Tab`   | Accept the ghost-text cue                                                             |
+| `r`     | Reset the current scene to its snapshot (command input unfocused)                     |
 
 ## Assets
 
