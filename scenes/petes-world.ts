@@ -1,5 +1,5 @@
 import type { Scene } from '../shared/types';
-import { badWolf, doomsday, partingOfTheWays, riseOfTheCybermen } from './episodes';
+import { doomsday, riseOfTheCybermen } from './episodes';
 
 export const petesWorld: Scene = {
   id: 'petes-world',
@@ -13,8 +13,6 @@ export const petesWorld: Scene = {
     },
   ],
   steps: [
-    { episode: badWolf },
-    { episode: partingOfTheWays },
     { cmd: 'git switch -c petes-world', caption: 'A parallel universe: same past, different future' },
     { episode: riseOfTheCybermen },
     { episode: doomsday },
