@@ -38,10 +38,19 @@ describe('FlatTimeline', () => {
   test('an empty timeline says so', () => {
     render(
       <FlatTimeline
+        layout={layout({ initialized: true, commits: [], branches: [], tags: [], head: { hash: null, branch: null } })}
+      />,
+    );
+    expect(screen.getByText('An empty timeline')).toBeTruthy();
+  });
+
+  test('before git init the timeline is blank', () => {
+    const { container } = render(
+      <FlatTimeline
         layout={layout({ initialized: false, commits: [], branches: [], tags: [], head: { hash: null, branch: null } })}
       />,
     );
-    expect(screen.getByText('Not a git repository')).toBeTruthy();
+    expect(container.querySelector('.empty')).toBeNull();
   });
 
   test('draws the pending node as uncommitted', () => {

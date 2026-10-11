@@ -43,9 +43,9 @@ export function FlatTimeline({ layout }: { layout: Layout }) {
         </g>
       ))}
 
-      {layout.nodes.length === 0 && !layout.pending && (
+      {layout.initialized && layout.nodes.length === 0 && !layout.pending && (
         <text x={width / 2} y={Y0} className="empty">
-          {layout.initialized ? 'An empty timeline' : 'Not a git repository'}
+          An empty timeline
         </text>
       )}
 
