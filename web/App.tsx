@@ -5,7 +5,7 @@ import { Console } from './console/Console';
 import { advance } from './cue';
 import { FlatTimeline } from './graph/FlatTimeline';
 import { layout } from './graph/layout';
-import { move, type Position } from './nav';
+import { fromQuery, move, type Position, toQuery } from './nav';
 import { StoryCardView } from './story/StoryCardView';
 import { WorkDirPanel } from './workdir/WorkDirPanel';
 
@@ -23,8 +23,16 @@ export function App() {
   const running = useRef(false);
 
   useEffect(() => {
-    fetchScenes().then(setScenes);
+    fetchScenes().then((loaded) => {
+      setScenes(loaded);
+      setPos(fromQuery(location.search, loaded));
+    });
   }, []);
+
+  useEffect(() => {
+    // replaceState, not pushState: one history entry per card would make Back useless.
+    if (scenes.length) history.replaceState(null, '', toQuery(pos, scenes));
+  }, [pos, scenes]);
 
   const scene = scenes[pos.scene];
   const sceneId = scene?.id;

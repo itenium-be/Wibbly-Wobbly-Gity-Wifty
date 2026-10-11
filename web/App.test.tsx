@@ -88,6 +88,7 @@ beforeEach(() => {
   runCommand.mockReset();
   runCommand.mockImplementation(async () => ran('a1 Episode one'));
   writeFile.mockClear();
+  history.replaceState(null, '', '/');
 });
 
 async function editRose() {
@@ -262,5 +263,38 @@ describe('App', () => {
     const row = (await screen.findByText('episodes/rose.md')).closest('li');
     expect(row?.className).toContain('clean');
     expect(row?.className).not.toContain('flash');
+  });
+
+  test('starts at the story card in the URL', async () => {
+    history.replaceState(null, '', '/?scene=dalek&card=0');
+    render(<App />);
+    expect(await screen.findByText('The Last Dalek')).toBeTruthy();
+    await waitFor(() => expect(enterScene).toHaveBeenCalledWith('dalek'));
+    expect(enterScene).not.toHaveBeenCalledWith('rose');
+  });
+
+  test('starts in the git phase when the URL card is past the story', async () => {
+    history.replaceState(null, '', '/?scene=rose&card=1');
+    render(<App />);
+    expect(await screen.findByLabelText('git command')).toBeTruthy();
+    expect(screen.getByText('Where is the TARDIS?')).toBeTruthy();
+  });
+
+  test('navigating keeps the position in the URL', async () => {
+    render(<App />);
+    expect(await screen.findByText('The Doctor')).toBeTruthy();
+    await waitFor(() => expect(location.search).toBe('?scene=rose&card=0'));
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    await waitFor(() => expect(location.search).toBe('?scene=rose&card=1'));
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    await waitFor(() => expect(location.search).toBe('?scene=dalek&card=0'));
+    expect(history.length).toBe(1);
+  });
+
+  test('an unknown scene in the URL falls back to the start', async () => {
+    history.replaceState(null, '', '/?scene=nope&card=1');
+    render(<App />);
+    expect(await screen.findByText('The Doctor')).toBeTruthy();
+    await waitFor(() => expect(location.search).toBe('?scene=rose&card=0'));
   });
 });
