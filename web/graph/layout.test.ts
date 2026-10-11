@@ -163,6 +163,28 @@ describe('layout', () => {
     expect(l.nodes.map((n) => n.lane)).toEqual([0, 1, 1, 2]);
   });
 
+  test('each lost chain gets its own lane, so it never looks like it follows another', () => {
+    const l = layout(
+      graph({
+        commits: [
+          c('a', 'The Runaway Bride'),
+          { ...c('b', 'Blink', 'a'), lost: true },
+          { ...c('q', 'Angels quantum-locked', 'b'), lost: true },
+          { ...c('r', 'Turn Right', 'a'), lost: true },
+          { ...c('t', 'Turn Left', 'r'), lost: true },
+        ],
+        branches: [{ name: 'prime-timeline', hash: 'a' }],
+        head: { hash: 'a', branch: 'prime-timeline' },
+      }),
+    );
+    expect(l.lanes).toEqual([
+      { name: 'prime-timeline', kind: 'prime' },
+      { name: 'lost', kind: 'detached' },
+      { name: 'lost 2', kind: 'detached' },
+    ]);
+    expect(l.nodes.map((n) => n.lane)).toEqual([0, 1, 1, 2, 2]);
+  });
+
   test('tags are attached to their commit', () => {
     const l = layout(graph({ commits: [c('a', 'Pompeii')], tags: [{ name: 'fixed-point/pompeii', hash: 'a' }] }));
     expect(l.nodes[0].tags).toEqual(['fixed-point/pompeii']);

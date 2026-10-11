@@ -29,10 +29,11 @@ const DETACHED = 'detached';
 const REFLOG = 'reflog';
 const LOST = 'lost';
 const UNIVERSES = new Set(['petes-world']);
+const isLost = (name: string) => name === LOST || name.startsWith(`${LOST} `);
 
 const kindOf = (name: string): LaneKind => {
   if (name === PRIME) return 'prime';
-  if (name === DETACHED || name === REFLOG || name === LOST) return 'detached';
+  if (name === DETACHED || name === REFLOG || isLost(name)) return 'detached';
   return UNIVERSES.has(name) ? 'parallel' : 'branch';
 };
 
@@ -40,7 +41,7 @@ const kindOf = (name: string): LaneKind => {
 // Commits only HEAD reaches (a deleted branch checked out from the reflog) sit above prime, where that branch was.
 // Lost commits sit just below prime, so the shas the presenter still types stay on screen next to where they were.
 const ORDER = ['branch', REFLOG, 'prime', LOST, 'parallel', 'detached'];
-const slotOf = (name: string) => (name === REFLOG || name === LOST ? name : kindOf(name));
+const slotOf = (name: string) => (name === REFLOG ? REFLOG : isLost(name) ? LOST : kindOf(name));
 
 export function layout(graph: GraphModel, dirty = false): Layout {
   const firstParent = new Map(graph.commits.map((c) => [c.hash, c.parents[0] ?? null]));
@@ -62,10 +63,27 @@ export function layout(graph: GraphModel, dirty = false): Layout {
       reachable.add(h);
       stack.push(...(parents.get(h) ?? []));
     }
-  for (const c of graph.commits) claim(c.hash, c.lost ? LOST : reachable.has(c.hash) ? DETACHED : REFLOG);
+  // A lost commit continues its parent's lane only while that parent is the lane's newest commit:
+  // two lost chains in one lane would read as one following the other.
+  const lostLanes: string[] = [];
+  const newest = new Map<string, string>();
+  for (const c of graph.commits) {
+    if (!c.lost) {
+      claim(c.hash, reachable.has(c.hash) ? DETACHED : REFLOG);
+      continue;
+    }
+    const parentLane = owner.get(c.parents[0]);
+    let lane = parentLane && newest.get(parentLane) === c.parents[0] ? parentLane : undefined;
+    if (!lane) {
+      lane = lostLanes.length ? `${LOST} ${lostLanes.length + 1}` : LOST;
+      lostLanes.push(lane);
+    }
+    owner.set(c.hash, lane);
+    newest.set(lane, c.hash);
+  }
 
   const used = new Set(owner.values());
-  const laneNames = [...branches.map((b) => b.name), REFLOG, LOST, DETACHED]
+  const laneNames = [...branches.map((b) => b.name), REFLOG, ...lostLanes, DETACHED]
     .filter((n) => used.has(n))
     .sort((a, b) => ORDER.indexOf(slotOf(a)) - ORDER.indexOf(slotOf(b)));
   const lanes = laneNames.map((name) => ({ name, kind: kindOf(name) }));
