@@ -26,7 +26,15 @@ export async function readGraph(cwd: string): Promise<GraphModel> {
   }
 
   const commits: Commit[] = (
-    await lines(cwd, ['log', '--all', '--topo-order', '--reverse', '--format=%H%x1f%h%x1f%P%x1f%s'])
+    await lines(cwd, [
+      'log',
+      '--branches',
+      '--tags',
+      'HEAD',
+      '--topo-order',
+      '--reverse',
+      '--format=%H%x1f%h%x1f%P%x1f%s',
+    ])
   ).map((row) => {
     const [hash, short, parents, message] = row.split(SEP);
     return { hash, short, message, parents: parents ? parents.split(' ') : [] };

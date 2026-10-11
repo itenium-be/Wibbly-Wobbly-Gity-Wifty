@@ -67,4 +67,14 @@ describe('readGraph', () => {
     ]);
     expect(g.head).toEqual({ hash: g.commits[0].hash, branch: null });
   });
+
+  test('a stash does not add phantom commits', async () => {
+    const g = await repo([
+      { git: ['init', '-q'] },
+      { commit: 'Rose' },
+      { write: { 'episodes/rose.md': 'changed\n' } },
+      { git: ['stash'] },
+    ]);
+    expect(g.commits.map((c) => c.message)).toEqual(['Rose']);
+  });
 });
