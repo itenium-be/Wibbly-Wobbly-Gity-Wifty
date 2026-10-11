@@ -45,6 +45,25 @@ describe('Console', () => {
     expect(onChange).toHaveBeenCalledWith('git rebase prime-timeline');
   });
 
+  test('Tab with no ghost text left does nothing', () => {
+    const { onChange, input } = setup('git lag');
+    fireEvent.keyDown(input, { key: 'Tab' });
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  test('Tab prevents the browser default focus move', () => {
+    const { input } = setup('git reb');
+    expect(fireEvent.keyDown(input, { key: 'Tab' })).toBe(false);
+  });
+
+  test('Escape blurs the input', () => {
+    const { input } = setup('');
+    input.focus();
+    expect(document.activeElement).toBe(input);
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(document.activeElement).not.toBe(input);
+  });
+
   test('Enter runs what was typed', () => {
     const { onRun, input } = setup('git status');
     fireEvent.keyDown(input, { key: 'Enter' });
