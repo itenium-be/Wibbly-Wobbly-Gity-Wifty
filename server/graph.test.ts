@@ -3,7 +3,7 @@ import type { GitStep } from '../shared/types';
 import { tmp } from '../test/tmp';
 import { buildSnapshot } from './build';
 import { git } from './git';
-import { readGraph, reflogLength } from './graph';
+import { readGraph, reflogSize } from './graph';
 
 async function repo(steps: GitStep[]) {
   const dir = await tmp();
@@ -115,7 +115,7 @@ describe('readGraph', () => {
       { git: ['reset', '-q', '--hard', 'HEAD~1'] },
       { commit: 'Blink' },
     ]);
-    const mark = await reflogLength(dir);
+    const mark = await reflogSize(dir);
     await git(dir, ['reset', '-q', '--hard', 'HEAD~1']);
 
     const g = await readGraph(dir, mark);

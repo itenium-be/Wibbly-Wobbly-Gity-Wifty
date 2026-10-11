@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import type { Commit, GraphModel, Ref } from '../shared/types';
 import { git } from './git';
 
@@ -20,17 +21,21 @@ async function refs(cwd: string, namespace: string): Promise<Ref[]> {
   });
 }
 
-const reflog = (cwd: string) => lines(cwd, ['reflog', 'show', '--format=%H', 'HEAD']);
+// Read as a file rather than with `git reflog`: readGraph runs after every command, and each git spawn adds up.
+const reflog = (cwd: string) => Bun.file(join(cwd, '.git', 'logs', 'HEAD'));
+const NO_COMMIT = /^0+$/;
 
-/** HEAD's reflog entries so far: pass it back to `readGraph` to show what later commands leave behind. */
-export async function reflogLength(cwd: string) {
-  return (await reflog(cwd)).length;
+/** HEAD's reflog so far: pass it back to `readGraph` to show what later commands leave behind. */
+export async function reflogSize(cwd: string) {
+  return (await reflog(cwd).exists()) ? reflog(cwd).size : 0;
 }
 
+/** Every commit HEAD moved from or to since the mark: each entry starts `<old> <new> `. */
 async function visitedSince(cwd: string, mark: number) {
-  const visited = await reflog(cwd);
-  // Each entry records where HEAD went; the one at the mark is where HEAD stood before the first move.
-  return [...new Set(visited.slice(0, visited.length - mark + 1))];
+  if (!(await reflog(cwd).exists())) return [];
+  const entries = (await reflog(cwd).slice(mark).text()).split('\n').filter(Boolean);
+  const hashes = entries.flatMap((e) => e.split(' ', 2)).filter((h) => !NO_COMMIT.test(h));
+  return [...new Set(hashes)];
 }
 
 export async function readGraph(cwd: string, reflogMark?: number): Promise<GraphModel> {
@@ -39,9 +44,12 @@ export async function readGraph(cwd: string, reflogMark?: number): Promise<Graph
   }
 
   const since = reflogMark === undefined ? [] : await visitedSince(cwd, reflogMark);
-  const lost = new Set(
-    since.length ? await lines(cwd, ['rev-list', ...since, '--not', '--branches', '--tags', 'HEAD']) : [],
-  );
+  const branches = await refs(cwd, 'refs/heads');
+  const tags = await refs(cwd, 'refs/tags');
+  const branch = await git(cwd, ['symbolic-ref', '-q', '--short', 'HEAD']);
+  const hash = await git(cwd, ['rev-parse', '-q', '--verify', 'HEAD']);
+  const mergeHead = await git(cwd, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);
+  const head = hash.code === 0 ? hash.output.trim() : null;
 
   const commits: Commit[] = (
     await lines(cwd, [
@@ -56,22 +64,27 @@ export async function readGraph(cwd: string, reflogMark?: number): Promise<Graph
     ])
   ).map((row) => {
     const [hash, short, parents, message] = row.split(SEP);
-    return { hash, short, message, parents: parents ? parents.split(' ') : [], ...(lost.has(hash) && { lost: true }) };
+    return { hash, short, message, parents: parents ? parents.split(' ') : [] };
   });
 
-  const branch = await git(cwd, ['symbolic-ref', '-q', '--short', 'HEAD']);
-  const hash = await git(cwd, ['rev-parse', '-q', '--verify', 'HEAD']);
-  const mergeHead = await git(cwd, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);
+  if (since.length) {
+    const parents = new Map(commits.map((c) => [c.hash, c.parents]));
+    const reachable = new Set<string>();
+    const stack = [...branches, ...tags].map((r) => r.hash).concat(head ?? []);
+    for (let h = stack.pop(); h !== undefined; h = stack.pop())
+      if (!reachable.has(h)) {
+        reachable.add(h);
+        stack.push(...(parents.get(h) ?? []));
+      }
+    for (const c of commits) if (!reachable.has(c.hash)) c.lost = true;
+  }
 
   return {
     initialized: true,
     commits,
-    branches: await refs(cwd, 'refs/heads'),
-    tags: await refs(cwd, 'refs/tags'),
-    head: {
-      hash: hash.code === 0 ? hash.output.trim() : null,
-      branch: branch.code === 0 ? branch.output.trim() : null,
-    },
+    branches,
+    tags,
+    head: { hash: head, branch: branch.code === 0 ? branch.output.trim() : null },
     ...(mergeHead.code === 0 && { mergeHead: mergeHead.output.trim() }),
   };
 }

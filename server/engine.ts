@@ -4,7 +4,7 @@ import type { BlameHunk, EpisodeResult, LiveState, RunResult, Scene, WorkDir } f
 import { parseBlame } from './blame';
 import { buildSnapshot, DAY, ROSE_AIRED } from './build';
 import { git } from './git';
-import { readGraph, reflogLength } from './graph';
+import { readGraph, reflogSize } from './graph';
 import { collapseCarriageReturns } from './output';
 import { meetsExpectation, play } from './play';
 import { GITCONFIG, sh } from './shell';
@@ -136,7 +136,7 @@ export class Engine {
     if (!scene) throw new Error(`unknown scene: ${id}`);
     this.current = undefined;
     await copyRepo(this.snapshot(id), this.live);
-    this.reflogMark = await reflogLength(this.live);
+    this.reflogMark = await reflogSize(this.live);
     this.current = scene;
     return { graph: await readGraph(this.live, this.reflogMark), workdir: await readWorkDir(this.live) };
   }
