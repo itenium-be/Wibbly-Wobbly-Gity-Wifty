@@ -6,38 +6,80 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { scenes } from '../scenes';
-import { stolenEarth } from '../scenes/episodes';
+import { blink } from '../scenes/episodes';
 import { Engine } from '../server/engine';
 import { readGraph } from '../server/graph';
 import { play } from '../server/play';
 import { applyEpisode } from '../server/tardis';
 import { readWorkDir } from '../server/workdir';
-import type { Episode, GraphModel, WorkDir } from '../shared/types';
+import type { Episode, GraphModel, Scene, WorkDir } from '../shared/types';
 import { parseAnsi } from '../web/console/ansi';
 import { episodeCodes } from '../web/episodes';
 import { FlatTimeline } from '../web/graph/FlatTimeline';
 import { layout } from '../web/graph/layout';
 
 type Step =
-  | { cmd: string; caption: string }
+  | { cmd: string | ((live: string) => Promise<string>); caption: string }
   | { episode: Episode; caption: string; date: string }
   | { edit: (live: string) => Promise<string>; caption: string };
-type Scenario = { id: string; title: string; lore: string; start: string; setup?: number; steps: Step[] };
+type Scenario = {
+  id: string;
+  title: string;
+  lore: string;
+  scenes?: Scene[];
+  start: string;
+  setup?: number;
+  steps: Step[];
+};
 
+const runawayBride: Episode = {
+  code: 'S03E00',
+  aired: '2006-12-25',
+  title: 'The Runaway Bride',
+  set: { Companions: ['Donna Noble'], Location: 'London, Christmas 2006' },
+  event: 'The Doctor stopped the Racnoss. Donna saved him.',
+};
 const donnaTurnsRight: Episode = {
-  code: 'Shan Shen, 2008',
+  code: 'Shan Shen',
   title: 'Donna turns right',
-  set: { Doctor: 'dead, under the Thames' },
-  event: 'The Doctor drowned the Racnoss, and himself',
+  set: { Companions: [], Location: 'Chiswick, a time beetle on her back' },
+  fastForward: true,
+};
+const doctorDies: Episode = {
+  code: 'Christmas 2006',
+  title: 'The Doctor dies',
+  set: { Doctor: 'dead, under the Thames', Location: 'London, Christmas 2006' },
+  event: 'The Doctor drowned the Racnoss, and himself. Nobody stopped him.',
+  fastForward: true,
+};
+const starsGoingOut: Episode = {
+  code: '2008',
+  title: 'The stars are going out',
+  set: { Location: 'Leeds, refugee housing' },
+  event: 'The stars are going out',
   fastForward: true,
 };
 const turnLeft: Episode = {
   code: 'S04E11',
   aired: '2008-06-21',
   title: 'Turn Left',
-  set: { Companions: ['Donna Noble', 'Rose Tyler'] },
   event: 'Bad Wolf. The darkness is coming.',
 };
+const withRunawayBride: Scene[] = scenes.map((scene) => {
+  if (scene.id === 'parting-of-the-ways')
+    return {
+      ...scene,
+      steps: scene.steps.flatMap((s) => ('episode' in s && s.episode === blink ? [{ episode: runawayBride }, s] : [s])),
+    };
+  if (scene.id === 'petes-world')
+    return {
+      ...scene,
+      steps: scene.steps.map((s) => ('cmd' in s ? { ...s, cmd: s.cmd.replace('HEAD~2', 'HEAD~3') } : s)),
+    };
+  return scene;
+});
+const git = async (live: string, args: string[]) =>
+  (await Bun.$`git ${args}`.cwd(live).env({ ...process.env, GIT_CONFIG_GLOBAL: `${live}.gitconfig` }).text()).trim();
 const metacrisis: Episode = {
   code: 'Bad Wolf Bay',
   title: 'Metacrisis',
@@ -52,21 +94,32 @@ const scenarios: Scenario[] = [
   {
     id: 'turn-left',
     title: 'Turn Left · rebase --onto',
-    lore: "Between Pete's World and Journey's End, so S04E11 lands before S04E12. The Stolen Earth moves from the end of Pete's World into this scene. One wrong turn: rebase it out of existence. Every later commit is replayed and gets a new hash; only the reflog remembers.",
-    start: 'petes-world',
-    setup: 4,
+    lore: "After Bad Wolf. The Runaway Bride (S03E00) is now on prime, between The Parting of the Ways and Blink. A time beetle makes Donna turn right: a whole branch of a darker world. Rose crosses over and sends Donna back. Only Rose's warning survives: rebase --onto replays just that commit onto the real timeline; the dark world's commits are left behind for the reflog.",
+    scenes: withRunawayBride,
+    start: 'outro',
     steps: [
-      { episode: donnaTurnsRight, caption: 'A beetle on her back', date: '2008-06-20 19:00:00 +0000' },
-      { episode: turnLeft, caption: 'Life goes on, the world gets darker', date: '' },
-      { cmd: 'git log --oneline -3', caption: 'Where did it go wrong?' },
-      { cmd: 'git rebase --onto HEAD~2 HEAD~1', caption: 'Turn left: the wrong turn never happened' },
+      { cmd: 'git log --oneline --grep Bride', caption: 'Christmas 2006: the day Donna met the Doctor' },
       {
-        edit: async (live) => applyEpisode(await show(live, 'HEAD:TARDIS.md'), turnLeft),
-        caption: 'Resolve TARDIS.md: the Doctor is alive, Rose still came',
+        cmd: async (live) => `git switch -c turn-right ${await git(live, ['log', '--format=%h', '-1', '--grep', 'Bride'])}~1`,
+        caption: 'A time beetle: the moment just before',
       },
-      { cmd: 'git add TARDIS.md && git rebase --continue', caption: 'Replayed: Turn Left gets a new hash' },
-      { cmd: 'git reflog -6', caption: 'The other world is only in the reflog' },
-      { episode: stolenEarth, caption: 'The darkness Rose warned about', date: '' },
+      { episode: donnaTurnsRight, caption: 'She turns right', date: '2006-12-24 19:00:00 +0000' },
+      { episode: doctorDies, caption: 'Nobody stops the Doctor: he dies fighting the Racnoss', date: '2006-12-25 20:00:00 +0000' },
+      { episode: starsGoingOut, caption: 'Without the Doctor, the world goes dark', date: '2008-06-14 19:00:00 +0000' },
+      { episode: turnLeft, caption: 'Rose crosses over from her universe: "Bad Wolf"', date: '' },
+      {
+        cmd: 'git rebase --onto prime-timeline turn-right~1 turn-right',
+        caption: "Donna turns left: only Rose's warning crosses back",
+      },
+      {
+        edit: async (live) => applyEpisode(await show(live, 'prime-timeline:TARDIS.md'), turnLeft),
+        caption: 'Resolve TARDIS.md: the Doctor alive, the warning kept',
+      },
+      { cmd: 'git add TARDIS.md && git rebase --continue', caption: "Rose's warning, replayed on the real timeline" },
+      { cmd: 'git switch prime-timeline', caption: 'Back to the real timeline' },
+      { cmd: 'git merge turn-right', caption: 'Fast-forward: the warning is ours now' },
+      { cmd: 'git branch -d turn-right', caption: 'The turn never happened' },
+      { cmd: 'git spoilers -8', caption: 'Only River remembers the dark world' },
     ],
   },
   {
@@ -113,17 +166,16 @@ const scenarios: Scenario[] = [
 
 type Frame = { cmd: string; caption: string; output: string; code: number; graph: GraphModel; workdir: WorkDir };
 
-const home = await mkdtemp(join(tmpdir(), 'tardis-mock-'));
-const engine = new Engine(home, scenes);
-await engine.prepare();
-const live = join(home, 'live');
-const config = `${live}.gitconfig`;
-const state = async () => ({ graph: await readGraph(live), workdir: await readWorkDir(live) });
-
 const rendered: { scenario: Scenario; frames: Frame[] }[] = [];
 for (const scenario of scenarios) {
+  const home = await mkdtemp(join(tmpdir(), 'tardis-mock-'));
+  const engine = new Engine(home, scenario.scenes ?? scenes);
+  await engine.prepare();
+  const live = join(home, 'live');
+  const config = `${live}.gitconfig`;
+  const state = async () => ({ graph: await readGraph(live), workdir: await readWorkDir(live) });
   await engine.enter(scenario.start);
-  const base = scenes.find((s) => s.id === scenario.start);
+  const base = (scenario.scenes ?? scenes).find((s) => s.id === scenario.start);
   for (const step of base?.steps.slice(0, scenario.setup ?? 0) ?? []) {
     if ('cmd' in step) await engine.run(step.cmd);
     else if ('edit' in step) for (const [p, c] of Object.entries(step.edit)) await engine.writeFile(p, c);
@@ -132,8 +184,9 @@ for (const scenario of scenarios) {
   const frames: Frame[] = [{ cmd: '', caption: 'Start', output: '', code: 0, ...(await state()) }];
   for (const step of scenario.steps) {
     if ('cmd' in step) {
-      const r = await engine.run(step.cmd);
-      frames.push({ cmd: step.cmd, caption: step.caption, output: r.output, code: r.code, ...(await state()) });
+      const cmd = typeof step.cmd === 'string' ? step.cmd : await step.cmd(live);
+      const r = await engine.run(cmd);
+      frames.push({ cmd, caption: step.caption, output: r.output, code: r.code, ...(await state()) });
     } else if ('edit' in step) {
       await engine.writeFile('TARDIS.md', await step.edit(live));
       frames.push({ cmd: '(edit TARDIS.md in the editor)', caption: step.caption, output: '', code: 0, ...(await state()) });
@@ -147,8 +200,9 @@ for (const scenario of scenarios) {
 
 const codes = {
   ...episodeCodes(scenes),
-  [donnaTurnsRight.title]: donnaTurnsRight.code,
-  [turnLeft.title]: turnLeft.code,
+  ...Object.fromEntries(
+    [runawayBride, donnaTurnsRight, doctorDies, starsGoingOut, turnLeft].map((e) => [e.title, e.code]),
+  ),
   [metacrisis.title]: metacrisis.code,
 };
 const SCALE = 0.62;
