@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { scenes } from '../scenes';
-import { blink, doomsday, forestOfTheDead, stolenEarth } from '../scenes/episodes';
+import { blink, doomsday, forestOfTheDead } from '../scenes/episodes';
 import { Engine } from '../server/engine';
 import { readGraph } from '../server/graph';
 import { play } from '../server/play';
@@ -94,7 +94,6 @@ const inBroadcastOrder: Scene[] = scenes.map((scene) => {
       steps: scene.steps.flatMap((s) => {
         if ('cmd' in s) return [{ ...s, cmd: s.cmd.replace('HEAD~2', 'HEAD~4') }];
         if (s.episode === doomsday) return [s, { episode: dimensionCannon }];
-        if (s.episode === stolenEarth) return [];
         return [s];
       }),
     };
@@ -116,21 +115,29 @@ const scenarios: Scenario[] = [
   {
     id: 'turn-left',
     title: 'Turn Left · branch from the past, cherry-pick across universes',
-    lore: "Between Pete's World and Journey's End. Prime already runs in broadcast order: … The Runaway Bride → Blink → Forest of the Dead → Turn Left; The Stolen Earth moves into this scene. Pete's World now ends with Rose building the dimension cannon. Donna's dark world forks off where she would have met the Doctor; Rose's commit crosses into it from petes-world.",
+    lore: "After Bad Wolf: the whole history is there, in broadcast order (… The Runaway Bride → Blink → Forest of the Dead → Turn Left → The Stolen Earth → Journey's End → Angels quantum-locked). Pete's World ends with Rose building the dimension cannon, merged in at Journey's End. The TARDIS goes back to Turn Left; Donna's dark world branches off The Runaway Bride; Rose's commit crosses into it from the parallel universe.",
     scenes: inBroadcastOrder,
-    start: 'petes-world',
-    setup: 5,
+    start: 'outro',
     steps: [
-      { cmd: 'git log --oneline -5', caption: 'The real timeline: Donna met the Doctor at Christmas' },
+      {
+        cmd: async (live) => `git switch --detach ${await git(live, ['log', '--format=%h', '-1', '--grep', 'Turn Left'])}`,
+        caption: 'The TARDIS lands on Turn Left',
+      },
+      { cmd: 'git log --oneline -4', caption: 'Donna met the Doctor at Christmas' },
       {
         cmd: async (live) =>
-          `git switch -c turn-right ${await git(live, ['log', '--format=%h', '-1', '--grep', 'Runaway Bride'])}~1`,
-        caption: 'A time beetle: back to just before The Runaway Bride',
+          `git switch -c turn-right ${await git(live, ['log', '--format=%h', '-1', '--grep', 'Runaway Bride'])}`,
+        caption: "A time beetle: Donna's world splits at The Runaway Bride",
       },
-      { episode: turnRight, caption: 'Donna turns right', date: '2006-12-24 19:00:00 +0000' },
-      { episode: doctorDies, caption: 'Nobody stops him: the Doctor dies fighting the Racnoss', date: '2006-12-25 20:00:00 +0000' },
+      { episode: turnRight, caption: 'Donna turns right', date: '2006-12-26 19:00:00 +0000' },
+      { episode: doctorDies, caption: 'Nobody stops him: the Doctor dies fighting the Racnoss', date: '2006-12-27 20:00:00 +0000' },
       { episode: titanic, caption: 'No Doctor to save London', date: '2007-12-25 20:00:00 +0000' },
-      { cmd: 'git cherry-pick petes-world', caption: 'Rose crosses over from her universe' },
+      { cmd: 'git log --oneline --grep cannon prime-timeline', caption: "Rose, in her universe: merged in at Journey's End" },
+      {
+        cmd: async (live) =>
+          `git cherry-pick ${await git(live, ['log', '--format=%h', '-1', '--grep', 'cannon', 'prime-timeline'])}`,
+        caption: 'Rose crosses over from her universe',
+      },
       {
         edit: async (live) => applyEpisode(await show(live, 'turn-right:TARDIS.md'), dimensionCannon),
         caption: 'Resolve TARDIS.md: Rose, in the dark world',
@@ -140,8 +147,6 @@ const scenarios: Scenario[] = [
       { cmd: 'git switch prime-timeline', caption: 'Rose sends Donna back: she turns left' },
       { cmd: 'git branch -d turn-right', caption: 'Git refuses: that world has commits nowhere else' },
       { cmd: 'git branch -D turn-right', caption: 'That world never happened' },
-      { cmd: 'git log --oneline -1 petes-world', caption: 'Rose is still in her universe, cannon ready' },
-      { episode: stolenEarth, caption: 'Bad Wolf: the darkness comes', date: '' },
     ],
   },
   {
