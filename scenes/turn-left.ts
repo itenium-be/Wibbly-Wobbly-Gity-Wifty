@@ -60,7 +60,7 @@ export const turnLeft: Scene = {
       accepts: 'git commit',
     },
     { cmd: 'git show', caption: 'All that is left: the warning' },
-    { cmd: 'git rebase --onto ebf7702 e09813f', caption: 'Turn Left, after Forest of the Dead' },
+    { cmd: 'git rebase --onto ebf7702 e09813f', caption: 'Turn Left, after Forest of the Dead (ebf7702)' },
     {
       cmd: 'git rebase --rebase-merges --onto prime-timeline ebf7702 4e05f6c',
       caption: 'The real world, replayed on top',
