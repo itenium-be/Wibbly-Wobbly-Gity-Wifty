@@ -6,6 +6,7 @@ import { advance, type Cue, current, played, start } from './cue';
 import { episodeCodes } from './episodes';
 import { FlatTimeline } from './graph/FlatTimeline';
 import { layout } from './graph/layout';
+import { Pan } from './graph/Pan';
 import { NextEpisode } from './NextEpisode';
 import { fromQuery, move, type Position, toQuery } from './nav';
 import { StoryCardView } from './story/StoryCardView';
@@ -165,7 +166,7 @@ export function App() {
       </header>
       {gitPhase ? (
         <>
-          <main>
+          <Pan>
             {graph && (
               <FlatTimeline
                 codes={codes}
@@ -173,7 +174,7 @@ export function App() {
                 layout={layout(graph, workdir?.files.some((f) => f.status !== 'clean') ?? false)}
               />
             )}
-          </main>
+          </Pan>
           {workdir && (
             <WorkDirPanel
               key={scene.id}
