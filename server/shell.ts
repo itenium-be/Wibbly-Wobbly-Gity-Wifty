@@ -33,14 +33,19 @@ export async function spawn(
   label: string,
 ): Promise<ShellResult> {
   // Own process group, so a timeout reaches pipeline members that would otherwise hold stdout open.
-  const proc = Bun.spawn(['setsid', ...cmd], { cwd, env: stageEnv(cwd, options), stdout: 'pipe', stderr: 'pipe' });
+  const proc = Bun.spawn(['setsid', '-w', ...cmd], {
+    cwd,
+    env: stageEnv(cwd, options),
+    stdout: 'pipe',
+    stderr: 'pipe',
+  });
   let timedOut = false;
   const timer = setTimeout(() => {
     timedOut = true;
     try {
       process.kill(-proc.pid, 'SIGKILL');
     } catch {
-      // group already gone
+      // ESRCH: the group can exit between the last write and the timer.
     }
   }, timeoutMs);
   const [stdout, stderr, code] = await Promise.all([

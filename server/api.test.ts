@@ -161,11 +161,10 @@ describe('api', () => {
       await enter();
       const res = await routes['/api/file'].PUT(put({ path: 'episodes/rose.md', content: '# Bad Wolf\n' }));
       expect(res.status).toBe(200);
-      expect(((await res.json()) as WorkDir).files).toContainEqual({
-        path: 'episodes/rose.md',
-        status: 'modified',
-        code: ' M',
-      });
+      expect(((await res.json()) as WorkDir).files).toEqual([
+        { path: 'TARDIS.md', status: 'clean', code: '' },
+        { path: 'episodes/rose.md', status: 'modified', code: ' M' },
+      ]);
     });
 
     test.each([
