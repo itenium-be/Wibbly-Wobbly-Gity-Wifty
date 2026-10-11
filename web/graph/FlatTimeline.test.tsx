@@ -24,6 +24,12 @@ describe('FlatTimeline', () => {
     expect(screen.getByText('HEAD (detached)')).toBeTruthy();
   });
 
+  test('draws tag labels below the commit so the TARDIS cannot hide them', () => {
+    render(<FlatTimeline layout={pompeii} />);
+    const y = Number(screen.getByText('⚑ fixed-point/pompeii').getAttribute('y'));
+    expect(y).toBeGreaterThan(200);
+  });
+
   test('parks the TARDIS on the HEAD commit', () => {
     render(<FlatTimeline layout={pompeii} />);
     expect(screen.getByTestId('tardis').style.transform).toBe('translate(260px, 160px)');

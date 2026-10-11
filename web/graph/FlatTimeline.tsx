@@ -75,7 +75,7 @@ export function FlatTimeline({ layout }: { layout: Layout }) {
               {n.short}
             </text>
             {n.tags.map((t, i) => (
-              <text key={t} x={x} y={y - 34 - i * 18} className="tag">
+              <text key={t} x={x} y={y + 78 + i * 18} className="tag">
                 ⚑ {t}
               </text>
             ))}
