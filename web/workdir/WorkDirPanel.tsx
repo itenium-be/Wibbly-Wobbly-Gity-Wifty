@@ -1,4 +1,4 @@
-import { type KeyboardEvent, useEffect, useRef, useState } from 'react';
+import { type KeyboardEvent, type PointerEvent, useEffect, useRef, useState } from 'react';
 import type { FileStatus, GraphModel, WorkDir } from '../../shared/types';
 import { HistoryView } from './HistoryView';
 
@@ -36,6 +36,33 @@ function Highlighted({ text }: { text: string }) {
     );
   }
   return <pre>{lines}</pre>;
+}
+
+const MIN_WIDTH = 320;
+
+/** The panel fills the page grid's last column, so its width is the distance from the pointer to the right edge. */
+function ResizeHandle() {
+  const dragging = useRef(false);
+
+  const move = (e: PointerEvent<HTMLDivElement>) => {
+    if (!dragging.current) return;
+    const width = Math.min(Math.max(innerWidth - e.clientX, MIN_WIDTH), innerWidth - MIN_WIDTH);
+    document.documentElement.style.setProperty('--workdir-width', `${width}px`);
+  };
+
+  return (
+    <div
+      className="resize"
+      onPointerDown={(e) => {
+        dragging.current = true;
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }}
+      onPointerMove={move}
+      onPointerUp={() => {
+        dragging.current = false;
+      }}
+    />
+  );
 }
 
 export function WorkDirPanel({ workdir, branch, graph, load, save, onDone }: Props) {
@@ -119,6 +146,7 @@ export function WorkDirPanel({ workdir, branch, graph, load, save, onDone }: Pro
 
   return (
     <aside className="workdir">
+      <ResizeHandle />
       <h3>
         <span className="tabs" role="tablist">
           <button

@@ -97,6 +97,22 @@ describe('WorkDirPanel', () => {
     expect(row('new.md').className).not.toContain('flash');
   });
 
+  test('dragging the left edge resizes the panel', () => {
+    const { container } = setup();
+    const handle = container.querySelector('.resize') as HTMLElement;
+    const width = () => document.documentElement.style.getPropertyValue('--workdir-width');
+    fireEvent.pointerDown(handle, { button: 0, clientX: 504 });
+    fireEvent.pointerMove(handle, { clientX: 400 });
+    expect(width()).toBe(`${innerWidth - 400}px`);
+    fireEvent.pointerMove(handle, { clientX: innerWidth - 10 });
+    expect(width()).toBe('320px');
+    fireEvent.pointerMove(handle, { clientX: 10 });
+    expect(width()).toBe(`${innerWidth - 320}px`);
+    fireEvent.pointerUp(handle);
+    fireEvent.pointerMove(handle, { clientX: 400 });
+    expect(width()).toBe(`${innerWidth - 320}px`);
+  });
+
   test('opens TARDIS.md from the start', async () => {
     const { load } = setup();
     expect(await screen.findByText('TARDIS.md — conflicted')).toBeTruthy();
