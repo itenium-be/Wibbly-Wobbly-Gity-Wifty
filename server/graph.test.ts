@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import type { GitStep } from '../shared/types';
 import { tmp } from '../test/tmp';
 import { buildSnapshot } from './build';
+import { git } from './git';
 import { readGraph } from './graph';
 
 async function repo(steps: GitStep[]) {
@@ -65,6 +66,25 @@ describe('readGraph', () => {
       'Blink',
       "Merge branch 'petes-world' into prime-timeline",
     ]);
+  });
+
+  test('a conflicted merge knows the commit it is merging in', async () => {
+    const dir = await tmp();
+    await buildSnapshot(dir, [
+      { git: ['init', '-q'] },
+      { commit: 'Rose', files: { 'TARDIS.md': 'Pete Tyler: unknown\n' } },
+      { git: ['switch', '-q', '-c', 'pete-lives'] },
+      { commit: 'Rose saves Pete', files: { 'TARDIS.md': 'Pete Tyler: alive\n' } },
+      { git: ['switch', '-q', 'prime-timeline'] },
+      { commit: "Father's Day", files: { 'TARDIS.md': 'Pete Tyler: dead\n' } },
+    ]);
+    await git(dir, ['merge', 'pete-lives']);
+    const g = await readGraph(dir);
+    expect(g.mergeHead).toBe(g.branches.find((b) => b.name === 'pete-lives')?.hash);
+  });
+
+  test('outside a merge there is no merge head', async () => {
+    expect((await repo([{ git: ['init', '-q'] }, { commit: 'Rose' }])).mergeHead).toBeUndefined();
   });
 
   test('an annotated tag points at its commit', async () => {

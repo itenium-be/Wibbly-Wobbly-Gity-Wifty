@@ -13,7 +13,8 @@ export type Node = {
 };
 export type Edge = { from: Node; to: Node };
 export type Head = { col: number; lane: number; label: string };
-export type Pending = { col: number; lane: number; from: { col: number; lane: number } | null };
+type Position = { col: number; lane: number };
+export type Pending = { col: number; lane: number; from: Position | null; merge?: Position };
 export type Layout = {
   initialized: boolean;
   lanes: Lane[];
@@ -79,12 +80,14 @@ export function layout(graph: GraphModel, dirty = false): Layout {
     ? { col: at.col, lane: at.lane, label: graph.head.branch ? `HEAD → ${graph.head.branch}` : 'HEAD (detached)' }
     : null;
 
+  const merged = graph.mergeHead ? byHash.get(graph.mergeHead) : undefined;
   const pending =
     dirty && graph.initialized
       ? {
           col: nodes.length,
           lane: at?.lane ?? Math.max(0, laneNames.indexOf(PRIME)),
           from: at ? { col: at.col, lane: at.lane } : null,
+          ...(merged && { merge: { col: merged.col, lane: merged.lane } }),
         }
       : null;
 

@@ -56,6 +56,8 @@ export type GraphModel = {
   branches: Ref[];
   tags: Ref[];
   head: { hash: string | null; branch: string | null };
+  /** The commit being merged in while a merge waits for its conflicts to be resolved. */
+  mergeHead?: string;
 };
 
 export type FileStatus = 'clean' | 'untracked' | 'modified' | 'staged' | 'conflicted';

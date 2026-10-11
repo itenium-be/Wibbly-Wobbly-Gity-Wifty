@@ -122,6 +122,25 @@ describe('FlatTimeline', () => {
     expect(screen.getByText('uncommitted')).toBeTruthy();
   });
 
+  test('the pending node sits clear of the branch pill on the commit before it', () => {
+    const { container } = render(
+      <FlatTimeline layout={{ ...pompeii, pending: { col: 2, lane: 0, from: { col: 1, lane: 0 } } }} />,
+    );
+    const rect = container.querySelector('.pill rect') as SVGRectElement;
+    const pillRight = Number(rect.getAttribute('x')) + Number(rect.getAttribute('width'));
+    const dot = container.querySelector('circle.pending') as SVGCircleElement;
+    expect(Number(dot.getAttribute('cx')) - 13).toBeGreaterThan(pillRight);
+  });
+
+  test('during a merge a dotted edge runs from the merged commit to the pending node', () => {
+    const { container } = render(
+      <FlatTimeline
+        layout={{ ...pompeii, pending: { col: 2, lane: 0, from: { col: 1, lane: 0 }, merge: { col: 0, lane: 0 } } }}
+      />,
+    );
+    expect(container.querySelectorAll('path.edge.pending')).toHaveLength(2);
+  });
+
   test('paints branch pills over the pending edge', () => {
     const { container } = render(
       <FlatTimeline layout={{ ...pompeii, pending: { col: 2, lane: 0, from: { col: 1, lane: 0 } } }} />,

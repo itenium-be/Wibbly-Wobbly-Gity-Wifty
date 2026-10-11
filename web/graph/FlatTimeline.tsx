@@ -8,6 +8,9 @@ const DY = 190;
 // .message is 14px JetBrains Mono, whose glyphs advance 0.6em
 const CHAR = 14 * 0.6;
 const LABEL_GAP = 24;
+const R = 13;
+const PILL_X = 24;
+const pillWidth = (name: string) => name.length * 9 + 16;
 
 const KICKER: Record<LaneKind, string> = {
   prime: 'UNIVERSE · PRIME',
@@ -32,12 +35,27 @@ export function FlatTimeline({ layout, codes = {}, zoom = 1 }: Props) {
   for (const n of layout.nodes)
     labels[n.col] = Math.max(labels[n.col], n.message.length, codes[n.message]?.length ?? 0);
   if (layout.pending) labels[layout.pending.col] = Math.max(labels[layout.pending.col], 'uncommitted'.length);
+  const pills = Array.from({ length: cols + 1 }, () => 0);
+  for (const n of layout.nodes) for (const b of n.branches) pills[n.col] = Math.max(pills[n.col], pillWidth(b));
   const xs = [X0];
   for (let c = 1; c <= cols; c++)
-    xs[c] = xs[c - 1] + Math.max(DX, ((labels[c - 1] + labels[c]) * CHAR) / 2 + LABEL_GAP);
+    xs[c] =
+      xs[c - 1] +
+      Math.max(
+        DX,
+        ((labels[c - 1] + labels[c]) * CHAR) / 2 + LABEL_GAP,
+        pills[c - 1] ? PILL_X + pills[c - 1] + R + LABEL_GAP : 0,
+      );
   const at = (p: { col: number; lane: number }) => ({ x: xs[p.col], y: Y0 + p.lane * DY });
   const width = xs[cols] + 260;
   const height = Y0 + Math.max(1, layout.lanes.length) * DY;
+  const link = (from: { col: number; lane: number }, to: { col: number; lane: number }) => {
+    const a = at(from);
+    const b = at(to);
+    return a.y === b.y
+      ? `M${a.x} ${a.y} L${b.x} ${b.y}`
+      : `M${a.x} ${a.y} C${a.x + DX * 0.6} ${a.y}, ${b.x - DX * 0.6} ${b.y}, ${b.x} ${b.y}`;
+  };
   const kind = (lane: number) => layout.lanes[lane]?.kind ?? 'prime';
   const tardis = at(layout.head ?? { col: 0, lane: 0 });
 
@@ -67,22 +85,12 @@ export function FlatTimeline({ layout, codes = {}, zoom = 1 }: Props) {
         </text>
       )}
 
-      {layout.edges.map(({ from, to }) => {
-        const a = at(from);
-        const b = at(to);
-        const d =
-          a.y === b.y
-            ? `M${a.x} ${a.y} L${b.x} ${b.y}`
-            : `M${a.x} ${a.y} C${a.x + DX * 0.6} ${a.y}, ${b.x - DX * 0.6} ${b.y}, ${b.x} ${b.y}`;
-        return <path key={`${from.hash}-${to.hash}`} d={d} className={`edge lane-${kind(to.lane)}`} />;
-      })}
+      {layout.edges.map(({ from, to }) => (
+        <path key={`${from.hash}-${to.hash}`} d={link(from, to)} className={`edge lane-${kind(to.lane)}`} />
+      ))}
 
-      {layout.pending?.from && (
-        <path
-          d={`M${at(layout.pending.from).x} ${at(layout.pending.from).y} L${at(layout.pending).x} ${at(layout.pending).y}`}
-          className="edge pending"
-        />
-      )}
+      {layout.pending?.from && <path d={link(layout.pending.from, layout.pending)} className="edge pending" />}
+      {layout.pending?.merge && <path d={link(layout.pending.merge, layout.pending)} className="edge pending" />}
 
       {layout.nodes.map((n) => {
         const { x, y } = at(n);
@@ -111,7 +119,7 @@ export function FlatTimeline({ layout, codes = {}, zoom = 1 }: Props) {
             ))}
             {n.branches.map((b, i) => (
               <g key={b} className={`pill lane-${b === 'prime-timeline' ? 'prime' : 'parallel'}`}>
-                <rect x={x + 24} y={y - 13 + i * 30} width={b.length * 9 + 16} height={26} rx={6} />
+                <rect x={x + PILL_X} y={y - 13 + i * 30} width={pillWidth(b)} height={26} rx={6} />
                 <text x={x + 32} y={y + 5 + i * 30}>
                   {b}
                 </text>

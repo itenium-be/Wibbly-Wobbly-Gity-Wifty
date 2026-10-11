@@ -42,6 +42,7 @@ export async function readGraph(cwd: string): Promise<GraphModel> {
 
   const branch = await git(cwd, ['symbolic-ref', '-q', '--short', 'HEAD']);
   const hash = await git(cwd, ['rev-parse', '-q', '--verify', 'HEAD']);
+  const mergeHead = await git(cwd, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);
 
   return {
     initialized: true,
@@ -52,5 +53,6 @@ export async function readGraph(cwd: string): Promise<GraphModel> {
       hash: hash.code === 0 ? hash.output.trim() : null,
       branch: branch.code === 0 ? branch.output.trim() : null,
     },
+    ...(mergeHead.code === 0 && { mergeHead: mergeHead.output.trim() }),
   };
 }

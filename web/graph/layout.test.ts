@@ -123,6 +123,24 @@ describe('pending', () => {
     expect(layout(one, true).pending).toEqual({ col: 1, lane: 0, from: { col: 0, lane: 0 } });
   });
 
+  test('during a merge the pending node also comes from the commit being merged in', () => {
+    const merging = graph({
+      commits: [c('a', 'Rose'), c('b', "Father's Day", 'a'), c('x', 'Rose saves Pete', 'a')],
+      branches: [
+        { name: 'pete-lives', hash: 'x' },
+        { name: 'prime-timeline', hash: 'b' },
+      ],
+      head: { hash: 'b', branch: 'prime-timeline' },
+      mergeHead: 'x',
+    });
+    expect(layout(merging, true).pending).toEqual({
+      col: 3,
+      lane: 1,
+      from: { col: 1, lane: 1 },
+      merge: { col: 2, lane: 0 },
+    });
+  });
+
   test('a clean working dir has no pending node', () => {
     expect(layout(one, false).pending).toBeNull();
   });
