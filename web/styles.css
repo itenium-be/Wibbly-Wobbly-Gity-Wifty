@@ -435,7 +435,8 @@ main {
   font:
     22px / 1.5 "JetBrains Mono",
     monospace;
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .viewer textarea {
