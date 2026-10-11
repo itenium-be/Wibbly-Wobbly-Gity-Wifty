@@ -10,7 +10,8 @@ export const outro: Scene = {
       text: '',
       images: [{ src: '/assets/episodes/end-of-time.jpg' }],
       boxes: [{ boxes: ["I Don't Want to Go"] }, { boxes: ['Questions?'] }],
+      qr: { src: '/assets/qr.svg', url: 'https://github.com/itenium-be/Wibbly-Wobbly-Gity-Wifty' },
     },
   ],
-  steps: [{ cmd: 'git log --oneline --graph --all', caption: 'The whole timeline' }],
+  steps: [],
 };

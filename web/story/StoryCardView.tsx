@@ -74,9 +74,19 @@ export function StoryCardView({
             </div>
           </div>
         ))}
+        {card.qr && (
+          <a className="qr" href={card.qr.url}>
+            <img src={card.qr.src} alt={`QR code to ${bare(card.qr.url)}`} />
+            {bare(card.qr.url)}
+          </a>
+        )}
       </div>
     </section>
   );
+}
+
+function bare(url: string) {
+  return url.replace(/^https?:\/\//, '');
 }
 
 function longestWord(text: string) {

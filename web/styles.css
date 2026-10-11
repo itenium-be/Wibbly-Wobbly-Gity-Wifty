@@ -1114,6 +1114,26 @@ main {
   text-transform: uppercase;
 }
 
+.story-text .qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  margin-top: 32px;
+  color: var(--text);
+  font-size: 18px;
+  text-decoration: none;
+}
+
+.story-text .qr img {
+  width: 14rem;
+  height: 14rem;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+}
+
 @keyframes box-in {
   from {
     opacity: 0;

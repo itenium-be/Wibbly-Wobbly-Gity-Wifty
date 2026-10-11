@@ -132,4 +132,14 @@ describe('StoryCardView', () => {
       expect(revealed('Upbeat')).toBe(true);
     });
   });
+
+  test('shows the QR code with the url it points to', () => {
+    render(
+      <StoryCardView
+        card={{ title: 'The End', text: '', images: [], qr: { src: '/qr.svg', url: 'https://github.com/x/y' } }}
+      />,
+    );
+    expect((screen.getByAltText('QR code to github.com/x/y') as HTMLImageElement).src).toContain('/qr.svg');
+    expect(screen.getByText('github.com/x/y')).toBeTruthy();
+  });
 });
