@@ -1,18 +1,19 @@
-import { tmpdir } from 'node:os';
 import { join, resolve, sep } from 'node:path';
 import { scenes } from '../scenes';
 import index from '../web/index.html';
 import { createRoutes } from './api';
 import { Engine } from './engine';
+import { tardisHome } from './home';
 
 const root = join(import.meta.dir, '..');
 const assets = join(root, 'assets');
-const engine = new Engine(process.env.TARDIS_HOME ?? join(tmpdir(), 'tardis'), scenes);
+const port = Number(process.env.PORT ?? 3000);
+const engine = new Engine(tardisHome(process.env, port), scenes);
 await engine.prepare();
 
 const server = Bun.serve({
   hostname: 'localhost',
-  port: Number(process.env.PORT ?? 3000),
+  port,
   development: { hmr: true, console: true },
   routes: {
     '/': index,
