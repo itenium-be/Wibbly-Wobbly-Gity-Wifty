@@ -341,4 +341,19 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: /play/i }));
     expect(await screen.findByText('After')).toBeTruthy();
   });
+
+  test('an episode whose commit fails stays on its step and can be retried', async () => {
+    playEpisode.mockImplementationOnce(async () => ({
+      cmd: 'git commit -am "The End of the World"',
+      ...ran('error: cannot commit', graph),
+      code: 1,
+    }));
+    history.replaceState(null, '', '/?scene=episodes&card=1');
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /play/i }));
+    expect(await screen.findByText(/cannot commit/)).toBeTruthy();
+    expect(screen.queryByText('After')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /play/i }));
+    expect(await screen.findByText('After')).toBeTruthy();
+  });
 });

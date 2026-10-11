@@ -92,6 +92,7 @@ export function App() {
       setOutput(`$ ${result.cmd}\n${result.output}`);
       setGraph(result.graph);
       setWorkdir(result.workdir);
+      if (result.code !== 0) return false;
       setCueIndex((i) => i + 1);
       return true;
     } catch (e) {
