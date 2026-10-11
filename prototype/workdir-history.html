@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Workdir / History toggle</title>
+<style>
+@font-face { font-family: "Orbitron"; font-weight: 700; src: url("../assets/fonts/orbitron-700.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 400; src: url("../assets/fonts/jetbrains-mono-400.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 600; src: url("../assets/fonts/jetbrains-mono-600.woff2") format("woff2"); }
+
+:root {
+  --space: #050816; --space-2: #0b1230; --tardis: #1f4fa8; --glow: #7fd4ff; --gold: #ffcc4d;
+  --danger: #ff5a6e; --text: #e6ecff; --muted: #8a95c2; --panel: rgba(10, 16, 40, 0.82);
+  --line: rgba(127, 212, 255, 0.25);
+  --st-untracked: #b48cff; --st-modified: #ffb347; --st-staged: #5fe39a; --st-conflicted: #ff5a6e;
+}
+html, body { height: 100%; margin: 0; }
+body {
+  color: var(--text);
+  background: radial-gradient(ellipse at 50% 40%, var(--space-2), var(--space) 70%);
+  font: 20px "JetBrains Mono", monospace;
+  display: grid; grid-template-columns: 1fr 640px; gap: 24px; padding: 24px; box-sizing: border-box;
+}
+.note { color: var(--muted); font-size: 15px; line-height: 1.6; max-width: 60ch; }
+.note h2 { font: 700 18px Orbitron, sans-serif; letter-spacing: 2px; color: var(--glow); }
+.note kbd { border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; color: var(--text); }
+
+.workdir {
+  min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 12px; padding: 16px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+}
+
+/* header: the title becomes a two-way switch, branch stays right */
+.workdir h3 {
+  margin: 0; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  font: 700 16px Orbitron, sans-serif; letter-spacing: 3px;
+}
+.tabs { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.tabs button {
+  padding: 6px 14px; border: 0; background: none; color: var(--muted); font: inherit; letter-spacing: inherit;
+  cursor: pointer; display: flex; gap: 8px; align-items: center;
+}
+.tabs button + button { border-left: 1px solid var(--line); }
+.tabs button[aria-selected="true"] { color: var(--space); background: var(--glow); }
+.tabs .count {
+  font: 600 13px "JetBrains Mono", monospace; letter-spacing: 0; padding: 0 7px; border-radius: 999px;
+  background: var(--st-modified); color: var(--space);
+}
+.tabs button[aria-selected="true"] .count { background: var(--space); color: var(--glow); }
+.branch { color: var(--glow); font: 600 18px "JetBrains Mono", monospace; letter-spacing: 0; white-space: nowrap; }
+
+/* files view (unchanged from today) */
+.files { margin: 0; padding: 0; list-style: none; overflow: auto; }
+.files li { border-radius: 6px; display: grid; grid-template-columns: 2.4em minmax(0, 1fr) auto; gap: 10px; padding: 6px 8px; align-items: center; }
+.files .code { font-size: .85em; font-weight: 600; white-space: pre; text-align: center; }
+.files .badge { padding: 1px 10px; border: 1px solid currentColor; border-radius: 999px; font-size: .7em; }
+.files .untracked { color: var(--st-untracked); } .files .modified { color: var(--st-modified); }
+.files .staged { color: var(--st-staged); } .files .clean { color: var(--muted); }
+
+/* history view: git log --oneline --decorate */
+.log { margin: 0; padding: 0; list-style: none; overflow: auto; font-size: 19px; }
+.log li {
+  display: grid; grid-template-columns: 1.2em 7ch minmax(0, 1fr); gap: 10px; align-items: baseline;
+  padding: 5px 8px; border-radius: 6px; cursor: pointer;
+}
+.log li:hover, .log li.open { background: rgba(127, 212, 255, 0.08); }
+.log .dot { color: var(--muted); text-align: center; }
+.log .head .dot { color: var(--gold); text-shadow: 0 0 8px var(--gold); }
+.log .hash { color: var(--gold); }
+.log .msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log .ref {
+  font-size: .7em; padding: 0 8px; margin-right: 6px; border-radius: 999px; border: 1px solid currentColor;
+  white-space: nowrap; vertical-align: 2px;
+}
+.ref.HEAD { color: var(--space); background: var(--gold); border-color: var(--gold); }
+.ref.branch-ref { color: var(--st-staged); }
+.ref.tag { color: var(--st-untracked); }
+.ref.other { color: var(--glow); }
+.log .merge .dot { color: var(--glow); }
+.log .unreachable { opacity: .45; }
+
+/* bottom viewer: file content or `git show --stat` */
+.viewer { border-top: 1px solid var(--line); padding-top: 12px; }
+.viewer .bar { color: var(--muted); font-size: 16px; margin-bottom: 8px; }
+.viewer pre {
+  margin: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: rgba(0,0,0,.25);
+  font: 18px / 1.5 "JetBrains Mono", monospace; white-space: pre; overflow: auto; max-height: 30vh;
+}
+.viewer .add { color: var(--st-staged); } .viewer .del { color: var(--danger); } .viewer .hash { color: var(--gold); }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<section class="note">
+  <h2>WORKDIR ⇄ HISTORY</h2>
+  <p>The panel title becomes a two-way switch. Same panel, same size — only the list and the bottom viewer swap.</p>
+  <ul>
+    <li><b>Working dir</b> tab: today's file list. Badge = number of dirty files, so you still see "something changed" while on History.</li>
+    <li><b>History</b> tab: <code>git log --oneline --decorate</code>, newest first. Gold hash, ref pills (<code>HEAD</code>, branches, tags). Merge commits get <code>◆</code>.</li>
+    <li>Click a commit → bottom viewer shows <code>git show --stat</code>, mirroring how clicking a file shows its content.</li>
+    <li>Branch name on the right stays in both views.</li>
+    <li>Toggle with a click, or <kbd>Tab</kbd> while the console input is empty (here: click or press <kbd>Tab</kbd>).</li>
+  </ul>
+  <p>Open question: log only <code>HEAD</code>'s ancestry (true <code>--oneline</code>), or <code>--all</code> with commits not on HEAD dimmed (shown for <code>a1c9e02</code>)?</p>
+</section>
+
+<aside class="workdir">
+  <h3>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-view="files">WORKING DIR <span class="count">2</span></button>
+      <button role="tab" aria-selected="false" data-view="log">HISTORY</button>
+    </div>
+    <span class="branch">main</span>
+  </h3>
+
+  <ul class="files" data-panel="files">
+    <li class="modified"><span class="code"> M</span><span>companions.md</span><span class="badge">modified</span></li>
+    <li class="staged"><span class="code">A </span><span>gallifrey.md</span><span class="badge">staged</span></li>
+    <li class="clean"><span class="code"></span><span>README.md</span><span class="badge">clean</span></li>
+    <li class="clean"><span class="code"></span><span>TARDIS.md</span><span class="badge">clean</span></li>
+  </ul>
+
+  <ul class="log" data-panel="log" hidden>
+    <li class="head open" data-show="9391028"><span class="dot">●</span><span class="hash">9391028</span>
+      <span class="msg"><span class="ref HEAD">HEAD → main</span>Rose saves Pete</span></li>
+    <li class="merge"><span class="dot">◆</span><span class="hash">4f6727c</span>
+      <span class="msg">Merge branch 'fathers-day'</span></li>
+    <li><span class="dot">●</span><span class="hash">a913f93</span>
+      <span class="msg"><span class="ref branch-ref">fathers-day</span>Pete lives</span></li>
+    <li><span class="dot">●</span><span class="hash">338d796</span>
+      <span class="msg"><span class="ref tag">tag: s01</span>Add companions list</span></li>
+    <li><span class="dot">●</span><span class="hash">570570a</span>
+      <span class="msg">Add TARDIS.md</span></li>
+    <li class="unreachable"><span class="dot">○</span><span class="hash">a1c9e02</span>
+      <span class="msg"><span class="ref other">reaper</span>Paradox (not on HEAD)</span></li>
+  </ul>
+
+  <div class="viewer" data-panel="files">
+    <div class="bar">companions.md — modified</div>
+<pre># Companions
+- Rose Tyler
+- Captain Jack
+- Martha Jones</pre>
+  </div>
+
+  <div class="viewer" data-panel="log" hidden>
+    <div class="bar">9391028 — Rose saves Pete</div>
+<pre><span class="hash">commit 9391028</span> (HEAD → main)
+Author: The Doctor
+Date:   Sat Oct 11 2026
+
+    Rose saves Pete
+
+ companions.md | 3 <span class="add">++</span><span class="del">-</span>
+ events.md     | 1 <span class="add">+</span>
+ 2 files changed, 3 insertions(+), 1 deletion(-)</pre>
+  </div>
+</aside>
+
+<script>
+const tabs = [...document.querySelectorAll('.tabs button')];
+const show = (view) => {
+  for (const t of tabs) t.setAttribute('aria-selected', t.dataset.view === view);
+  for (const p of document.querySelectorAll('[data-panel]')) p.hidden = p.dataset.panel !== view;
+};
+for (const t of tabs) t.addEventListener('click', () => show(t.dataset.view));
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  e.preventDefault();
+  show(tabs[0].getAttribute('aria-selected') === 'true' ? 'log' : 'files');
+});
+for (const li of document.querySelectorAll('.log li')) {
+  li.addEventListener('click', () => {
+    for (const o of document.querySelectorAll('.log li.open')) o.classList.remove('open');
+    li.classList.add('open');
+  });
+}
+</script>
+</body>
+</html>

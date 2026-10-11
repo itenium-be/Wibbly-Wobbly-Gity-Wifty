@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>History with branches</title>
+<style>
+@font-face { font-family: "Orbitron"; font-weight: 700; src: url("../assets/fonts/orbitron-700.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 400; src: url("../assets/fonts/jetbrains-mono-400.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 600; src: url("../assets/fonts/jetbrains-mono-600.woff2") format("woff2"); }
+
+:root {
+  --space: #050816; --space-2: #0b1230; --tardis: #1f4fa8; --glow: #7fd4ff; --gold: #ffcc4d;
+  --danger: #ff5a6e; --text: #e6ecff; --muted: #8a95c2; --panel: rgba(10, 16, 40, 0.82);
+  --line: rgba(127, 212, 255, 0.25);
+  --st-untracked: #b48cff; --st-modified: #ffb347; --st-staged: #5fe39a;
+  --row: 38px;
+}
+html, body { height: 100%; margin: 0; }
+body {
+  color: var(--text);
+  background: radial-gradient(ellipse at 50% 40%, var(--space-2), var(--space) 70%);
+  font: 20px "JetBrains Mono", monospace;
+  display: grid; grid-template-columns: 1fr 640px; gap: 24px; padding: 24px; box-sizing: border-box;
+}
+.note { color: var(--muted); font-size: 15px; line-height: 1.6; max-width: 60ch; }
+.note h2 { font: 700 18px Orbitron, sans-serif; letter-spacing: 2px; color: var(--glow); }
+.note pre { color: var(--text); background: rgba(0,0,0,.3); padding: 8px 12px; border-radius: 6px; font-size: 14px; }
+
+.workdir {
+  min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 12px; padding: 16px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; align-content: start;
+}
+.workdir h3 {
+  margin: 0; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  font: 700 16px Orbitron, sans-serif; letter-spacing: 3px;
+}
+.tabs { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.tabs button {
+  padding: 6px 14px; border: 0; background: none; color: var(--muted); font: inherit; letter-spacing: inherit;
+  display: flex; gap: 8px; align-items: center;
+}
+.tabs button + button { border-left: 1px solid var(--line); }
+.tabs button[aria-selected="true"] { color: var(--space); background: var(--glow); }
+.tabs .count { font: 600 13px "JetBrains Mono", monospace; letter-spacing: 0; padding: 0 7px; border-radius: 999px; background: var(--st-modified); color: var(--space); }
+.branch { color: var(--glow); font: 600 18px "JetBrains Mono", monospace; letter-spacing: 0; }
+
+.scope { display: flex; gap: 6px; font-size: 14px; }
+.scope button {
+  padding: 2px 12px; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--muted);
+  font: inherit; cursor: pointer;
+}
+.scope button[aria-pressed="true"] { color: var(--text); border-color: var(--glow); }
+
+.log { position: relative; overflow: auto; }
+.log svg { position: absolute; left: 0; top: 0; }
+.log ul { margin: 0; padding: 0; list-style: none; font-size: 19px; }
+.log li {
+  height: var(--row); display: grid; grid-template-columns: 7ch minmax(0, 1fr); gap: 10px; align-items: center;
+  padding-right: 8px; border-radius: 6px; cursor: pointer;
+}
+.log li:hover, .log li.open { background: rgba(127, 212, 255, 0.08); }
+.log .hash { color: var(--gold); }
+.log .msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log .ref {
+  font-size: .7em; padding: 0 8px; margin-right: 6px; border-radius: 999px; border: 1px solid currentColor;
+  white-space: nowrap; vertical-align: 2px;
+}
+.ref.HEAD { color: var(--space) !important; background: var(--gold); border-color: var(--gold) !important; }
+.ref.tag { color: var(--st-untracked); border-style: dashed; }
+
+.viewer { border-top: 1px solid var(--line); padding-top: 12px; }
+.viewer .bar { color: var(--muted); font-size: 16px; margin-bottom: 8px; }
+.viewer pre {
+  margin: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: rgba(0,0,0,.25);
+  font: 18px / 1.5 "JetBrains Mono", monospace; white-space: pre; overflow: auto;
+}
+.viewer .hash { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<section class="note">
+  <h2>HISTORY WITH BRANCHES</h2>
+  <p>The same one-line list, with a lane gutter on the left, like <code>git log --oneline --graph</code> but drawn as lines instead of ASCII.</p>
+  <ul>
+    <li>Each branch gets a lane colour, and its label uses that same colour, so <code>fathers-day</code> (orange) obviously belongs to the orange lane.</li>
+    <li>The gold dot is <code>HEAD</code>. Merge commits are a ringed dot where two lanes join.</li>
+    <li><b>HEAD</b> / <b>--all</b> toggle above the list: <code>reaper</code> is not merged into <code>main</code>, so it only shows under <code>--all</code>.</li>
+    <li>Commits are sorted newest first (<code>--date-order</code>), so the lanes interleave the way they happened.</li>
+  </ul>
+  <p>The ASCII this replaces:</p>
+<pre>*   9391028 (HEAD -> main) Merge branch 'fathers-day'
+| * 77ab1e0 (reaper) Reapers appear
+|/
+| * c0ffee1 (fathers-day) Rose saves Pete
+* | 5d3e2a1 Add Gallifrey
+* | 338d796 (tag: s01) Add companions list
+| * a913f93 Pete lives
+|/
+* 570570a Add TARDIS.md</pre>
+  <p>The panel version puts <code>fathers-day</code> and <code>reaper</code> in separate lanes. The ASCII above squeezes them into the same column.</p>
+</section>
+
+<aside class="workdir">
+  <h3>
+    <div class="tabs">
+      <button aria-selected="false">WORKING DIR <span class="count">2</span></button>
+      <button aria-selected="true">HISTORY</button>
+    </div>
+    <span class="branch">main</span>
+  </h3>
+  <div class="scope">
+    <button data-scope="head" aria-pressed="false">HEAD</button>
+    <button data-scope="all" aria-pressed="true">--all</button>
+  </div>
+  <div class="log"><svg></svg><ul></ul></div>
+  <div class="viewer">
+    <div class="bar"></div>
+    <pre></pre>
+  </div>
+</aside>
+
+<script>
+// Newest first. lane 0 = main, 1 = fathers-day, 2 = reaper.
+const commits = [
+  { hash: '9391028', lane: 0, parents: ['5d3e2a1', 'c0ffee1'], msg: "Merge branch 'fathers-day'", refs: [['HEAD', 'HEAD → main']] },
+  { hash: '77ab1e0', lane: 2, parents: ['338d796'], msg: 'Reapers appear', refs: [['branch', 'reaper']], all: true },
+  { hash: 'c0ffee1', lane: 1, parents: ['a913f93'], msg: 'Rose saves Pete', refs: [['branch', 'fathers-day']] },
+  { hash: '5d3e2a1', lane: 0, parents: ['338d796'], msg: 'Add Gallifrey' },
+  { hash: '338d796', lane: 0, parents: ['570570a'], msg: 'Add companions list', refs: [['tag', 'tag: s01']] },
+  { hash: 'a913f93', lane: 1, parents: ['570570a'], msg: 'Pete lives' },
+  { hash: '570570a', lane: 0, parents: [], msg: 'Add TARDIS.md' },
+];
+const laneColor = ['var(--glow)', 'var(--st-modified)', 'var(--st-untracked)'];
+const ROW = 38, LANE = 20, PAD = 14;
+const svg = document.querySelector('.log svg');
+const ul = document.querySelector('.log ul');
+const viewerBar = document.querySelector('.viewer .bar');
+const viewerPre = document.querySelector('.viewer pre');
+
+const render = (scope) => {
+  const rows = commits.filter((c) => scope === 'all' || !c.all);
+  const lanes = Math.max(...rows.map((c) => c.lane)) + 1;
+  const gutter = PAD * 2 + (lanes - 1) * LANE;
+  const x = (lane) => PAD + lane * LANE;
+  const y = (i) => i * ROW + ROW / 2;
+  const at = new Map(rows.map((c, i) => [c.hash, i]));
+
+  let paths = '';
+  rows.forEach((c, i) => {
+    for (const p of c.parents) {
+      const j = at.get(p);
+      const parent = rows[j];
+      const [x1, y1, x2, y2] = [x(c.lane), y(i), x(parent.lane), y(j)];
+      let d;
+      if (x1 === x2) d = `M${x1},${y1} V${y2}`;
+      // A merge's second parent leaves the merge row sideways; a branch tip runs down its own lane and joins at the fork.
+      else if (parent.lane > c.lane) d = `M${x1},${y1} C${x1},${y1 + ROW * 0.6} ${x2},${y1 + ROW * 0.4} ${x2},${y1 + ROW} V${y2}`;
+      else d = `M${x1},${y1} V${y2 - ROW} C${x1},${y2 - ROW * 0.4} ${x2},${y2 - ROW * 0.6} ${x2},${y2}`;
+      const color = laneColor[Math.max(c.lane, parent.lane)];
+      paths += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.5"/>`;
+    }
+  });
+  rows.forEach((c, i) => {
+    const head = c.refs?.some(([k]) => k === 'HEAD');
+    const merge = c.parents.length > 1;
+    const fill = head ? 'var(--gold)' : merge ? 'var(--space)' : laneColor[c.lane];
+    const glow = head ? ' style="filter: drop-shadow(0 0 6px var(--gold))"' : '';
+    paths += `<circle cx="${x(c.lane)}" cy="${y(i)}" r="${merge ? 7 : 6}" fill="${fill}" stroke="${head ? 'var(--gold)' : laneColor[c.lane]}" stroke-width="2.5"${glow}/>`;
+  });
+  svg.setAttribute('width', gutter);
+  svg.setAttribute('height', rows.length * ROW);
+  svg.innerHTML = paths;
+
+  ul.innerHTML = '';
+  rows.forEach((c, i) => {
+    const li = document.createElement('li');
+    li.style.paddingLeft = `${gutter}px`;
+    const refs = (c.refs ?? [])
+      .map(([kind, name]) => `<span class="ref ${kind}" style="color:${laneColor[c.lane]}">${name}</span>`)
+      .join('');
+    li.innerHTML = `<span class="hash">${c.hash}</span><span class="msg">${refs}${c.msg}</span>`;
+    li.addEventListener('click', () => select(li, c));
+    ul.append(li);
+    if (i === 0) select(li, c);
+  });
+
+  for (const b of document.querySelectorAll('.scope button')) b.setAttribute('aria-pressed', b.dataset.scope === scope);
+};
+
+const select = (li, c) => {
+  for (const o of ul.querySelectorAll('.open')) o.classList.remove('open');
+  li.classList.add('open');
+  viewerBar.textContent = `${c.hash} — ${c.msg}`;
+  const merge = c.parents.length > 1 ? `Merge: ${c.parents.join(' ')}\n` : '';
+  viewerPre.innerHTML = `<span class="hash">commit ${c.hash}</span>\n${merge}Author: The Doctor\n\n    ${c.msg}`;
+};
+
+for (const b of document.querySelectorAll('.scope button')) b.addEventListener('click', () => render(b.dataset.scope));
+render('all');
+</script>
+</body>
+</html>
