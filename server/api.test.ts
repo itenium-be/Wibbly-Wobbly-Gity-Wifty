@@ -60,4 +60,13 @@ describe('api', () => {
     const res = await routes['/api/run'].POST(post('/api/run', { input: 'git log --format=%s' }));
     expect((await res.json()) as RunResult).toMatchObject({ code: 0, output: 'Rose\n' });
   });
+
+  test('a malformed run body is a 400', async () => {
+    const notJson = Object.assign(new Request('http://tardis/api/run', { method: 'POST', body: 'git log' }), {
+      params: {},
+    });
+    expect((await routes['/api/run'].POST(notJson)).status).toBe(400);
+    expect((await routes['/api/run'].POST(post('/api/run', { input: 42 }))).status).toBe(400);
+    expect((await routes['/api/run'].POST(post('/api/run', null))).status).toBe(400);
+  });
 });

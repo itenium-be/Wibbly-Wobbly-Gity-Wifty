@@ -24,8 +24,9 @@ export function createRoutes(engine: Engine, scenes: Scene[]) {
     },
     '/api/run': {
       POST: async (req: Request) => {
-        const { input } = (await req.json()) as { input: string };
-        return Response.json(await engine.run(input));
+        const body = (await req.json().catch(() => null)) as { input?: unknown } | null;
+        if (typeof body?.input !== 'string') return new Response('bad request', { status: 400 });
+        return Response.json(await engine.run(body.input));
       },
     },
   };
