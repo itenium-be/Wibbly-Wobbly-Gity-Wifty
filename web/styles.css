@@ -45,6 +45,8 @@
 
 * {
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
 }
 
 html,
@@ -697,8 +699,6 @@ main {
 .diff {
   min-height: 0;
   overflow: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--line) transparent;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: rgba(0, 0, 0, 0.25);
