@@ -1,5 +1,5 @@
 import type { Scene } from '../shared/types';
-import { blink, forestOfTheDead } from './episodes';
+import { blink, forestOfTheDead, runawayBride } from './episodes';
 
 export const partingOfTheWaysScene: Scene = {
   id: 'parting-of-the-ways',
@@ -19,6 +19,7 @@ export const partingOfTheWaysScene: Scene = {
       caption: 'Same episode, new face: the commit gets a new hash',
       accepts: 'git commit',
     },
+    { episode: runawayBride },
     { episode: blink },
     { episode: forestOfTheDead },
   ],

@@ -49,6 +49,14 @@ export const doomsday: Episode = {
   set: { Location: 'Bad Wolf Bay, Norway' },
 };
 
+export const runawayBride: Episode = {
+  code: 'S03E00',
+  aired: '2006-12-25',
+  title: 'The Runaway Bride',
+  writer: 'Russell T Davies',
+  set: { Companions: ['Donna Noble'], Location: 'London, Christmas 2006' },
+};
+
 export const blink: Episode = {
   code: 'S03E10',
   aired: '2007-06-09',
@@ -65,6 +73,26 @@ export const forestOfTheDead: Episode = {
   writer: 'Steven Moffat',
   set: { Companions: ['Donna Noble'], Location: 'The Library, 51st century' },
   event: 'Who is River Song? Spoilers?',
+};
+
+export const dimensionCannon: Episode = {
+  code: 'Torchwood',
+  aired: '2008-06-21',
+  title: 'The dimension cannon',
+  writer: 'Russell T Davies',
+  event: 'Rose built a dimension cannon to cross back.',
+  fastForward: true,
+  dark: true,
+};
+
+export const turnRight: Episode = {
+  code: 'Chiswick',
+  title: 'Turn Right',
+  writer: 'Russell T Davies',
+  set: { Doctor: 'dead, under the Thames', Companions: [], Location: 'Chiswick' },
+  event: 'Donna turned right. The Doctor died fighting the Racnoss.',
+  fastForward: true,
+  dark: true,
 };
 
 export const stolenEarth: Episode = {

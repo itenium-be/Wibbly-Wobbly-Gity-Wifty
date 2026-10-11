@@ -85,7 +85,9 @@ describe('scenes', () => {
 
   test("pete's world branches off after Series 1 and diverges on both sides", async () => {
     await playScene(engine, sceneOf('petes-world'));
-    expect(await out('git log --format=%s -2 petes-world')).toBe('Doomsday\nRise of the Cybermen\n');
+    expect(await out('git log --format=%s -3 petes-world')).toBe(
+      'The dimension cannon\nDoomsday\nRise of the Cybermen\n',
+    );
     expect(await out('git log -1 --format=%s $(git merge-base petes-world prime-timeline)')).toBe(
       'The Parting of the Ways\n',
     );
@@ -100,8 +102,10 @@ describe('scenes', () => {
       'The Parting of the Ways',
       'Rise of the Cybermen',
       'Doomsday',
+      'The Runaway Bride',
       'Blink',
       'Forest of the Dead',
+      'The dimension cannon',
       'The Stolen Earth',
     ]);
   });
