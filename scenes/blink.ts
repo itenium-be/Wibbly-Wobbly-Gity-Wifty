@@ -15,7 +15,7 @@ export const blinkScene: Scene = {
     { cmd: 'git bisect start', caption: 'Search the timeline' },
     { cmd: 'git bisect bad', caption: 'The Angel is here now' },
     { cmd: 'git bisect good fixed-point/pete', caption: 'No Angels in 1987' },
-    { cmd: 'grep Angel TARDIS.md', caption: 'The TARDIS jumped halfway. Any Angels?', fails: true },
+    { cmd: 'grep Angel TARDIS.md || echo "No Angel"', caption: 'The TARDIS jumped halfway. Any Angels?' },
     { cmd: 'git bisect good', caption: 'Clean: the Angel came later' },
     {
       cmd: `git bisect run sh -c '! grep -q Angel TARDIS.md'`,
