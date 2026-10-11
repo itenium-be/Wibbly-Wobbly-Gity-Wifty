@@ -31,4 +31,33 @@ describe('api', () => {
     const { fetchScenes } = await real();
     expect(await fetchScenes()).toEqual([]);
   });
+
+  test('readFile fetches the file as text with the path encoded', async () => {
+    let url = '';
+    globalThis.fetch = (async (u: string) => {
+      url = u;
+      return new Response('# Rose\n', { status: 200 });
+    }) as unknown as typeof fetch;
+    const { readFile } = await real();
+    expect(await readFile('episodes/bad wolf.md')).toBe('# Rose\n');
+    expect(url).toBe('/api/file?path=episodes%2Fbad%20wolf.md');
+  });
+
+  test('readFile throws on a non-OK response', async () => {
+    respond('no such file', 404);
+    const { readFile } = await real();
+    await expect(readFile('nope.md')).rejects.toThrow('404 no such file');
+  });
+
+  test('writeFile PUTs the content and returns the working directory', async () => {
+    let init: RequestInit | undefined;
+    globalThis.fetch = (async (_: string, i: RequestInit) => {
+      init = i;
+      return Response.json({ files: [], merging: false });
+    }) as unknown as typeof fetch;
+    const { writeFile } = await real();
+    expect(await writeFile('a.md', 'x')).toEqual({ files: [], merging: false });
+    expect(init?.method).toBe('PUT');
+    expect(JSON.parse(String(init?.body))).toEqual({ path: 'a.md', content: 'x' });
+  });
 });

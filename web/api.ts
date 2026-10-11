@@ -1,13 +1,17 @@
-import type { LiveState, RunResult, SceneView } from '../shared/types';
+import type { LiveState, RunResult, SceneView, WorkDir } from '../shared/types';
 
-async function json<T>(res: Response): Promise<T> {
+async function ok(res: Response): Promise<Response> {
   if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
-  return res.json();
+  return res;
 }
 
-async function post<T>(url: string, body?: unknown): Promise<T> {
+async function json<T>(res: Response): Promise<T> {
+  return (await ok(res)).json();
+}
+
+async function send<T>(method: string, url: string, body?: unknown): Promise<T> {
   const res = await fetch(url, {
-    method: 'POST',
+    method,
     headers: { 'content-type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -18,5 +22,11 @@ export async function fetchScenes(): Promise<SceneView[]> {
   return json(await fetch('/api/scenes'));
 }
 
-export const enterScene = (id: string) => post<LiveState>(`/api/scenes/${id}/enter`);
-export const runCommand = (input: string) => post<RunResult>('/api/run', { input });
+export const enterScene = (id: string) => send<LiveState>('POST', `/api/scenes/${id}/enter`);
+export const runCommand = (input: string) => send<RunResult>('POST', '/api/run', { input });
+
+export async function readFile(path: string): Promise<string> {
+  return (await ok(await fetch(`/api/file?path=${encodeURIComponent(path)}`))).text();
+}
+
+export const writeFile = (path: string, content: string) => send<WorkDir>('PUT', '/api/file', { path, content });
