@@ -1,6 +1,7 @@
 import { copyFile, cp, mkdir, rm } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
-import type { EpisodeResult, LiveState, RunResult, Scene, WorkDir } from '../shared/types';
+import { join, relative, resolve } from 'node:path';
+import type { BlameHunk, EpisodeResult, LiveState, RunResult, Scene, WorkDir } from '../shared/types';
+import { parseBlame } from './blame';
 import { buildSnapshot, DAY, ROSE_AIRED } from './build';
 import { git } from './git';
 import { readGraph } from './graph';
@@ -12,6 +13,7 @@ import { livePath, readWorkDir } from './workdir';
 export class UnknownEpisodeError extends Error {}
 export class InvalidCommitError extends Error {}
 export class UnknownCommitError extends Error {}
+export class NotInHistoryError extends Error {}
 
 /** Every repo dir carries its own global git config next to it, so aliases travel with snapshots. */
 const configOf = (dir: string) => `${dir}.gitconfig`;
@@ -95,6 +97,15 @@ export class Engine {
       const { output, code } = await git(this.live, ['show', '--format=', '--diff-merges=first-parent', hash]);
       if (code !== 0) throw new UnknownCommitError(`unknown commit: ${hash}`);
       return output;
+    });
+  }
+
+  blame(path: string): Promise<BlameHunk[]> {
+    return this.serialise(async () => {
+      const file = relative(this.live, await livePath(this.live, path));
+      const { output, code } = await git(this.live, ['blame', '--porcelain', '--', file]);
+      if (code !== 0) throw new NotInHistoryError(`not in history: ${path}`);
+      return parseBlame(output);
     });
   }
 

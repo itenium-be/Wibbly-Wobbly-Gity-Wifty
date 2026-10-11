@@ -88,6 +88,10 @@ const writeFile = mock(
   }),
 );
 
+const blameFile = mock(async (_path: string) => [
+  { hash: 'a1', author: 'Russell T Davies', date: '2005-03-26', summary: 'Episode one', lines: ['# Rose'] },
+]);
+
 mock.module('./api', () => ({
   fetchScenes: async () => scenes,
   enterScene,
@@ -96,6 +100,7 @@ mock.module('./api', () => ({
   readFile,
   writeFile,
   showCommit: async () => '',
+  blameFile,
 }));
 const { App } = await import('./App');
 
@@ -113,6 +118,7 @@ beforeEach(() => {
   runCommand.mockImplementation(async () => ran('a1 Episode one'));
   playEpisode.mockClear();
   writeFile.mockClear();
+  blameFile.mockClear();
   history.replaceState(null, '', '/');
 });
 
@@ -167,6 +173,37 @@ describe('App', () => {
     fireEvent.change(input, { target: { value: 'git rm --cached episodes/rose.md' } });
     fireEvent.keyDown(input, { key: 'Enter' });
     await waitFor(() => expect(row()?.className).toContain('untracked'));
+  });
+
+  test('a successful git blame opens the file in blame mode in the working directory', async () => {
+    const input = await toGitPhase();
+    fireEvent.change(input, { target: { value: 'git blame episodes/rose.md' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(await screen.findByText('Russell T Davies · 2005-03-26')).toBeTruthy();
+    expect(blameFile).toHaveBeenCalledWith('episodes/rose.md');
+  });
+
+  test("the next scene does not reopen the previous scene's blame", async () => {
+    const input = await toGitPhase();
+    fireEvent.change(input, { target: { value: 'git blame episodes/rose.md' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(await screen.findByText('Russell T Davies · 2005-03-26')).toBeTruthy();
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(await screen.findByText('The Last Dalek')).toBeTruthy();
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    await screen.findByLabelText('git command');
+    expect(await screen.findByText('episodes/rose.md')).toBeTruthy();
+    expect(screen.queryByText('Russell T Davies · 2005-03-26')).toBeNull();
+    expect(blameFile).toHaveBeenCalledTimes(1);
+  });
+
+  test('a failed git blame leaves the working directory alone', async () => {
+    runCommand.mockImplementationOnce(async () => ({ ...ran('fatal: no such path'), code: 128 }));
+    const input = await toGitPhase();
+    fireEvent.change(input, { target: { value: 'git blame nope.md' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(await screen.findByText(/fatal: no such path/)).toBeTruthy();
+    expect(blameFile).not.toHaveBeenCalled();
   });
 
   test('a detached HEAD shows as such in the working directory header', async () => {

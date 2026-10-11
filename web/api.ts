@@ -1,4 +1,4 @@
-import type { EpisodeResult, LiveState, RunResult, SceneView, WorkDir } from '../shared/types';
+import type { BlameHunk, EpisodeResult, LiveState, RunResult, SceneView, WorkDir } from '../shared/types';
 
 async function ok(res: Response): Promise<Response> {
   if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
@@ -32,6 +32,10 @@ export async function readFile(path: string): Promise<string> {
 
 export async function showCommit(hash: string): Promise<string> {
   return (await ok(await fetch(`/api/show?hash=${encodeURIComponent(hash)}`))).text();
+}
+
+export async function blameFile(path: string): Promise<BlameHunk[]> {
+  return json(await fetch(`/api/blame?path=${encodeURIComponent(path)}`));
 }
 
 export const writeFile = (path: string, content: string) => send<WorkDir>('PUT', '/api/file', { path, content });

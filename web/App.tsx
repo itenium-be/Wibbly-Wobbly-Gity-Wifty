@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Episode, GraphModel, RunResult, SceneView, WorkDir } from '../shared/types';
-import { enterScene, fetchScenes, playEpisode, readFile, runCommand, showCommit, writeFile } from './api';
+import { blameFile, enterScene, fetchScenes, playEpisode, readFile, runCommand, showCommit, writeFile } from './api';
+import { blameTarget } from './blame';
 import { Console } from './console/Console';
 import { advance, type Cue, current, played, start } from './cue';
 import { episodeCodes } from './episodes';
@@ -25,6 +26,7 @@ export function App() {
   const [zoom, setZoom] = useState(1);
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
+  const [blameRequest, setBlameRequest] = useState<{ path: string; n: number }>();
   const [popover, setPopover] = useState<{ hash: string; at: { x: number; y: number } } | null>(null);
   const closePopover = useCallback(() => setPopover(null), []);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -54,6 +56,7 @@ export function App() {
     const mine = ++epoch.current;
     // Keeps the panel from diffing the next scene's statuses against this one's.
     setWorkdir(null);
+    setBlameRequest(undefined);
     const entered = await enterScene(sceneId);
     if (mine !== epoch.current) return;
     setGraph(entered.graph);
@@ -133,6 +136,8 @@ export function App() {
     setWorkdir(result.workdir);
     setCueState((c) => advance(scene.steps, c, cmd, result.code));
     setInput('');
+    const blamed = blameTarget(cmd);
+    if (blamed && result.code === 0) setBlameRequest((r) => ({ path: blamed, n: (r?.n ?? 0) + 1 }));
   };
 
   const save = async (path: string, content: string) => {
@@ -200,6 +205,8 @@ export function App() {
               branch={graph?.initialized ? (graph.head.branch ?? 'HEAD (detached)') : ''}
               load={readFile}
               show={showCommit}
+              blame={blameFile}
+              blameRequest={blameRequest}
               save={save}
               onDone={() => inputRef.current?.focus()}
             />

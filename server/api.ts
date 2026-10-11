@@ -1,5 +1,5 @@
 import type { Scene, SceneView } from '../shared/types';
-import { type Engine, InvalidCommitError, UnknownCommitError, UnknownEpisodeError } from './engine';
+import { type Engine, InvalidCommitError, NotInHistoryError, UnknownCommitError, UnknownEpisodeError } from './engine';
 import { InvalidPathError } from './workdir';
 
 type RouteRequest = Request & { params: Record<string, string> };
@@ -63,6 +63,18 @@ export function createRoutes(engine: Engine, scenes: Scene[]) {
         } catch (e) {
           if (e instanceof InvalidCommitError) return new Response(e.message, { status: 400 });
           if (e instanceof UnknownCommitError) return new Response(e.message, { status: 404 });
+          throw e;
+        }
+      },
+    },
+    '/api/blame': {
+      GET: async (req: Request) => {
+        const path = new URL(req.url).searchParams.get('path');
+        if (path === null) return new Response('bad request', { status: 400 });
+        try {
+          return await fileErrors(async () => Response.json(await engine.blame(path)));
+        } catch (e) {
+          if (e instanceof NotInHistoryError) return new Response(e.message, { status: 404 });
           throw e;
         }
       },

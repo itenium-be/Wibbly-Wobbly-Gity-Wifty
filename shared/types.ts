@@ -12,12 +12,14 @@ export type StoryCard = { title: string; text: string; images: StoryImage[]; rev
 /** `set`: `Key: value` lines in TARDIS.md, or `Key:` and a `- item` per entry. `event`: a line appended under `Events:`. */
 /**
  * `aired`: broadcast date (YYYY-MM-DD); the commit carries it so the timeline sorts in broadcast order.
+ * `writer`: the commit's author, so `git blame` names who wrote each line; the Doctor stays the committer.
  * `fastForward`: a scripted moment inside an episode, not a new episode.
  */
 export type Episode = {
   code: string;
   title: string;
   aired?: string;
+  writer?: string;
   set?: Record<string, string | string[]>;
   event?: string;
   fastForward?: true;
@@ -59,6 +61,9 @@ export type GraphModel = {
   /** The commit being merged in while a merge waits for its conflicts to be resolved. */
   mergeHead?: string;
 };
+
+/** Consecutive lines last changed by one commit. `date`: author date, YYYY-MM-DD. */
+export type BlameHunk = { hash: string; author: string; date: string; summary: string; lines: string[] };
 
 export type FileStatus = 'clean' | 'untracked' | 'modified' | 'staged' | 'conflicted';
 /** `code`: the two-letter `git status --short` code, '' when clean. */

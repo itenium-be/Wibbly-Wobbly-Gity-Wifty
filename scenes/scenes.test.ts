@@ -33,6 +33,12 @@ describe('scenes', () => {
     for (const title of titles) expect(title).not.toMatch(/["$`\\]/);
   });
 
+  test('every episode credits its writer', () => {
+    const episodes = scenes.flatMap((s) => s.steps.flatMap((step) => ('episode' in step ? [step.episode] : [])));
+    for (const e of episodes)
+      expect({ title: e.title, writer: e.writer }).toEqual({ title: e.title, writer: expect.any(String) });
+  });
+
   test('rose starts with an untracked TARDIS log and no repo', async () => {
     const { graph, workdir } = await engine.enter('rose');
     expect(graph.initialized).toBe(false);
