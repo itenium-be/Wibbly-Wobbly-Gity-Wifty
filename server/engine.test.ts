@@ -42,4 +42,10 @@ describe('Engine', () => {
     expect(result).toMatchObject({ code: 1, output: 'only git commands travel in this TARDIS' });
     expect(result.graph.commits).toHaveLength(1);
   });
+
+  test('entering an unknown scene throws and keeps the current live repo', async () => {
+    await engine.enter('dalek');
+    await expect(engine.enter('nope')).rejects.toThrow('unknown scene: nope');
+    expect((await engine.run('git log --format=%s')).output).toBe('Dalek\nRose\n');
+  });
 });

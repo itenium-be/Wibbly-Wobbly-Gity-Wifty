@@ -26,6 +26,7 @@ export class Engine {
   }
 
   async enter(id: string): Promise<GraphModel> {
+    if (!this.scenes.some((s) => s.id === id)) throw new Error(`unknown scene: ${id}`);
     await rm(this.live, { recursive: true, force: true });
     await cp(this.snapshot(id), this.live, { recursive: true });
     return readGraph(this.live);
