@@ -149,6 +149,15 @@ export function App() {
           <small>{scene.episode}</small>
           {scene.title}
         </div>
+        {!gitPhase && pos.scene === 0 && (
+          <button
+            type="button"
+            className="skip-intro"
+            onClick={() => setPos({ scene: 0, card: scene.story.length, image: 0 })}
+          >
+            Skip Intro
+          </button>
+        )}
         {gitPhase && (
           <div className="zoom">
             <button

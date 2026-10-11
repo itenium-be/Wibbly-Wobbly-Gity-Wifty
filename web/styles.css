@@ -89,6 +89,25 @@ header .zoom {
   margin-left: auto;
 }
 
+/* The story view has no workdir column, so the header can reach the right edge. */
+header:has(.skip-intro) {
+  grid-column: 1 / -1;
+}
+
+.skip-intro {
+  margin-left: auto;
+  padding: 8px 18px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--panel);
+  font:
+    600 14px "JetBrains Mono",
+    monospace;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
 .zoom button {
   width: 32px;
   height: 32px;

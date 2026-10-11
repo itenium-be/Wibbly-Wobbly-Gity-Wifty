@@ -133,6 +133,21 @@ describe('App', () => {
     expect(screen.getByText('The TARDIS')).toBeTruthy();
   });
 
+  test('Skip Intro jumps from the intro cards to the git phase', async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Skip Intro' }));
+    expect(await screen.findByText('Where is the TARDIS?')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Skip Intro' })).toBeNull();
+    expect(location.search).toBe('?scene=rose&card=1');
+  });
+
+  test('Skip Intro only shows in the first scene', async () => {
+    history.replaceState(null, '', '?scene=dalek&card=0');
+    render(<App />);
+    expect(await screen.findByText('The Last Dalek')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Skip Intro' })).toBeNull();
+  });
+
   test('opens on the first story card, then → reaches the git phase', async () => {
     await toGitPhase();
     expect(await screen.findByText('Episode one')).toBeTruthy();
