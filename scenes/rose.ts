@@ -65,7 +65,7 @@ export const rose: Scene = {
           src: '/assets/companions/jack.jpg',
           name: 'Captain Jack',
           stamp: 'DEAD',
-          stampNote: 'Got better',
+          stampNote: '(Got better)',
           fate: 'Exterminated by a Dalek',
         },
         {
