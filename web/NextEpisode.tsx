@@ -22,13 +22,15 @@ export function NextEpisode({ episode, onPlay }: Props) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'n' || e.ctrlKey || e.metaKey || e.altKey || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key !== 'ArrowRight' || e.ctrlKey || e.metaKey || e.altKey || e.target instanceof HTMLTextAreaElement)
+        return;
       if (e.target instanceof HTMLInputElement && e.target.value !== '') return;
       e.preventDefault();
       playOnce();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    // Capture runs before App's →, which skips the scene only when this didn't claim the key.
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
   }, [playOnce]);
 
   return (

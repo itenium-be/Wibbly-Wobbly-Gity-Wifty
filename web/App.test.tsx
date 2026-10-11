@@ -369,6 +369,16 @@ describe('App', () => {
     expect(screen.queryByLabelText('next episode')).toBeNull();
   });
 
+  test('→ plays the next episode instead of leaving the scene', async () => {
+    history.replaceState(null, '', '/?scene=episodes&card=1');
+    render(<App />);
+    await screen.findByRole('button', { name: /play/i });
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(playEpisode).toHaveBeenCalledWith('S01E02');
+    expect(await screen.findByText('After')).toBeTruthy();
+    expect(location.search).toBe('?scene=episodes&card=1');
+  });
+
   test('Next Episode stays hidden while HEAD is detached', async () => {
     enterScene.mockImplementation(async () => live({ ...graph, head: { hash: 'a1', branch: null } }));
     history.replaceState(null, '', '/?scene=episodes&card=1');

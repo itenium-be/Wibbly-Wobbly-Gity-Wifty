@@ -21,7 +21,7 @@ describe('NextEpisode', () => {
     expect(screen.queryByText('NEXT EPISODE')).toBeNull();
   });
 
-  test('plays on n, unless the console has text in it', () => {
+  test('plays on →, unless the console has text in it', () => {
     const onPlay = mock(async () => true);
     render(
       <>
@@ -29,9 +29,9 @@ describe('NextEpisode', () => {
         <NextEpisode episode={episode} onPlay={onPlay} />
       </>,
     );
-    fireEvent.keyDown(screen.getByLabelText('console'), { key: 'n' });
+    fireEvent.keyDown(screen.getByLabelText('console'), { key: 'ArrowRight' });
     expect(onPlay).not.toHaveBeenCalled();
-    fireEvent.keyDown(window, { key: 'n' });
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(onPlay).toHaveBeenCalledTimes(1);
   });
 
@@ -61,10 +61,10 @@ describe('NextEpisode', () => {
     expect(onPlay).toHaveBeenCalledTimes(2);
   });
 
-  test.each(['ctrlKey', 'metaKey', 'altKey'])('n with %s does not play', (modifier) => {
+  test.each(['ctrlKey', 'metaKey', 'altKey'])('→ with %s does not play', (modifier) => {
     const onPlay = mock(async () => true);
     render(<NextEpisode episode={episode} onPlay={onPlay} />);
-    fireEvent.keyDown(window, { key: 'n', [modifier]: true });
+    fireEvent.keyDown(window, { key: 'ArrowRight', [modifier]: true });
     expect(onPlay).not.toHaveBeenCalled();
   });
 });

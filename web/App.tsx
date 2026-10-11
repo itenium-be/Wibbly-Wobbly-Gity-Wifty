@@ -76,7 +76,7 @@ export function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLTextAreaElement) return;
+      if (e.defaultPrevented || e.target instanceof HTMLTextAreaElement) return;
       const typing = e.target instanceof HTMLInputElement;
       if (typing && (e.target as HTMLInputElement).value !== '') return;
       if (e.key === 'ArrowRight') setPos((p) => move(p, 1, scenes));

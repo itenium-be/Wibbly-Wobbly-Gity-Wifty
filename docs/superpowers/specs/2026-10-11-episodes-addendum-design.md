@@ -47,7 +47,7 @@ type Step =
 ## Next Episode
 
 - Slides in bottom-right, Netflix-style, as soon as the current step is an episode step: `S01E02 · The End of the World`.
-- Plays after an 8s countdown, on click, or on `n`.
+- Plays after an 8s countdown, on click, or on →.
 - Hidden while HEAD is detached: the commit would land on no branch.
 
 ## Shell
