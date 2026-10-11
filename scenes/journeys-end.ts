@@ -13,7 +13,6 @@ export const journeysEnd: Scene = {
   ],
   steps: [
     { cmd: 'git merge petes-world', caption: 'The universes collide', fails: true },
-    { cmd: 'git st', caption: 'Both universes changed the same lines' },
     {
       edit: {
         'TARDIS.md': [
