@@ -8,8 +8,13 @@ export const fathersDayScene: Scene = {
   story: [
     {
       title: 'A Fixed Point in Time',
-      text: "Rose's dad Pete was hit by a car on 7 November 1987. Rose goes back and saves him. Two versions of 1987 cannot both be true: the Reapers come to sterilise the wound in time.",
+      text: "7 November 1987. Pete Tyler, Rose's dad, is hit by a car. He dies alone.",
       images: [{ src: '/assets/episodes/fathers-day.jpg' }],
+      boxes: [
+        { boxes: ['Rose was a baby'] },
+        { boxes: ['Now she has a time machine'] },
+        { boxes: ['The Reapers come to sterilise the wound'] },
+      ],
     },
   ],
   steps: [
