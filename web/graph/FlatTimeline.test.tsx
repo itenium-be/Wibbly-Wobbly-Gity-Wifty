@@ -69,6 +69,32 @@ describe('FlatTimeline', () => {
     expect(svg.style.height).toBe('200%');
   });
 
+  const titled = (message: string) =>
+    layout({
+      initialized: true,
+      commits: [
+        { hash: 'a1', short: 'a1', message, parents: [] },
+        { hash: 'b2', short: 'b2', message, parents: ['a1'] },
+      ],
+      branches: [],
+      tags: [],
+      head: { hash: null, branch: null },
+    });
+  const gap = (message: string) => {
+    render(<FlatTimeline layout={titled(message)} />);
+    const [a, b] = screen.getAllByText(message).map((t) => Number(t.getAttribute('x')));
+    return b - a;
+  };
+
+  test('spreads commits apart so long titles do not overlap', () => {
+    const long = 'The Stolen Earth and the Medusa Cascade';
+    expect(gap(long)).toBeGreaterThan(long.length * 14 * 0.6);
+  });
+
+  test('keeps the default spacing between short titles', () => {
+    expect(gap('Rose')).toBe(150);
+  });
+
   test('draws the pending node as uncommitted', () => {
     render(<FlatTimeline layout={{ ...pompeii, pending: { col: 2, lane: 0, from: { col: 1, lane: 0 } } }} />);
     expect(screen.getByText('uncommitted')).toBeTruthy();

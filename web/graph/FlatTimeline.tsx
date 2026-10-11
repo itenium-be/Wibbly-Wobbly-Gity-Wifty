@@ -5,8 +5,9 @@ const X0 = 260;
 const DX = 150;
 const Y0 = 200;
 const DY = 190;
-
-const at = (p: { col: number; lane: number }) => ({ x: X0 + p.col * DX, y: Y0 + p.lane * DY });
+// .message is 14px JetBrains Mono, whose glyphs advance 0.6em
+const CHAR = 14 * 0.6;
+const LABEL_GAP = 24;
 
 const KICKER: Record<LaneKind, string> = {
   prime: 'UNIVERSE · PRIME',
@@ -26,7 +27,15 @@ type Props = { layout: Layout; codes?: Record<string, string>; zoom?: number };
 
 export function FlatTimeline({ layout, codes = {}, zoom = 1 }: Props) {
   const cols = Math.max(0, layout.pending?.col ?? 0, ...layout.nodes.map((n) => n.col));
-  const width = X0 + cols * DX + 260;
+  const labels = Array.from({ length: cols + 1 }, () => 0);
+  for (const n of layout.nodes)
+    labels[n.col] = Math.max(labels[n.col], n.message.length, codes[n.message]?.length ?? 0);
+  if (layout.pending) labels[layout.pending.col] = Math.max(labels[layout.pending.col], 'uncommitted'.length);
+  const xs = [X0];
+  for (let c = 1; c <= cols; c++)
+    xs[c] = xs[c - 1] + Math.max(DX, ((labels[c - 1] + labels[c]) * CHAR) / 2 + LABEL_GAP);
+  const at = (p: { col: number; lane: number }) => ({ x: xs[p.col], y: Y0 + p.lane * DY });
+  const width = xs[cols] + 260;
   const height = Y0 + Math.max(1, layout.lanes.length) * DY;
   const kind = (lane: number) => layout.lanes[lane]?.kind ?? 'prime';
   const tardis = at(layout.head ?? { col: 0, lane: 0 });
