@@ -18,6 +18,7 @@ export function App() {
   const inputRef = useRef<HTMLInputElement>(null);
   // Bumped on every reset so responses for a scene we already left are dropped.
   const epoch = useRef(0);
+  const running = useRef(false);
 
   useEffect(() => {
     fetchScenes().then(setScenes);
@@ -61,8 +62,12 @@ export function App() {
   if (!scene) return null;
 
   const run = async (cmd: string) => {
+    if (running.current) return;
+    running.current = true;
     const mine = epoch.current;
-    const result = await runCommand(cmd);
+    const result = await runCommand(cmd).finally(() => {
+      running.current = false;
+    });
     if (mine !== epoch.current) return;
     setOutput(`$ ${cmd}\n${result.output}`);
     setGraph(result.graph);

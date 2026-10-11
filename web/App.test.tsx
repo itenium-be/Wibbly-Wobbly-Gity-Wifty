@@ -106,4 +106,15 @@ describe('App', () => {
     expect(screen.queryByText(/STALE OUTPUT/)).toBeNull();
     expect(screen.queryByText('Stale graph')).toBeNull();
   });
+
+  test('Enter while a run is in flight does not run the command again', async () => {
+    const slow = deferred<RunResult>();
+    runCommand.mockImplementationOnce(() => slow.promise);
+    const input = await toGitPhase();
+    fireEvent.change(input, { target: { value: 'git log' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await act(async () => slow.resolve({ output: 'done', code: 0, graph }));
+    expect(runCommand).toHaveBeenCalledTimes(1);
+  });
 });
