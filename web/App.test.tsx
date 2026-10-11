@@ -96,6 +96,26 @@ describe('App', () => {
     expect(screen.getByText('Where is the TARDIS?')).toBeTruthy();
   });
 
+  test('shows the working directory and updates it after a run', async () => {
+    runCommand.mockImplementationOnce(async () => ({
+      ...ran('rm episodes/rose.md'),
+      workdir: { files: [{ path: 'episodes/rose.md', status: 'untracked', code: '??' }], merging: false },
+    }));
+    const input = await toGitPhase();
+    const row = () => screen.getByText('episodes/rose.md').closest('li');
+    expect((await screen.findByText('episodes/rose.md')).closest('li')?.className).toContain('clean');
+    expect(screen.getByText('prime-timeline', { selector: '.branch' })).toBeTruthy();
+    fireEvent.change(input, { target: { value: 'git rm --cached episodes/rose.md' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(row()?.className).toContain('untracked'));
+  });
+
+  test('a detached HEAD shows as such in the working directory header', async () => {
+    enterScene.mockImplementation(async () => live({ ...graph, head: { hash: 'a1', branch: null } }));
+    await toGitPhase();
+    expect(await screen.findByText('HEAD (detached)', { selector: '.branch' })).toBeTruthy();
+  });
+
   test('running the cued command shows its output and advances the cue', async () => {
     const input = await toGitPhase();
     fireEvent.change(input, { target: { value: 'git log' } });

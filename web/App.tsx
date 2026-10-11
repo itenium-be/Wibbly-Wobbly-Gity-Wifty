@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { GraphModel, RunResult, SceneView } from '../shared/types';
+import type { GraphModel, RunResult, SceneView, WorkDir } from '../shared/types';
 import { enterScene, fetchScenes, runCommand } from './api';
 import { Console } from './console/Console';
 import { advance } from './cue';
@@ -7,11 +7,13 @@ import { FlatTimeline } from './graph/FlatTimeline';
 import { layout } from './graph/layout';
 import { move, type Position } from './nav';
 import { StoryCardView } from './story/StoryCardView';
+import { WorkDirPanel } from './workdir/WorkDirPanel';
 
 export function App() {
   const [scenes, setScenes] = useState<SceneView[]>([]);
   const [pos, setPos] = useState<Position>({ scene: 0, card: 0, image: 0 });
   const [graph, setGraph] = useState<GraphModel | null>(null);
+  const [workdir, setWorkdir] = useState<WorkDir | null>(null);
   const [cueIndex, setCueIndex] = useState(0);
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
@@ -34,6 +36,7 @@ export function App() {
     const entered = await enterScene(sceneId);
     if (mine !== epoch.current) return;
     setGraph(entered.graph);
+    setWorkdir(entered.workdir);
     setCueIndex(0);
     setInput('');
     setOutput('');
@@ -78,6 +81,7 @@ export function App() {
     if (mine !== epoch.current) return;
     setOutput(`$ ${cmd}\n${result.output}`);
     setGraph(result.graph);
+    setWorkdir(result.workdir);
     setCueIndex((i) => advance(scene.steps, i, cmd, result.code));
     setInput('');
   };
@@ -96,6 +100,13 @@ export function App() {
       {gitPhase ? (
         <>
           <main>{graph && <FlatTimeline layout={layout(graph)} />}</main>
+          {workdir && (
+            <WorkDirPanel
+              key={scene.id}
+              workdir={workdir}
+              branch={graph?.initialized ? (graph.head.branch ?? 'HEAD (detached)') : ''}
+            />
+          )}
           <Console
             cue={scene.steps[cueIndex]}
             value={input}
