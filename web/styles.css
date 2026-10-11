@@ -1,3 +1,31 @@
+@font-face {
+  font-family: "Orbitron";
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/orbitron-500.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Orbitron";
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/orbitron-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/jetbrains-mono-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/jetbrains-mono-600.woff2") format("woff2");
+}
+
 :root {
   --space: #050816;
   --space-2: #0b1230;
