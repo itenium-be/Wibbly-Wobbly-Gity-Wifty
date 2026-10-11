@@ -5,6 +5,7 @@ import { buildSnapshot } from './build';
 import { tokenize } from './command';
 import { git } from './git';
 import { readGraph } from './graph';
+import { collapseCarriageReturns } from './output';
 
 export class Engine {
   private readonly home: string;
@@ -51,6 +52,6 @@ export class Engine {
   private async doRun(input: string): Promise<RunResult> {
     const parsed = tokenize(input);
     const result = parsed.ok ? await git(this.live, parsed.args) : { output: parsed.error, code: 1 };
-    return { ...result, graph: await readGraph(this.live) };
+    return { ...result, output: collapseCarriageReturns(result.output), graph: await readGraph(this.live) };
   }
 }
