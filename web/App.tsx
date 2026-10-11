@@ -138,7 +138,11 @@ export function App() {
       </header>
       {gitPhase ? (
         <>
-          <main>{graph && <FlatTimeline layout={layout(graph)} />}</main>
+          <main>
+            {graph && (
+              <FlatTimeline layout={layout(graph, workdir?.files.some((f) => f.status !== 'clean') ?? false)} />
+            )}
+          </main>
           {workdir && (
             <WorkDirPanel
               key={scene.id}

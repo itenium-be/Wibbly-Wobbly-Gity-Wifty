@@ -13,7 +13,15 @@ export type Node = {
 };
 export type Edge = { from: Node; to: Node };
 export type Head = { col: number; lane: number; label: string };
-export type Layout = { initialized: boolean; lanes: Lane[]; nodes: Node[]; edges: Edge[]; head: Head | null };
+export type Pending = { col: number; lane: number; from: { col: number; lane: number } | null };
+export type Layout = {
+  initialized: boolean;
+  lanes: Lane[];
+  nodes: Node[];
+  edges: Edge[];
+  head: Head | null;
+  pending: Pending | null;
+};
 
 const PRIME = 'prime-timeline';
 const DETACHED = 'detached';
@@ -24,7 +32,7 @@ const kindOf = (name: string): LaneKind => {
   return 'parallel';
 };
 
-export function layout(graph: GraphModel): Layout {
+export function layout(graph: GraphModel, dirty = false): Layout {
   const firstParent = new Map(graph.commits.map((c) => [c.hash, c.parents[0] ?? null]));
   const owner = new Map<string, string>();
   const claim = (tip: string | null, lane: string) => {
@@ -65,5 +73,10 @@ export function layout(graph: GraphModel): Layout {
     ? { col: at.col, lane: at.lane, label: graph.head.branch ? `HEAD → ${graph.head.branch}` : 'HEAD (detached)' }
     : null;
 
-  return { initialized: graph.initialized, lanes, nodes, edges, head };
+  const pending =
+    dirty && graph.initialized
+      ? { col: nodes.length, lane: at?.lane ?? 0, from: at ? { col: at.col, lane: at.lane } : null }
+      : null;
+
+  return { initialized: graph.initialized, lanes, nodes, edges, head, pending };
 }

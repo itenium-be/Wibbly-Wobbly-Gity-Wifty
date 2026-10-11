@@ -729,3 +729,14 @@ main {
     transform: translateX(120%);
   }
 }
+
+.timeline .pending {
+  stroke: var(--st-modified);
+  stroke-dasharray: 6 6;
+  fill: none;
+}
+
+.timeline .pending text {
+  fill: var(--st-modified);
+  stroke: none;
+}

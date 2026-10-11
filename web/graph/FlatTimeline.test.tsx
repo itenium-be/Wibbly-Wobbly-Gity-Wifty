@@ -43,4 +43,9 @@ describe('FlatTimeline', () => {
     );
     expect(screen.getByText('Not a git repository')).toBeTruthy();
   });
+
+  test('draws the pending node as uncommitted', () => {
+    render(<FlatTimeline layout={{ ...pompeii, pending: { col: 2, lane: 0, from: { col: 1, lane: 0 } } }} />);
+    expect(screen.getByText('uncommitted')).toBeTruthy();
+  });
 });
