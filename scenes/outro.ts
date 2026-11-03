@@ -6,7 +6,7 @@ export const outro: Scene = {
   title: 'The End of Time',
   story: [
     {
-      title: 'Wibbly Wobbly Gity Wifty',
+      title: 'Wibbly Wobbly Git Schwifty',
       text: '',
       images: [{ src: '/assets/episodes/end-of-time.jpg' }],
       boxes: [{ boxes: ["I Don't Want to Go"] }, { boxes: ['Questions?'] }],

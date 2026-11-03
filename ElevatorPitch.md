@@ -1,6 +1,6 @@
-# Wibbly Wobbly Git-y Wifty
+# Wibbly Wobbly Git Schwifty
 
-*Beware! Lots of Wibbly wobbly, timey wimey… stuff going on in this session.*
+*Beware! Lots of Wibbly wobbly, timey wimey (²)… stuff going on in this session.*
 
 ## Abstract
 
@@ -32,3 +32,6 @@ The basics are a quick refresher; the specials are for the experienced.
 ## Session Format
 
 50 minutes, presented live inside a TARDIS console
+
+
+(²) No Rick and Morty though 😢

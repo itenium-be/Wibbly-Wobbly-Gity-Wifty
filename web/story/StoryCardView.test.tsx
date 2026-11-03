@@ -144,11 +144,11 @@ describe('StoryCardView', () => {
   });
 
   test('a cover card shows its title lines and the itenium logo', () => {
-    render(<StoryCardView card={{ title: 'Talk', text: '', images: [], cover: ['Wibbly Wobbly', 'Gity', 'Wifty'] }} />);
+    render(<StoryCardView card={{ title: 'Talk', text: '', images: [], cover: ['Wibbly Wobbly', 'Git', 'Schwifty'] }} />);
     expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual([
       'Wibbly Wobbly',
-      'Gity',
-      'Wifty',
+      'Git',
+      'Schwifty',
     ]);
     expect(screen.getByAltText('itenium logo')).toBeTruthy();
   });
