@@ -1,36 +1,41 @@
-# Wibbly Wobbly Git-y Wifty
+# Wibbly Wobbly Git Schwifty
 
 *Time travel with branches, merges and the occasional paradox.*
 
-A git session using the revived Doctor Who series (2005, "Rose", onwards) as the repository. The commit history is the timeline; the TARDIS is how we move through it.
+A 50-minute presented git session built on the revived Doctor Who (2005, "Rose", onwards).
+The repo *is* the timeline: commits are episodes, `HEAD` is where the TARDIS sits, branches are
+parallel universes. It runs live through a custom web app — the TARDIS Console — not slides.
+Every command is typed on stage against a real throwaway repo. Take-home: this public repo.
 
-## Concept mapping
+## Run of show
 
-| Git | Doctor Who |
-|---|---|
-| Commit | An episode / event. Once it happened, it's in the timeline. |
-| `HEAD` | Where the TARDIS currently is. |
-| `checkout <old commit>` / detached HEAD | Travelling to the past. Look around, but "you can't rewrite history, not one line". Changes are lost unless you branch. |
-| Tag | Fixed points in time (Pompeii, Bowie Base One, Captain Jack). They never move. |
-| Branch | Parallel universe: Pete's World, *Turn Left*. |
-| Merge | *Journey's End*: universes collide, the Doctor-Donna. |
-| Merge conflict | *Day of the Doctor*: three Doctors, incompatible memories, resolved manually. |
-| `commit --amend` | Regeneration (*The Parting of the Ways*): same episode, new face, new hash. |
-| Rebase / force-push | *Father's Day*: Rose rewrites shared history and the Reapers arrive. Don't rewrite public history. |
-| Reflog | River's diary. Nothing is truly lost. Spoilers. |
-| Cherry-pick | River and the Doctor meeting out of order. |
-| `blame` / `log --grep` | *Bad Wolf*: a message scattered through time, traced back to its author. |
-| `bisect` | *Blink*: narrow down exactly when it went wrong. |
+One continuous timeline, ten scenes. The basics come fast; the later scenes are specials for the
+experienced.
 
-## Structure
+| #  | Scene                 | Git                                                                 | Doctor Who                                               |
+|----|-----------------------|---------------------------------------------------------------------|----------------------------------------------------------|
+| 1  | Rose                  | `init`, `add`, `commit`, aliases, `HEAD`                            | The timeline begins; HEAD = where the TARDIS is          |
+| 2  | Father's Day          | `tag` (fixed point), `switch -c`, failing `merge`, `merge --abort`  | Rose saves Pete; dead-and-alive paradox, the Reapers come |
+| 3  | The Parting of the Ways | `commit --amend`                                                  | Regeneration: same episode, new face, new hash           |
+| 4  | Pete's World          | `switch -c` off `HEAD~3`                                            | A parallel universe splits off                           |
+| 5  | Journey's End         | `merge` + conflict resolve, `rerere`                               | Universes collide, the Doctor-Donna                      |
+| 6  | Blink                 | `bisect start/bad/good/run/reset`                                  | Narrow down exactly when the Angels got in               |
+| 7  | River's Diary         | `reflog`, detached `HEAD`                                          | Spoilers; nothing is truly lost                          |
+| 8  | Bad Wolf              | `log --grep`, `log -S`, `blame`                                    | A message scattered through time, traced to its author   |
+| 9  | Turn Left             | `reset --hard/--soft`, `cherry-pick`, `restore --source`, `rebase --onto`, `rebase --rebase-merges` | The dark world, folded up and replayed onto the prime timeline |
+| 10 | Outro                 | Recap: scene → command                                             | Q&A, repo link                                           |
 
-**Main show:** commit → branch → merge → tag
+## How it runs
 
-**Specials (side shows):**
-- Rebase: *Father's Day*
-- Amend: *The Parting of the Ways*
-- Reflog: River's diary
-- Bisect: *Blink*
+- **TARDIS Console**: Bun + TypeScript backend, React frontend, localhost on the presenter's laptop.
+- **Real git underneath**: the backend runs commands in a throwaway demo repo.
+- **Scenes are data**: each scene is a `build` script (deterministic starting state) plus `steps`
+  (the live cues). The presenter types each command; the next one shows as ghost text.
+- **Deterministic**: builds run with fixed author/committer dates, so hashes are identical every run.
+- **Graph**: the backend exposes the repo as one JSON model; a flat 2D SVG renderer draws lanes
+  (one per universe), episode nodes, gold-star fixed points, and the TARDIS at HEAD.
+
+Full detail: [`docs/superpowers/specs/2026-10-11-tardis-console-design.md`](docs/superpowers/specs/2026-10-11-tardis-console-design.md).
 
 ## Guidelines
 
@@ -38,3 +43,15 @@ A git session using the revived Doctor Who series (2005, "Rose", onwards) as the
 - Doctor Who time is wibbly wobbly; git semantics stay strict. The show is flavour, not the model.
 - One running storyline: this repo *is* the timeline.
 - Default timeline branch: `prime-timeline`, starting at "Rose".
+
+## Parked — ideas for later
+
+Not in the current cut; kept for a future version.
+
+- **Pompeii as a standalone fixed-points scene** — folded into Father's Day's `fixed-point/pete` tag.
+- **A dedicated cherry-pick scene** (River and the Doctor meeting out of order) — cherry-pick now
+  lives inside Turn Left.
+- **Interactive rebase.**
+- **3D renderer** (react-three-fiber), behind the same graph model.
+- **Presenter view** on a second screen.
+- **Audience participation / hands-on mode.**
